@@ -1,0 +1,22 @@
+{
+  "name": "tinyeth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "npx tsc && jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "jest": "^27.1.0"
+  },
+  "dependencies": {
+    "typescript": "^4.4.2",
+    "typescript-logging": "^1.0.0"
+  }
+}

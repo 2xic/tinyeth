@@ -1,0 +1,19 @@
+# Eth vm
+- https://ethervm.io/
+
+# Eth blocks
+
+- https://blog.ethereum.org/2015/11/15/merkling-in-ethereum/
+- https://ethereum.org/en/developers/docs/blocks/
+- https://blog.ethereum.org/2015/06/26/state-tree-pruning/
+- https://blog.ethereum.org/2014/02/18/ethereum-scalability-and-decentralization-updates/
+
+# Eth accounts
+- https://ethereum.org/en/developers/docs/accounts/
+
+# Eth transaction
+- https://ethereum.org/en/developers/docs/transactions/
+- https://lsongnotes.wordpress.com/2017/12/21/ethereum-transaction-structure/
+
+# Eth RLP
+src/rlp/docs
