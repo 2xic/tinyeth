@@ -20,7 +20,6 @@ export class RlpDecoder {
       output = input.substr(offset, length);
     } else if (type === "list") {
       output = Array(length).fill(0).toString();
-      //input.substr(offset, length);
     }
     return (
       output + (this._parse({ input: input.substr(offset + length) }) || "")
@@ -84,16 +83,6 @@ export class RlpDecoder {
   }
 
   private toInteger(input: string): number {
-    const length = input.length;
-    if (!length) {
-      throw new Error("input is null");
-    } else if (length == 1) {
-      return input.charCodeAt(0);
-    }
-    const list = Array(input);
-    return (
-      list[list.length - 1].charCodeAt(0) +
-      this.toInteger(input.substr(0, input.length - 1)) * 256
-    );
+    return Buffer.from(input, "hex").readInt8();
   }
 }

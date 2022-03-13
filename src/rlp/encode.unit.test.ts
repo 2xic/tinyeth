@@ -41,5 +41,11 @@ describe("RlpEncoder", () => {
         input: 127,
       })
     ).toBe("0x7f");
+
+    expect(
+      new RlpEncoder().encode({
+        input: 128,
+      })
+    ).toBe("0x8180");
   });
 });

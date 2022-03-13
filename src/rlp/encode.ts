@@ -1,4 +1,5 @@
-import { isJSDocThisTag } from "typescript";
+import { createMetaProperty, isJSDocThisTag } from "typescript";
+import { Uint } from "./uint";
 
 export class RlpEncoder {
   public encode({ input }: { input: InputTytpes }) {
@@ -6,11 +7,7 @@ export class RlpEncoder {
       "0x" +
       Array(this._encode({ input }))
         .map((c) => {
-          const isNumber = /^\d+$/.test(c);
-          if (isNumber) {
-            return c;
-          }
-          return c.charCodeAt(0).toString(16);
+          return c;
         })
         .join("")
     );
@@ -21,23 +18,13 @@ export class RlpEncoder {
       if (input.length === 1 && input[0].charCodeAt(0) < 0x80) {
         return input;
       }
-      return (
-        this.encodeLength({
-          length: input.length,
-          offset: 0x80,
-        }) + input
-      );
+      return Buffer.from([0x80 + input.length]).toString("hex") + input;
     } else if (Array.isArray(input)) {
       let output = "";
       input.map((c) => {
         output += this._encode({ input: c });
       });
-      return (
-        this.encodeLength({
-          length: output.length,
-          offset: 0xc0,
-        }) + output
-      );
+      return Buffer.from([0xc0 + output.length]).toString("hex") + output;
     } else if (typeof input === "boolean") {
       if (input) {
         return "01";
@@ -48,39 +35,16 @@ export class RlpEncoder {
       if (input === 0) {
         return "80";
       } else if (input < 128) {
-        return this.toBinary({ input });
+        return Buffer.from([input]).toString("hex");
       } else {
-        throw new Error("Not implemented");
+        const { length, bytes } = new Uint().encodeNumber(input);
+        return (
+          Buffer.from([0x80 + length]).toString("hex") +
+          Buffer.from(bytes).toString("hex")
+        );
       }
     }
     throw new Error("unknown type");
-  }
-
-  private encodeLength({
-    length,
-    offset,
-  }: {
-    length: number;
-    offset: number;
-  }): string {
-    if (length < 56) {
-      return String.fromCharCode(length + offset);
-    } else if (length < 256 ** 8) {
-      const binary = this.toBinary({ input: length });
-      return String.fromCharCode(binary.length + offset + 55) + binary;
-    } else {
-      throw new Error("Input too long");
-    }
-  }
-
-  private toBinary({ input }: { input: number }): string {
-    if (input == 0) {
-      return "";
-    }
-    return (
-      this.toBinary({ input: parseInt((input / 256).toString()) }) +
-      String.fromCharCode(input % 256)
-    );
   }
 }
 
