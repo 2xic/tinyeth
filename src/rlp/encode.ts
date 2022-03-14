@@ -3,14 +3,9 @@ import { Uint } from "./uint";
 
 export class RlpEncoder {
   public encode({ input }: { input: InputTytpes }) {
-    return (
-      "0x" +
-      Array(this._encode({ input }))
-        .map((c) => {
-          return c;
-        })
-        .join("")
-    );
+    const hexPrefix = "0x";
+    const encoded = this._encode({ input });
+    return hexPrefix + encoded;
   }
 
   private _encode({ input }: { input: InputTytpes }): string {
@@ -18,7 +13,11 @@ export class RlpEncoder {
       if (input.length === 1 && input[0].charCodeAt(0) < 0x80) {
         return input;
       }
-      return Buffer.from([0x80 + input.length]).toString("hex") + input;
+      const encodedString = Buffer.from(
+        input.split("").map((item) => item.charCodeAt(0))
+      ).toString("hex");
+
+      return Buffer.from([0x80 + input.length]).toString("hex") + encodedString;
     } else if (Array.isArray(input)) {
       let output = "";
       input.map((c) => {

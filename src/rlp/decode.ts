@@ -1,88 +1,56 @@
+import { createInputFiles } from "typescript";
+
 export class RlpDecoder {
   public parse({ input }: { input: string }): string | undefined {
-    const strippedInput = input.substring(2).match(/.{1,2}/g);
-    const parsed = (
-      strippedInput?.map((c) => {
-        return String.fromCharCode(parseInt(c, 16));
-      }) || []
-    ).join();
-    return this._parse({ input: parsed });
+    const strippedInput = Buffer.from(input.substring(2), "hex");
+    let parsed = "";
+
+    let index = 0;
+    while (index < strippedInput.length) {
+      const { newIndex, token } = this.getToken(strippedInput, index);
+
+      parsed += token;
+      index = newIndex;
+    }
+
+    return parsed;
   }
 
-  private _parse({ input }: { input: string }): string | undefined {
-    if (!input.length) {
-      return undefined;
+  private getToken(
+    input: Buffer,
+    index: number
+  ): {
+    newIndex: number;
+    token: string | number[];
+  } {
+    if (input[index] <= 0x7f) {
+      return {
+        newIndex: index + 1,
+        token: input[index].toString(), //String.fromCharCode(input[index]),
+      };
+    } else if (input[index] <= 0xb7) {
+      const length = input[index] - 0x80;
+      const token: string = new Array(length)
+        .map((_, tokenIndex): string => {
+          const char = String.fromCharCode(input[index + tokenIndex]);
+          return char;
+        })
+        .join("");
+      return {
+        newIndex: index + 1,
+        token,
+      };
+    } else if (input[index] <= 0xf7) {
+      const length = input[index] - 0xc0;
+      const token: number[] = [...Array(length )].map((_, tokenIndex) =>
+          Number(input[1 + index + tokenIndex])
+      );
+      return {
+        newIndex: index + length + 1,
+        token: JSON.stringify(token),
+      };
     }
-    const { offset, length, type } = this.decode({ input });
 
-    let output = "";
-    if (type == "string") {
-      output = input.substr(offset, length);
-    } else if (type === "list") {
-      output = Array(length).fill(0).toString();
-    }
-    return (
-      output + (this._parse({ input: input.substr(offset + length) }) || "")
-    );
-  }
-
-  private decode({ input }: { input: string }) {
-    const length = input.length;
-    if (length === 0) {
-      throw new Error("input is null");
-    }
-    const prefix = input.charCodeAt(0);
-
-    if (prefix <= 0x7f) {
-      return {
-        offset: 0,
-        length: 1,
-        type: "string",
-      };
-    } else if (prefix <= 0xb7 && length - prefix - 0x80) {
-      return {
-        offset: 1,
-        length: prefix - 0x80,
-        type: "string",
-      };
-    } else if (
-      prefix <= 0xb7 &&
-      length > prefix - 0xb7 &&
-      length > prefix - 0xb7 + this.toInteger(input.substr(1, prefix - 0xb7))
-    ) {
-      const offset = prefix - 0xb7;
-      const length = this.toInteger(input.substr(1, prefix - 0xb7));
-
-      return {
-        offset: 1 + offset,
-        length: length,
-        type: "string",
-      };
-    } else if (prefix <= 0xf7 && length > prefix - 0xc0) {
-      const length = prefix - 0xc0;
-      return {
-        offset: 1,
-        length,
-        type: "list",
-      };
-    } else if (
-      prefix <= 0xff &&
-      length > prefix - 0xf7 &&
-      length > prefix - 0xf7 + this.toInteger(input.substr(1, prefix - 0xf7))
-    ) {
-      const offset = prefix - 0xf7;
-      const length = this.toInteger(input.substr(1, offset));
-      return {
-        offset: 1 + offset,
-        length,
-        type: "list",
-      };
-    } else {
-      throw new Error("Illegal input");
-    }
-  }
-
-  private toInteger(input: string): number {
-    return Buffer.from(input, "hex").readInt8();
+    throw new Error("Not implemented");
   }
 }

@@ -48,4 +48,12 @@ describe("RlpEncoder", () => {
       })
     ).toBe("0x8180");
   });
+
+  it('should correclty encoded strings', () => {
+    expect(
+      new RlpEncoder().encode({
+        input: "dog",
+      })
+    ).toBe("0x83646f67");
+  });
 });
