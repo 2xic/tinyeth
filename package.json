@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bn.js": "^5.1.0",
     "@types/jest": "^27.0.1",
     "@types/keccak": "^3.0.1",
     "@types/secp256k1": "^4.0.3",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "bignumber.js": "^9.0.2",
+    "bn.js": "^5.2.0",
     "keccak": "^3.0.2",
     "secp256k1": "^4.0.3",
     "typescript": "^4.4.2",

@@ -1,6 +1,7 @@
 import secp256k1 from "secp256k1";
 import createKeccakHash from "keccak";
 import BigNumber from "bignumber.js";
+import bn from "bn.js";
 
 export class KeyPair {
   constructor() {}
@@ -69,7 +70,6 @@ export class KeyPair {
         .update(Buffer.from(inputMessage, "hex"))
         .digest()
     );
-    console.log(message.length);
 
     if (message.length !== 32) {
       throw new Error("Invalid message length");
@@ -77,35 +77,24 @@ export class KeyPair {
 
     const { signature, recid: r } = secp256k1.ecdsaSign(message, privateKey);
     return {
+      fullSignature: `${Buffer.from(signature).toString("hex")}0${r}`,
       signature,
       r,
       message,
     };
   }
 
-  public getSignaturePoints({ signature }: { signature: Uint8Array }) {
-    /*
-    var { signature, recid: recovery } = secp256k1.ecdsaSign(
-      message,
-      privateKey
-    );*/
-    const r = new BigNumber(
-      Buffer.from(signature.slice(0, 32)).toString("hex"),
-      16
-    );
-    const s = new BigNumber(
-      Buffer.from(signature.slice(32, 64)).toString("hex"),
-      16
-    );
-    const v = r.minus(27);
-    /*  if (![0, 1].includes(v.toNumber())) {
-      throw new Error(`Invalid signature v value ${v.toNumber()}`);
-    }
-*/
-    return {
-      r,
-      s,
-      v,
-    };
+  public getPublicKeyFromSignature({
+    signature,
+    r,
+    message,
+  }: {
+    signature: Uint8Array;
+    r: number;
+    message: Uint8Array;
+  }) {
+    return Buffer.from(
+      secp256k1.ecdsaRecover(signature, r, message, false).slice(1)
+    ).toString("hex");
   }
 }
