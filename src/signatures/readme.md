@@ -14,4 +14,5 @@
 
 ### Code
 - https://github.com/ethers-io/ethers.js/blob/33a029e457320a226c68a01f4cfa2d110125a8b8/packages/bytes/src.ts/index.ts
+- https://yos.io/2018/11/16/ethereum-signatures/
 - 
