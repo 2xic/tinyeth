@@ -4,7 +4,7 @@
 - https://ethereum.github.io/yellowpaper/paper.pdf
 - https://eth.wiki/fundamentals/rlp
 - https://toolkit.abdk.consulting/ethereum#rlp
-
+- https://medium.com/coinmonks/data-structure-in-ethereum-episode-1-recursive-length-prefix-rlp-encoding-decoding-d1016832f919
 
 # Geth
 
