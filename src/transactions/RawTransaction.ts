@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { RlpEncoder } from "../rlp/encode";
+import { RlpEncoder } from "../rlp/RlpEncoder";
 
 export class RawTransaction {
   constructor(

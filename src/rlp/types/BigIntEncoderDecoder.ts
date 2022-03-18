@@ -1,4 +1,4 @@
-export class BigInt {
+export class BigIntEncoderDecoder {
   public encode({ input }: { input: string }): {
     encoding: string;
     bytes: number;

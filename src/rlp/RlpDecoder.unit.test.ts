@@ -1,4 +1,4 @@
-import { RlpDecoder } from "./decode";
+import { RlpDecoder } from "./RlpDecoder";
 
 describe("RlpDecoder", () => {
   it("it should decode non values", () => {

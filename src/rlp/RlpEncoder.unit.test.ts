@@ -1,4 +1,4 @@
-import { RlpEncoder } from "./encode";
+import { RlpEncoder } from "./RlpEncoder";
 
 describe("RlpEncoder", () => {
   it("should correctly encode booleans", () => {
