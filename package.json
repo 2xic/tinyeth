@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npx tsc && jest"
+    "test": "npx tsc && jest",
+    "lint": "npx eslint ./"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +17,9 @@
     "@types/jest": "^27.0.1",
     "@types/keccak": "^3.0.1",
     "@types/secp256k1": "^4.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "@typescript-eslint/parser": "^5.15.0",
+    "eslint": "^8.11.0",
     "jest": "^27.1.0"
   },
   "dependencies": {

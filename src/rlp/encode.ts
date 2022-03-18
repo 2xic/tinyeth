@@ -1,12 +1,5 @@
 import BigNumber from "bignumber.js";
-import {
-  createInputFiles,
-  createMetaProperty,
-  EndOfLineState,
-  getTsBuildInfoEmitOutputFilePath,
-  isJSDocThisTag,
-} from "typescript";
-import { BigInt } from "./bigint";
+import { BigInt } from "./types/BigInt";
 import { Uint } from "./uint";
 
 export class RlpEncoder {

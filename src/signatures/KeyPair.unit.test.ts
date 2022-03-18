@@ -1,6 +1,4 @@
 import { KeyPair } from "./KeyPair";
-import createKeccakHash from "keccak";
-
 describe("KeyPair", () => {
   it("should be able to create public key from private key", () => {
     // random address created by https://www.pwall.org/ethereum/

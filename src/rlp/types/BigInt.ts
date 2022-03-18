@@ -1,8 +1,4 @@
-import { Uint } from "./uint";
-
 export class BigInt {
-  constructor() {}
-
   public encode({ input }: { input: string }): {
     encoding: string;
     bytes: number;
@@ -28,7 +24,7 @@ export class BigInt {
     }
   }
 
-  private bitSize(num: Number) {
+  private bitSize(num: number) {
     return num.toString(2).length;
   }
 }

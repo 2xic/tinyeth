@@ -1,10 +1,8 @@
 import secp256k1 from "secp256k1";
 import createKeccakHash from "keccak";
-import BigNumber from "bignumber.js";
-import bn from "bn.js";
+
 
 export class KeyPair {
-  constructor() {}
 
   public getAddress({ publicKey }: { publicKey: string }) {
     const publicKeyHash = createKeccakHash("keccak256")

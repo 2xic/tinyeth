@@ -1,4 +1,4 @@
-import { BigInt } from "./bigint";
+import { BigInt } from "./BigInt";
 
 describe("BigInt", () => {
   it("should be able to represent bigint", () => {
