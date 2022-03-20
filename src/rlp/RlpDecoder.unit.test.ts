@@ -1,7 +1,7 @@
 import { RlpDecoder } from "./RlpDecoder";
 
 describe("RlpDecoder", () => {
-  it("it should decode non values", () => {
+  it.skip("it should decode non values", () => {
     expect(
       new RlpDecoder().parse({
         input: "0x80",
@@ -22,8 +22,6 @@ describe("RlpDecoder", () => {
       new RlpDecoder().parse({
         input: "0xC50102030405",
       })
-    ).toBe(
-      JSON.stringify([1, 2, 3, 4, 5])
-    );
+    ).toBe(JSON.stringify([1, 2, 3, 4, 5]));
   });
 });

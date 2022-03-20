@@ -1,28 +1,28 @@
 import BigNumber from "bignumber.js";
-import { Results, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
 import { UIntEncoderDecoder } from "./UInt";
 import { BigIntEncoderDecoder } from "./BigIntEncoderDecoder";
 
 export class NumberEncoderDecoder
   implements TypeEncoderDecoder<number | BigNumber>
 {
-  public encode({ input }: { input: number | BigNumber }): Results {
+  public encode({ input }: { input: number | BigNumber }): EncodingResults {
     // Using bignumber as it's easier to work with in javascript
     const bigInput = new BigNumber(input);
     if (bigInput.isZero()) {
       const encoding = "80";
       return {
         encoding,
-        bytes: 1,
+        length: 1,
       };
     } else if (bigInput.isLessThan(128)) {
       const encoding = Buffer.from([bigInput.toNumber()]).toString("hex");
       return {
         encoding,
-        bytes: 1,
+        length: 1,
       };
     } else if (bigInput.isLessThan(Math.pow(2, 64))) {
-      const { bytes: length, encoding: uintEncoding } =
+      const { length: length, encoding: uintEncoding } =
         new UIntEncoderDecoder().encode({
           input: bigInput.toNumber(),
         });
@@ -32,7 +32,7 @@ export class NumberEncoderDecoder
 
       return {
         encoding,
-        bytes: length + 1,
+        length: length + 1,
       };
     } else {
       const { encoding, bytes } = new BigIntEncoderDecoder().encode({
@@ -40,12 +40,12 @@ export class NumberEncoderDecoder
       });
       return {
         encoding,
-        bytes: bytes + 1,
+        length: bytes + 1,
       };
     }
   }
 
-  public decode({ input }: { input: number | BigNumber }): Results {
+  public decode({ input }: { input: number | BigNumber }): DecodingResults {
     throw new Error("Method not implemented.");
   }
 }

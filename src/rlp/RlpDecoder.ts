@@ -1,3 +1,7 @@
+import { SimpleTypeEncoderDecoder } from "./types/SimpleTypeEncoderDecoder";
+import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
+import { DecodingResults } from "./types/TypeEncoderDecoder";
+
 export class RlpDecoder {
   public parse({ input }: { input: string }): string | undefined {
     const strippedInput = Buffer.from(input.substring(2), "hex");
@@ -5,9 +9,9 @@ export class RlpDecoder {
 
     let index = 0;
     while (index < strippedInput.length) {
-      const { newIndex, token } = this.getToken(strippedInput, index);
+      const { newIndex, decoding } = this.getToken(strippedInput, index);
 
-      parsed += token;
+      parsed += decoding;
       index = newIndex;
     }
 
@@ -17,35 +21,36 @@ export class RlpDecoder {
   private getToken(
     input: Buffer,
     index: number
-  ): {
-    newIndex: number;
-    token: string | number[];
-  } {
-    if (input[index] <= 0x7f) {
+  ): DecodingResults {
+    const typeValue = input[index];
+    const isStringValue = new StringEncoderDecoder().isDecodeType({
+      input: typeValue,
+    });
+    const isSimpleType = new SimpleTypeEncoderDecoder().isDecodeType({
+      input: typeValue,
+    })
+
+    if (isSimpleType) {
+      return new SimpleTypeEncoderDecoder().decode({ input,  
+        fromIndex: index,});
+    } else if (isStringValue) {
+      const token = new StringEncoderDecoder().decode({
+        input,
+        fromIndex: index,
+      });
+
       return {
         newIndex: index + 1,
-        token: input[index].toString(),
+        decoding: token.decoding,
       };
-    } else if (input[index] <= 0xb7) {
-      const length = input[index] - 0x80;
-      const token: string = new Array(length)
-        .map((_, tokenIndex): string => {
-          const char = String.fromCharCode(input[index + tokenIndex]);
-          return char;
-        })
-        .join("");
-      return {
-        newIndex: index + 1,
-        token,
-      };
-    } else if (input[index] <= 0xf7) {
-      const length = input[index] - 0xc0;
+    } else if (typeValue <= 0xf7) {
+      const length = typeValue - 0xc0;
       const token: number[] = [...Array(length)].map((_, tokenIndex) =>
         Number(input[1 + index + tokenIndex])
       );
       return {
         newIndex: index + length + 1,
-        token: JSON.stringify(token),
+        decoding: JSON.stringify(token),
       };
     }
 

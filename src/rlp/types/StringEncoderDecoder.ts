@@ -1,7 +1,8 @@
-import { Results, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import { isValueBetween } from "./isBetween";
+import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
 
 export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
-  public encode({ input }: { input: string }): Results {
+  public encode({ input }: { input: string }): EncodingResults {
     const isLongString = 55 < input.length;
     const isShortString = input.length === 1 && input[0].charCodeAt(0) < 0x80;
     const encodedChars = input.split("").map((item) => item.charCodeAt(0));
@@ -10,7 +11,7 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
     if (isShortString) {
       return {
         encoding: input,
-        bytes: input.length,
+        length: input.length,
       };
     } else if (isLongString) {
       const length = input.length;
@@ -19,7 +20,7 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
 
       return {
         encoding: `${firstLength}${bytes}${encodedString}`,
-        bytes: length + 3,
+        length: length + 3,
       };
     }
 
@@ -28,11 +29,34 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
     const bytes = input.length + 1;
     return {
       encoding,
-      bytes,
+      length: bytes,
     };
   }
 
-  public decode({ input }: { input: string }): Results {
-    throw new Error("Method not implemented.");
+  public decode({
+    input,
+    fromIndex,
+  }: {
+    input: Buffer;
+    fromIndex: number;
+  }): DecodingResults {
+    const length = input[fromIndex] - 0x80;
+    console.log([fromIndex, fromIndex + length]);
+    const decoding = Buffer.from(
+      input.slice(fromIndex, fromIndex + length)
+    ).toString("ascii");
+
+    return {
+      decoding,
+      newIndex: fromIndex + 1,
+    };
+  }
+
+  public isDecodeType({ input }: { input: number }): boolean {
+    return isValueBetween({
+      value: input,
+      min: 0x82,
+      max: 0xb7,
+    });
   }
 }

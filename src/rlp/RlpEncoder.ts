@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { BooleanEncoderDecoder } from "./types/BooleanEncoderDecoder";
 import { NumberEncoderDecoder } from "./types/NumberEncoderDecoder";
 import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
+import { EncodingResults } from "./types/TypeEncoderDecoder";
 
 export class RlpEncoder {
   public encode({ input }: { input: InputTypes }) {
@@ -10,10 +11,7 @@ export class RlpEncoder {
     return hexPrefix + encoded;
   }
 
-  private _encode({ input }: { input: InputTypes }): {
-    encoding: string;
-    bytes: number;
-  } {
+  private _encode({ input }: { input: InputTypes }): EncodingResults {
     if (typeof input === "string") {
       return new StringEncoderDecoder().encode({ input });
     } else if (typeof input === "boolean") {
@@ -25,17 +23,17 @@ export class RlpEncoder {
       let length = 0;
 
       input.forEach((inputElement) => {
-        const { encoding: encoded, bytes } = this._encode({
+        const { encoding: encoded, length: encodingLength } = this._encode({
           input: inputElement,
         });
         output += encoded;
-        length += bytes;
+        length += encodingLength;
       });
 
       const encoding = Buffer.from([0xc0 + length]).toString("hex") + output;
       return {
         encoding,
-        bytes: 2,
+        length: 2,
       };
     }
     throw new Error("unknown type");
