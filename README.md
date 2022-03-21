@@ -7,15 +7,18 @@ _Just something so I get a better understanding of the core parts of the protoco
 ### Plan
 
 - [ ] (WIP) Implement encoding and decoding of RLP
-  Currently added:
-    - Basic support added currently
 
-- [ ] (WIP) Signing of transactions
+  Currently added:
+    - Support for primitive types, and partial bigint support
+
+- [ ] (WIP) Construction of transactions
+
   Currently added:
     - Support for creating a key pair added, signing, and verification
     - Support for creating a raw transactions
+    - (wip) signing of transactions
 
-- [ ] Implementation of parts of the EVM
+- [ ] Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
 
 - [ ] Data structures like block, transactions, accounts, etc
 
