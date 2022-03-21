@@ -72,4 +72,8 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
       max: 0xf7,
     });
   }
+
+  public isEncodeType({ input }: { input: unknown }): boolean {
+    return Array.isArray(input);
+  }
 }

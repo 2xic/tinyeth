@@ -10,6 +10,10 @@ export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
     throw new Error("Method not implemented");
   }
 
+  public isEncodeType({ input }: { input: unknown; }): boolean {
+    throw new Error("Method not implemented.");
+  }
+
   public decode({
     input,
     fromIndex,

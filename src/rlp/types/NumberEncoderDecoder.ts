@@ -1,14 +1,16 @@
 import BigNumber from "bignumber.js";
-import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import {
+  DecodingResults,
+  EncodingResults,
+  TypeEncoderDecoder,
+} from "./TypeEncoderDecoder";
 import { UIntEncoderDecoder } from "./UInt";
 import { BigIntEncoderDecoder } from "./BigIntEncoderDecoder";
-import { isValueBetween } from "./isBetween";
 
 export class NumberEncoderDecoder
   implements TypeEncoderDecoder<number | BigNumber>
 {
   public encode({ input }: { input: number | BigNumber }): EncodingResults {
-    // Using bignumber as it's easier to work with in javascript
     const bigInput = new BigNumber(input);
     if (bigInput.isZero()) {
       const encoding = "80";
@@ -46,7 +48,15 @@ export class NumberEncoderDecoder
     }
   }
 
-  public decode({ input }: { input: number | BigNumber }): DecodingResults {
+  public decode({ input }: { input: Buffer }): DecodingResults {
     throw new Error("Method not implemented.");
+  }
+
+  public isDecodeType({ input }: { input: number }): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  public isEncodeType({ input }: { input: unknown }): boolean {
+    return typeof input === "number" || BigNumber.isBigNumber(input);
   }
 }

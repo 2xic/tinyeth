@@ -28,4 +28,8 @@ export class IsNonValueEncoderDecoder implements TypeEncoderDecoder<any> {
   public isDecodeType({ input }: { input: number }): boolean {
     return input == 0x80;
   }
+
+  public isEncodeType({ input }: { input: unknown }): boolean {
+    throw new Error("Method not implemented.");
+  }
 }

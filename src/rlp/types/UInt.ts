@@ -1,4 +1,8 @@
-import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import {
+  DecodingResults,
+  EncodingResults,
+  TypeEncoderDecoder,
+} from "./TypeEncoderDecoder";
 
 export class UIntEncoderDecoder implements TypeEncoderDecoder<number> {
   public encode({ input }: { input: number }): EncodingResults {
@@ -53,11 +57,25 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<number> {
     }
   }
 
-  public decode({ input }: { input: number; }): DecodingResults {
+  public isEncodeType({ input }: { input: unknown }): boolean {
     throw new Error("Method not implemented.");
   }
 
-  private getByteArray({ input, n }: { input: number; n: number }): EncodingResults {
+  public decode({ input }: { input: Buffer }): DecodingResults {
+    throw new Error("Method not implemented.");
+  }
+
+  public isDecodeType({ input }: { input: number }): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  private getByteArray({
+    input,
+    n,
+  }: {
+    input: number;
+    n: number;
+  }): EncodingResults {
     const length = n / 8 + 1;
     const array = [...new Array(length)].map((_, index) => {
       const padding = n - 8 * index;
@@ -70,7 +88,7 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<number> {
 
     return {
       length: array.length,
-      encoding: Buffer.from(array).toString('hex'),
+      encoding: Buffer.from(array).toString("hex"),
     };
   }
 

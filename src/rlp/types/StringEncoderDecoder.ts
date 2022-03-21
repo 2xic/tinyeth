@@ -1,5 +1,9 @@
 import { isValueBetween } from "./isBetween";
-import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import {
+  DecodingResults,
+  EncodingResults,
+  TypeEncoderDecoder,
+} from "./TypeEncoderDecoder";
 
 export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
   public encode({ input }: { input: string }): EncodingResults {
@@ -58,5 +62,9 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
       min: 0x82,
       max: 0xb7,
     });
+  }
+
+  public isEncodeType({ input }: { input: unknown }): boolean {
+    return typeof input === "string";
   }
 }

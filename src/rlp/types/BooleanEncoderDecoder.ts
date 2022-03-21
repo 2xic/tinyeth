@@ -1,4 +1,8 @@
-import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
+import {
+  DecodingResults,
+  EncodingResults,
+  TypeEncoderDecoder,
+} from "./TypeEncoderDecoder";
 
 export class BooleanEncoderDecoder implements TypeEncoderDecoder<boolean> {
   public encode({ input }: { input: boolean }): EncodingResults {
@@ -14,8 +18,16 @@ export class BooleanEncoderDecoder implements TypeEncoderDecoder<boolean> {
       };
     }
   }
-  
-  public decode({ input }: { input: boolean }): DecodingResults {
+
+  public decode({ input }: { input: Buffer }): DecodingResults {
     throw new Error("Method not implemented.");
+  }
+
+  public isDecodeType({ input }: { input: number }): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  public isEncodeType({ input }: { input: unknown }): boolean {
+    return typeof input === "boolean";
   }
 }

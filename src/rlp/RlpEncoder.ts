@@ -3,28 +3,34 @@ import { ArrayEncoderDecoder } from "./types/ArrayEncoderDecoder";
 import { BooleanEncoderDecoder } from "./types/BooleanEncoderDecoder";
 import { NumberEncoderDecoder } from "./types/NumberEncoderDecoder";
 import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
-import { EncodingResults } from "./types/TypeEncoderDecoder";
+import {
+  EncodingResults,
+  TypeEncoderDecoder,
+} from "./types/TypeEncoderDecoder";
 
 export class RlpEncoder {
   public encode({ input }: { input: InputTypes }) {
     const hexPrefix = "0x";
-    const encoded = this._encode({ input }).encoding;
+    const encoded = this.encodeToken({ input }).encoding;
     return hexPrefix + encoded;
   }
 
-  private _encode({ input }: { input: InputTypes }): EncodingResults {
-    if (typeof input === "string") {
-      return new StringEncoderDecoder().encode({ input });
-    } else if (typeof input === "boolean") {
-      return new BooleanEncoderDecoder().encode({ input });
-    } else if (typeof input === "number" || BigNumber.isBigNumber(input)) {
-      return new NumberEncoderDecoder().encode({ input });
-    } else if (Array.isArray(input)) {
-      return new ArrayEncoderDecoder().encode({
-        encoder: this._encode,
+  private encodeToken({ input }: { input: InputTypes }): EncodingResults {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typeEncoder: Array<TypeEncoderDecoder<any>> = [
+      new StringEncoderDecoder(),
+      new BooleanEncoderDecoder(),
+      new NumberEncoderDecoder(),
+      new ArrayEncoderDecoder(),
+    ];
+    const encoding = typeEncoder.find((item) => item.isEncodeType({ input }));
+    if (encoding) {
+      return encoding.encode({
         input,
-      })
+        encoder: this.encodeToken.bind(this),
+      });
     }
+
     throw new Error("unknown type");
   }
 }

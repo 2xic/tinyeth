@@ -2,7 +2,10 @@ import { ArrayEncoderDecoder } from "./types/ArrayEncoderDecoder";
 import { IsNonValueEncoderDecoder } from "./types/IsNonValueEncoderDecoder";
 import { SimpleTypeEncoderDecoder } from "./types/SimpleTypeEncoderDecoder";
 import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
-import { DecodingResults } from "./types/TypeEncoderDecoder";
+import {
+  DecodingResults,
+  TypeEncoderDecoder,
+} from "./types/TypeEncoderDecoder";
 
 export class RlpDecoder {
   public parse({ input }: { input: string }): string | undefined {
@@ -31,39 +34,23 @@ export class RlpDecoder {
     index: number;
   }): DecodingResults {
     const typeValue = input[index];
-    const isStringValue = new StringEncoderDecoder().isDecodeType({
-      input: typeValue,
-    });
-    const isSimpleType = new SimpleTypeEncoderDecoder().isDecodeType({
-      input: typeValue,
-    });
-    const isArrayType = new ArrayEncoderDecoder().isDecodeType({
-      input: typeValue,
-    });
-    const isNonValue = new IsNonValueEncoderDecoder().isDecodeType({
-      input: typeValue,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typeDecoders: Array<TypeEncoderDecoder<any>> = [
+      new StringEncoderDecoder(),
+      new SimpleTypeEncoderDecoder(),
+      new ArrayEncoderDecoder(),
+      new IsNonValueEncoderDecoder(),
+    ];
 
-    if (isSimpleType) {
-      return new SimpleTypeEncoderDecoder().decode({ input, fromIndex: index });
-    } else if (isStringValue) {
-      const token = new StringEncoderDecoder().decode({
+    const decoding = typeDecoders.find((item) =>
+      item.isDecodeType({ input: typeValue })
+    );
+    if (decoding) {
+      return decoding.decode({
         input,
         fromIndex: index,
+        decoder: this.getToken.bind(this),
       });
-
-      return {
-        newIndex: index + 1,
-        decoding: token.decoding,
-      };
-    } else if (isArrayType) {
-      return new ArrayEncoderDecoder().decode({
-        input,
-        fromIndex: index,
-        decoder: this.getToken,
-      });
-    } else if (isNonValue) {
-      return new IsNonValueEncoderDecoder().decode({ input, fromIndex: index });
     }
 
     throw new Error("Not implemented");
