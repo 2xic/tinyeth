@@ -1,3 +1,5 @@
+import { ArrayEncoderDecoder } from "./types/ArrayEncoderDecoder";
+import { IsNonValueEncoderDecoder } from "./types/IsNonValueEncoderDecoder";
 import { SimpleTypeEncoderDecoder } from "./types/SimpleTypeEncoderDecoder";
 import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
 import { DecodingResults } from "./types/TypeEncoderDecoder";
@@ -9,7 +11,10 @@ export class RlpDecoder {
 
     let index = 0;
     while (index < strippedInput.length) {
-      const { newIndex, decoding } = this.getToken(strippedInput, index);
+      const { newIndex, decoding } = this.getToken({
+        input: strippedInput,
+        index,
+      });
 
       parsed += decoding;
       index = newIndex;
@@ -18,21 +23,29 @@ export class RlpDecoder {
     return parsed;
   }
 
-  private getToken(
-    input: Buffer,
-    index: number
-  ): DecodingResults {
+  private getToken({
+    input,
+    index,
+  }: {
+    input: Buffer;
+    index: number;
+  }): DecodingResults {
     const typeValue = input[index];
     const isStringValue = new StringEncoderDecoder().isDecodeType({
       input: typeValue,
     });
     const isSimpleType = new SimpleTypeEncoderDecoder().isDecodeType({
       input: typeValue,
-    })
+    });
+    const isArrayType = new ArrayEncoderDecoder().isDecodeType({
+      input: typeValue,
+    });
+    const isNonValue = new IsNonValueEncoderDecoder().isDecodeType({
+      input: typeValue,
+    });
 
     if (isSimpleType) {
-      return new SimpleTypeEncoderDecoder().decode({ input,  
-        fromIndex: index,});
+      return new SimpleTypeEncoderDecoder().decode({ input, fromIndex: index });
     } else if (isStringValue) {
       const token = new StringEncoderDecoder().decode({
         input,
@@ -43,15 +56,14 @@ export class RlpDecoder {
         newIndex: index + 1,
         decoding: token.decoding,
       };
-    } else if (typeValue <= 0xf7) {
-      const length = typeValue - 0xc0;
-      const token: number[] = [...Array(length)].map((_, tokenIndex) =>
-        Number(input[1 + index + tokenIndex])
-      );
-      return {
-        newIndex: index + length + 1,
-        decoding: JSON.stringify(token),
-      };
+    } else if (isArrayType) {
+      return new ArrayEncoderDecoder().decode({
+        input,
+        fromIndex: index,
+        decoder: this.getToken,
+      });
+    } else if (isNonValue) {
+      return new IsNonValueEncoderDecoder().decode({ input, fromIndex: index });
     }
 
     throw new Error("Not implemented");

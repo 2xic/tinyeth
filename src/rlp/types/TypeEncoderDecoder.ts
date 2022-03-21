@@ -10,6 +10,6 @@ export interface EncodingResults {
 }
 
 export interface DecodingResults {
-  decoding: string;
+  decoding: string | number;
   newIndex: number;
 }

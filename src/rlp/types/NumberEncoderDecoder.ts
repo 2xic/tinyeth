@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { DecodingResults, EncodingResults, TypeEncoderDecoder } from "./TypeEncoderDecoder";
 import { UIntEncoderDecoder } from "./UInt";
 import { BigIntEncoderDecoder } from "./BigIntEncoderDecoder";
+import { isValueBetween } from "./isBetween";
 
 export class NumberEncoderDecoder
   implements TypeEncoderDecoder<number | BigNumber>

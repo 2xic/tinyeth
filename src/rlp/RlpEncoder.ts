@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { ArrayEncoderDecoder } from "./types/ArrayEncoderDecoder";
 import { BooleanEncoderDecoder } from "./types/BooleanEncoderDecoder";
 import { NumberEncoderDecoder } from "./types/NumberEncoderDecoder";
 import { StringEncoderDecoder } from "./types/StringEncoderDecoder";
@@ -19,26 +20,14 @@ export class RlpEncoder {
     } else if (typeof input === "number" || BigNumber.isBigNumber(input)) {
       return new NumberEncoderDecoder().encode({ input });
     } else if (Array.isArray(input)) {
-      let output = "";
-      let length = 0;
-
-      input.forEach((inputElement) => {
-        const { encoding: encoded, length: encodingLength } = this._encode({
-          input: inputElement,
-        });
-        output += encoded;
-        length += encodingLength;
-      });
-
-      const encoding = Buffer.from([0xc0 + length]).toString("hex") + output;
-      return {
-        encoding,
-        length: 2,
-      };
+      return new ArrayEncoderDecoder().encode({
+        encoder: this._encode,
+        input,
+      })
     }
     throw new Error("unknown type");
   }
 }
 
-type InputTypes = Literal | Literal[];
-type Literal = string | number | boolean | BigNumber;
+export type InputTypes = Literal | Literal[];
+export type Literal = string | number | boolean | BigNumber;

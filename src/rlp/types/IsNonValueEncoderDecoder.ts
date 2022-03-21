@@ -5,7 +5,7 @@ import {
   TypeEncoderDecoder,
 } from "./TypeEncoderDecoder";
 
-export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
+export class IsNonValueEncoderDecoder implements TypeEncoderDecoder<any> {
   public encode({ input }: { input: any }): EncodingResults {
     throw new Error("Method not implemented");
   }
@@ -17,10 +17,7 @@ export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
     input: Buffer;
     fromIndex: number;
   }): DecodingResults {
-    let decoding: string | number = input[fromIndex].toString();
-    if (!Number.isNaN(decoding)) {
-      decoding = Number(decoding);
-    }
+    const decoding = "";
 
     return {
       newIndex: fromIndex + 1,
@@ -29,10 +26,6 @@ export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return isValueBetween({
-      value: input,
-      min: 0x00,
-      max: 0x7f,
-    });
+    return input == 0x80;
   }
 }
