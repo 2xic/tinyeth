@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import { RlpEncoder } from "./RlpEncoder";
 
 describe("RlpEncoder", () => {
@@ -79,6 +80,17 @@ describe("RlpEncoder", () => {
       })
     ).toBe("0x84ffffffff");
 
+    expect(
+      new RlpEncoder().encode({
+        input: new BigNumber('0xFFFFFFFFFFFFFF'),
+      })
+    ).toBe("0x87FFFFFFFFFFFFFF");
+
+    expect(
+      new RlpEncoder().encode({
+        input: new BigNumber('0x010000000000000000000000000000000000000000000000000000000000000000'),
+      })
+    ).toBe("0xA1010000000000000000000000000000000000000000000000000000000000000000");
   });
 
   it("should correctly encoded strings", () => {

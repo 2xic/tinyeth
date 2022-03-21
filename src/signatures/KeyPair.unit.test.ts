@@ -17,7 +17,11 @@ describe("KeyPair", () => {
   });
 
   it("should be able to sign and verify", async () => {
-    const { signature, r, message } = await new KeyPair().signMessage({
+    const {
+      signature,
+      recovery: r,
+      message,
+    } = await new KeyPair().signMessage({
       privateKey:
         "840c32ef4b9ea4cec9fa4d14baf3ae3daaa4387d33634aff673f165985506f3a",
       message: "test",
@@ -39,12 +43,16 @@ describe("KeyPair", () => {
   it("should have matching signature as other implementations", async () => {
     // https://github.com/miguelmota/ethereum-development-with-go-book/blob/master/en/signature-verify/README.md
 
-    const { signature, r, message, fullSignature } =
-      await new KeyPair().signMessage({
-        privateKey:
-          "fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19",
-        message: Buffer.from("hello", "ascii").toString("hex"),
-      });
+    const {
+      signature,
+      recovery: r,
+      message,
+      fullSignature,
+    } = await new KeyPair().signMessage({
+      privateKey:
+        "fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19",
+      message: Buffer.from("hello", "ascii").toString("hex"),
+    });
 
     expect(Buffer.from(message).toString("hex")).toBe(
       "1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8"

@@ -1,9 +1,7 @@
 import secp256k1 from "secp256k1";
 import createKeccakHash from "keccak";
 
-
 export class KeyPair {
-
   public getAddress({ publicKey }: { publicKey: string }) {
     const publicKeyHash = createKeccakHash("keccak256")
       .update(Buffer.from(publicKey, "hex"))
@@ -17,7 +15,6 @@ export class KeyPair {
   }
 
   public getPublicKey({ privateKey: inputPrivateKey }: { privateKey: string }) {
-    //    const privateKey = addPrefix0x(p);
     const privateKey = inputPrivateKey.startsWith("0x")
       ? inputPrivateKey.slice(2)
       : inputPrivateKey;
@@ -52,7 +49,7 @@ export class KeyPair {
     return Buffer.from(publicKey).toString("hex");
   }
 
-  public async signMessage({
+  public signMessage({
     privateKey: inputPrivateKey,
     message: inputMessage,
   }: {
@@ -73,11 +70,11 @@ export class KeyPair {
       throw new Error("Invalid message length");
     }
 
-    const { signature, recid: r } = secp256k1.ecdsaSign(message, privateKey);
+    const { signature, recid: recovery } = secp256k1.ecdsaSign(message, privateKey);
     return {
-      fullSignature: `${Buffer.from(signature).toString("hex")}0${r}`,
+      fullSignature: `${Buffer.from(signature).toString("hex")}0${recovery}`,
       signature,
-      r,
+      recovery,
       message,
     };
   }
