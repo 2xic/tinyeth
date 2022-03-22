@@ -1,18 +1,19 @@
+import BigNumber from "bignumber.js";
 import {
   DecodingResults,
   EncodingResults,
   TypeEncoderDecoder,
 } from "./TypeEncoderDecoder";
 
-export class UIntEncoderDecoder implements TypeEncoderDecoder<number> {
-  public encode({ input }: { input: number }): EncodingResults {
-    const isUint8 = input < this.powerOfTwo(8);
-    const isUint16 = input < this.powerOfTwo(16);
-    const isUint24 = input < this.powerOfTwo(24);
-    const isUint32 = input < this.powerOfTwo(32);
-    const isUint40 = input < this.powerOfTwo(40);
-    const isUint48 = input < this.powerOfTwo(48);
-    const isUint56 = input < this.powerOfTwo(56);
+export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
+  public encode({ input }: { input: BigNumber }): EncodingResults {
+    const isUint8 = input.isLessThan(this.powerOfTwo(8));
+    const isUint16 = input.isLessThan(this.powerOfTwo(16));
+    const isUint24 = input.isLessThan(this.powerOfTwo(24));
+    const isUint32 = input.isLessThan(this.powerOfTwo(32));
+    const isUint40 = input.isLessThan(this.powerOfTwo(40));
+    const isUint48 = input.isLessThan(this.powerOfTwo(48));
+    const isUint56 = input.isLessThan(this.powerOfTwo(56));
 
     if (isUint8) {
       return this.getByteArray({
@@ -73,17 +74,17 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<number> {
     input,
     n,
   }: {
-    input: number;
+    input: BigNumber;
     n: number;
   }): EncodingResults {
     const length = n / 8 + 1;
     const array = [...new Array(length)].map((_, index) => {
       const padding = n - 8 * index;
       if (!padding) {
-        return input % 256;
+        return input.modulo(256).toNumber();
       }
-      const data = BigInt(input) >> BigInt(padding);
-      return parseInt(data.toString());
+      const data = BigInt(input.toString()) >> BigInt(padding);
+      return new BigNumber(data.toString()).toNumber();
     });
 
     return {

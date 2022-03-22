@@ -22,15 +22,34 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
       const { encoding: encoded, length: encodingLength } = encoder({
         input: inputElement,
       });
+      if (Array.isArray(inputElement)) {
+        length += 1;
+      }
       output += encoded;
       length += encodingLength;
     });
 
-    const encoding = Buffer.from([0xc0 + length]).toString("hex") + output;
-    return {
-      encoding,
-      length: 2,
-    };
+    if (length < 55) {
+      const encoding = Buffer.from([0xc0 + length]).toString("hex") + output;
+      return {
+        encoding,
+        length,
+      };
+    } else {
+      const lengthInHex = length.toString(16);
+      const paddingLength = lengthInHex.padStart(lengthInHex.length % 2);
+
+      const encoding =
+        Buffer.from([
+          0xf7 + Math.ceil(parseFloat(paddingLength.length.toString()) / 2),
+          parseInt(paddingLength, 16),
+        ]).toString("hex") + output;
+
+      return {
+        encoding,
+        length: 3,
+      };
+    }
   }
 
   public decode({

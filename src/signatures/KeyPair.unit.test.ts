@@ -21,7 +21,7 @@ describe("KeyPair", () => {
       signature,
       recovery: r,
       message,
-    } = await new KeyPair().signMessage({
+    } = await new KeyPair().hashAndSignMessage({
       privateKey:
         "840c32ef4b9ea4cec9fa4d14baf3ae3daaa4387d33634aff673f165985506f3a",
       message: "test",
@@ -48,7 +48,7 @@ describe("KeyPair", () => {
       recovery: r,
       message,
       fullSignature,
-    } = await new KeyPair().signMessage({
+    } = await new KeyPair().hashAndSignMessage({
       privateKey:
         "fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19",
       message: Buffer.from("hello", "ascii").toString("hex"),
@@ -74,4 +74,24 @@ describe("KeyPair", () => {
 
     expect(publicKey2).toBe(publicKey);
   });
+
+  it("should correctly calculate the r,s,v", () => {
+    const { v, r, s } = new KeyPair().signTransaction({
+      message: Buffer.from(
+        "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "hex"
+      ),
+      privateKey:
+        "616E6769652E6A6A706572657A616775696E6167612E6574682E6C696E6B0D0A",
+    });
+
+    expect(v).toBe(28);
+    expect(r.toString("hex")).toBe(
+      "0afc56a5157fe2ef0853177299c24c39bf445f13ca923c663ceb694298ce2526"
+    );
+    expect(s.toString("hex")).toBe(
+      "1e695a7561192a2c5dd794e7fb719783c5f545607030e0365d9335223c469d9e"
+    );
+  });
 });
+// fcd8 9f5c 9760 ec0e 4210 44f0 3f1e 3071 f738 d528 2d95 159e 2aa3 4400 89f0 e18c

@@ -29,20 +29,16 @@ export class RawTransaction {
     const rawTransaction = this.encode();
     const message = createKeccakHash("keccak256")
       .update(Buffer.from(rawTransaction, "hex"))
-      .digest()
-      .toString("hex");
+      .digest();
 
-    const { signature, recovery } = new KeyPair().signMessage({
+    const { r, s, v } = new KeyPair().signTransaction({
       privateKey,
-      message,
+      message, //: rawTransaction.slice(2),
+      chainId,
     });
-    // same as https://github.com/ethereumjs/ethereumjs-util/blob/f51bfcab9e5505dfed4819ef1336f9fc00a12c3d/src/signature.ts#L38
-    const r = Buffer.from(signature.slice(0, 32));
-    const v = chainId ? recovery + (chainId * 2 + 35) : recovery + 27;
-    const s = Buffer.from(signature.slice(32, 64));
 
     return new RlpEncoder().encode({
-      input: [...this.params, v, r.toString("hex"), s.toString("hex")],
+      input: [...this.params, v, new Uint8Array(r), new Uint8Array(s)],
     });
   }
 

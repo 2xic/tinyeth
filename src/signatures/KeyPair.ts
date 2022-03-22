@@ -49,28 +49,80 @@ export class KeyPair {
     return Buffer.from(publicKey).toString("hex");
   }
 
-  public signMessage({
+  public signTransaction({
+    chainId,
+    privateKey,
+    message,
+  }: {
+    message: Buffer;
+    chainId?: number;
+    privateKey: string;
+  }) {
+    const { signature, recovery } = this.signMessage({
+      privateKey,
+      message,
+    });
+    // same as https://github.com/ethereumjs/ethereumjs-util/blob/f51bfcab9e5505dfed4819ef1336f9fc00a12c3d/src/signature.ts#L38
+    const r = Buffer.from(signature.slice(0, 32));
+    const v = chainId ? recovery + (chainId * 2 + 35) : recovery + 27;
+    const s = Buffer.from(signature.slice(32, 64));
+
+    return {
+      r,
+      v,
+      s,
+    };
+  }
+
+  public hashAndSignMessage({
     privateKey: inputPrivateKey,
     message: inputMessage,
   }: {
     privateKey: string;
-    message: string;
+    message: string
+  }) {
+    const hashBuffer = createKeccakHash("keccak256")
+      .update(Buffer.from(inputMessage, "hex"))
+      .digest();
+
+    return this.signMessage({
+      message: hashBuffer,
+      privateKey: inputPrivateKey,
+    });
+  }
+
+  public signMessage({
+    privateKey: inputPrivateKey,
+    message,
+  }: {
+    privateKey: string;
+    message: Buffer;
   }) {
     const privateKey = new Uint8Array(Buffer.from(inputPrivateKey, "hex"));
     if (privateKey.length !== 32) {
       throw new Error("Invalid privatekey");
     }
+    /*
+    const hashBuffer = createKeccakHash("keccak256")
+      .update(Buffer.from(inputMessage, "hex"))
+      .digest();
     const message = new Uint8Array(
-      createKeccakHash("keccak256")
-        .update(Buffer.from(inputMessage, "hex"))
-        .digest()
+      hashBuffer,
+      hashBuffer.byteOffset,
+      hashBuffer.length
     );
-
+      */
     if (message.length !== 32) {
       throw new Error("Invalid message length");
     }
 
-    const { signature, recid: recovery } = secp256k1.ecdsaSign(message, privateKey);
+    //    console.log(["hash", inputMessage, Buffer.from(message).toString("hex")]);
+
+    const { signature, recid: recovery } = secp256k1.ecdsaSign(
+      message,
+      privateKey
+    );
+
     return {
       fullSignature: `${Buffer.from(signature).toString("hex")}0${recovery}`,
       signature,

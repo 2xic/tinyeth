@@ -5,22 +5,37 @@ import {
   TypeEncoderDecoder,
 } from "./TypeEncoderDecoder";
 
-export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
-  public encode({ input }: { input: string }): EncodingResults {
+export class StringEncoderDecoder
+  implements TypeEncoderDecoder<string | Uint8Array>
+{
+  public encode({ input }: { input: string | Uint8Array }): EncodingResults {
     const isLongString = 55 < input.length;
-    const isShortString = input.length === 1 && input[0].charCodeAt(0) < 0x80;
-    const encodedChars = input.split("").map((item) => item.charCodeAt(0));
+    const isUint8 = input instanceof Uint8Array;
+    const firstItem = input[0];
+    const firstValue =
+      typeof firstItem === "number" || !firstItem
+        ? firstItem
+        : firstItem.charCodeAt(0);
+    const isShortString = input.length === 1 && firstValue < 0x80;
+    const encodedChars = isUint8
+      ? input.map((item) => item)
+      : input.split("").map((item) => item.charCodeAt(0));
     const encodedString = Buffer.from(encodedChars).toString("hex");
 
     if (isShortString) {
       return {
-        encoding: input,
+        encoding: isUint8 ? Buffer.from(input).toString("hex") : input,
         length: input.length,
       };
     } else if (isLongString) {
       const length = input.length;
-      const firstLength = new Number(0xb7 + 2).toString(16);
-      const bytes = new Number(length).toString(16).padStart(4, "0");
+      const encodedLength = new Number(length).toString(16);
+      const isSingleByte = encodedLength.length <= 2;
+
+      const bytes = encodedLength.padStart(isSingleByte ? 2 : 4, "0");
+      const byteLength = isSingleByte ? 1 : 2;
+
+      const firstLength = new Number(0xb7 + byteLength).toString(16);
 
       return {
         encoding: `${firstLength}${bytes}${encodedString}`,
@@ -45,7 +60,6 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
     fromIndex: number;
   }): DecodingResults {
     const length = input[fromIndex] - 0x80;
-    console.log([fromIndex, fromIndex + length]);
     const decoding = Buffer.from(
       input.slice(fromIndex, fromIndex + length)
     ).toString("ascii");
@@ -65,6 +79,6 @@ export class StringEncoderDecoder implements TypeEncoderDecoder<string> {
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {
-    return typeof input === "string";
+    return typeof input === "string" || input instanceof Uint8Array;
   }
 }

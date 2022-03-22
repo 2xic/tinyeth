@@ -1,9 +1,11 @@
+import BigNumber from "bignumber.js";
+
 export class BigIntEncoderDecoder {
   public encode({ input }: { input: string }): {
     encoding: string;
     bytes: number;
   } {
-    const bitsLength = this.bitSize(parseInt(input, 16));
+    const bitsLength = this.bitSize(input);
     const length = this.getLengthHeader({ bitsLength });
     const encodedArray = Uint8Array.from(Buffer.from(input, "hex"));
     const encoded = Buffer.from(encodedArray).toString("hex");
@@ -24,7 +26,7 @@ export class BigIntEncoderDecoder {
     }
   }
 
-  private bitSize(num: number) {
-    return num.toString(2).length;
+  private bitSize(input: string): number {
+    return new BigNumber(input, 16).toString(2).length;
   }
 }

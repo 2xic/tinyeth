@@ -4,13 +4,13 @@ import {
   EncodingResults,
   TypeEncoderDecoder,
 } from "./TypeEncoderDecoder";
-import { UIntEncoderDecoder } from "./UInt";
+import { UIntEncoderDecoder } from "./UIntEncoderDecoder";
 import { BigIntEncoderDecoder } from "./BigIntEncoderDecoder";
 
 export class NumberEncoderDecoder
-  implements TypeEncoderDecoder<number | BigNumber>
+  implements TypeEncoderDecoder<BigNumber>
 {
-  public encode({ input }: { input: number | BigNumber }): EncodingResults {
+  public encode({ input }: { input: BigNumber }): EncodingResults {
     const bigInput = new BigNumber(input);
     if (bigInput.isZero()) {
       const encoding = "80";
@@ -27,7 +27,7 @@ export class NumberEncoderDecoder
     } else if (bigInput.isLessThan(Math.pow(2, 64))) {
       const { length: length, encoding: uintEncoding } =
         new UIntEncoderDecoder().encode({
-          input: bigInput.toNumber(),
+          input: bigInput,
         });
 
       const encoding =
