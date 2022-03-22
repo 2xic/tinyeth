@@ -8,12 +8,14 @@ _Just something so I get a better understanding of the core parts of the protoco
 
 - [ ] (WIP) Implement encoding and decoding of RLP
   Currently added:
-    - Basic support added currently
+    - Good encoder support
+    - (WIP)) decoder support
 
-- [ ] (WIP) Signing of transactions
+- [x] Signing of transactions
   Currently added:
     - Support for creating a key pair added, signing, and verification
     - Support for creating a raw transactions
+    - Support for signing a raw transaction
 
 - [ ] Implementation of parts of the EVM
 
