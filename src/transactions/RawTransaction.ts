@@ -24,16 +24,16 @@ export class RawTransaction {
     chainId,
   }: {
     privateKey: string;
-    chainId: number;
+    chainId?: number;
   }) {
     const rawTransaction = this.encode();
     const message = createKeccakHash("keccak256")
-      .update(Buffer.from(rawTransaction, "hex"))
+      .update(Buffer.from(rawTransaction.slice(2), "hex"))
       .digest();
 
     const { r, s, v } = new KeyPair().signTransaction({
       privateKey,
-      message, //: rawTransaction.slice(2),
+      message,
       chainId,
     });
 

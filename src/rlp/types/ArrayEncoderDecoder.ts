@@ -1,4 +1,3 @@
-import { NewLineKind } from "typescript";
 import { InputTypes, Literal } from "../RlpEncoder";
 import { isValueBetween } from "./isBetween";
 import {

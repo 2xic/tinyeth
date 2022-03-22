@@ -1,4 +1,3 @@
-import BigNumber from "bignumber.js";
 import { BigIntEncoderDecoder } from "./BigIntEncoderDecoder";
 
 describe("BigInt", () => {
@@ -23,7 +22,7 @@ describe("BigInt", () => {
     const { encoding } = new BigIntEncoderDecoder().encode({
       input,
     });
-    console.log(encoding);
+
     expect(encoding).toBe(output);
   });
 });

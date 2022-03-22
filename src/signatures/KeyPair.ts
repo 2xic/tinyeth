@@ -102,21 +102,10 @@ export class KeyPair {
     if (privateKey.length !== 32) {
       throw new Error("Invalid privatekey");
     }
-    /*
-    const hashBuffer = createKeccakHash("keccak256")
-      .update(Buffer.from(inputMessage, "hex"))
-      .digest();
-    const message = new Uint8Array(
-      hashBuffer,
-      hashBuffer.byteOffset,
-      hashBuffer.length
-    );
-      */
+
     if (message.length !== 32) {
       throw new Error("Invalid message length");
     }
-
-    //    console.log(["hash", inputMessage, Buffer.from(message).toString("hex")]);
 
     const { signature, recid: recovery } = secp256k1.ecdsaSign(
       message,

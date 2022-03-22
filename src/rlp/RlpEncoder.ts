@@ -25,10 +25,6 @@ export class RlpEncoder {
     ];
     const encoding = typeEncoder.find((item) => item.isEncodeType({ input }));
     if (encoding) {
-/*      console.log([
-        input,
-        encoding,
-      ])*/
       return encoding.encode({
         input,
         encoder: this.encodeToken.bind(this),

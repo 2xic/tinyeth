@@ -78,7 +78,7 @@ describe("KeyPair", () => {
   it("should correctly calculate the r,s,v", () => {
     const { v, r, s } = new KeyPair().signTransaction({
       message: Buffer.from(
-        "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "cf2d502a6347c7f393f107a8e1d15dcf4830c8c2cb7d81f7beda5b901006c50a",
         "hex"
       ),
       privateKey:
@@ -87,10 +87,10 @@ describe("KeyPair", () => {
 
     expect(v).toBe(28);
     expect(r.toString("hex")).toBe(
-      "0afc56a5157fe2ef0853177299c24c39bf445f13ca923c663ceb694298ce2526"
+      "8029fda98d0c934c36078788937886dedb95be54c16c2bdf023033851b221d67"
     );
     expect(s.toString("hex")).toBe(
-      "1e695a7561192a2c5dd794e7fb719783c5f545607030e0365d9335223c469d9e"
+      "7e37b1ddf372c531f5b8f13f5f530a040ee32ad8f87d95f49a047d3c4db5d05b"
     );
   });
 });
