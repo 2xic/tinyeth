@@ -7,6 +7,7 @@ _Just something so I get a better understanding of the core parts of the protoco
 ### Plan
 
 - [ ] (WIP) Implement encoding and decoding of RLP
+
   Currently added:
     - Good encoder support
     - (WIP)) decoder support
@@ -17,7 +18,7 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Support for creating a raw transactions
     - Support for signing a raw transaction
 
-- [ ] Implementation of parts of the EVM
+- [ ] Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
 
 - [ ] Data structures like block, transactions, accounts, etc
 
