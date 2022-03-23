@@ -10,7 +10,7 @@ _Just something so I get a better understanding of the core parts of the protoco
 
   Currently added:
     - Good encoder support
-    - (WIP)) decoder support
+    - (WIP)) decoder support (support some primitive types)
 
 - [x] Signing of transactions
   Currently added:
@@ -18,7 +18,9 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Support for creating a raw transactions
     - Support for signing a raw transaction
 
-- [ ] Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
+- [ ] (WIP) Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
+  Currently added:
+    - Runs a basic contract
 
 - [ ] Data structures like block, transactions, accounts, etc
 
