@@ -1,3 +1,7 @@
 # Eth vm
-- https://ethervm.io/
 
+## Docs
+
+- https://ethereum.github.io/yellowpaper/paper.pdf
+- https://ethervm.io/
+- https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
