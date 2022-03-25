@@ -1,14 +1,14 @@
-import { Evm } from "./Evm";
+import { Evm } from './Evm';
 
 export class OpCode {
-  constructor(
+	constructor(
     public length: number,
     public onExecute: ({
-      evm,
-      byteIndex,
+    	evm,
+    	byteIndex,
     }: {
       evm: Evm;
       byteIndex: number;
     }) => void
-  ) {}
+	) {}
 }

@@ -1,4 +1,4 @@
-import { InputTypes } from "../RlpEncoder";
+import { InputTypes } from '../RlpEncoder';
 
 export abstract class TypeEncoderDecoder<T> {
   public abstract encode({
@@ -12,15 +12,15 @@ export abstract class TypeEncoderDecoder<T> {
   public abstract isEncodeType({ input }: { input: unknown }): boolean;
 
   public abstract decode({
-    input,
-    fromIndex,
-    decoder,
+  	input,
+  	fromIndex,
+  	decoder,
   }: {
     input: Buffer;
     fromIndex: number;
     decoder: ({
-      input,
-      index,
+    	input,
+    	index,
     }: {
       input: Buffer;
       index: number;

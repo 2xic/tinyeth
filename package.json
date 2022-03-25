@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "npx tsc && jest",
-    "lint": "npx eslint ./"
+    "lint": "npx eslint ./ --fix"
   },
   "author": "",
   "license": "ISC",
@@ -17,10 +17,15 @@
     "@types/jest": "^27.0.1",
     "@types/keccak": "^3.0.1",
     "@types/secp256k1": "^4.0.3",
-    "@typescript-eslint/eslint-plugin": "^5.15.0",
-    "@typescript-eslint/parser": "^5.15.0",
+    "@typescript-eslint/eslint-plugin": "^5.16.0",
+    "@typescript-eslint/parser": "^5.16.0",
     "eslint": "^8.11.0",
-    "jest": "^27.1.0"
+    "eslint-config-node": "^4.1.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.1.0",
+    "prettier": "^2.6.1"
   },
   "dependencies": {
     "bignumber.js": "^9.0.2",
