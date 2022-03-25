@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { RlpEncoder } from '../rlp/RlpEncoder';
 import createKeccakHash from 'keccak';
 import { KeyPair } from '../signatures/KeyPair';
+import { SignedTransaction } from './SignedTransaction';
 
 export class RawTransaction {
   constructor(
@@ -13,7 +14,7 @@ export class RawTransaction {
     private data: string
   ) {}
 
-  public encode() {
+  public encode(): string {
     return new RlpEncoder().encode({
       input: this.params,
     });
@@ -25,7 +26,7 @@ export class RawTransaction {
   }: {
     privateKey: string;
     chainId?: number;
-  }) {
+  }): SignedTransaction {
     const rawTransaction = this.encode();
     const message = createKeccakHash('keccak256')
       .update(Buffer.from(rawTransaction.slice(2), 'hex'))
@@ -37,9 +38,11 @@ export class RawTransaction {
       chainId,
     });
 
-    return new RlpEncoder().encode({
-      input: [...this.params, v, new Uint8Array(r), new Uint8Array(s)],
-    });
+    return new SignedTransaction(
+      new RlpEncoder().encode({
+        input: [...this.params, v, new Uint8Array(r), new Uint8Array(s)],
+      })
+    );
   }
 
   private get params() {

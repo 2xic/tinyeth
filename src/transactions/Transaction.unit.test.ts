@@ -36,7 +36,7 @@ describe('Transaction', () => {
           '616E6769652E6A6A706572657A616775696E6167612E6574682E6C696E6B0D0A',
       });
 
-    expect(transaction).toBe(
+    expect(transaction.toString()).toBe(
       '0xf86f8201e7852e90edd00083030d4094bd064928cdd4fd67fb99917c880e6560978d7ca1880de0b6b3a7640000801ca08029fda98d0c934c36078788937886dedb95be54c16c2bdf023033851b221d67a07e37b1ddf372c531f5b8f13f5f530a040ee32ad8f87d95f49a047d3c4db5d05b'
     );
   });
