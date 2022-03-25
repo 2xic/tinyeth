@@ -1,7 +1,11 @@
 {
-    // The following will hide the js and map files in the editor
-    "files.exclude": {
-        "**/*.js": true,
-        "**/*.map": true
-    }
+  // The following will hide the js and map files in the editor
+  "files.exclude": {
+    "**/*.js": true,
+    "**/*.map": true
+  },
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
 }
