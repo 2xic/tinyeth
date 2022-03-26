@@ -24,6 +24,9 @@ _Just something so I get a better understanding of the core parts of the protoco
   Currently added:
     - Runs a basic contract
 
-- [ ] Data structures like block, transactions, accounts, etc
+- [ ] Data structures like block, transactions, accounts, Merkle Patricia Trie, ethash(?), etc
 
-- [ ] Maybe even some basic network support
+- [ ] Network support (should be able to fetch a block)
+  - RLPx
+  - Wire protocol
+
