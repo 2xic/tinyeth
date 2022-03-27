@@ -1,7 +1,7 @@
 import { Evm } from './Evm';
 
 describe('evm', () => {
-  it('should execute a simple contract', () => {
+  it('should step through a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = new Evm(Buffer.from('6001600081905550', 'hex'));
     evm.step();
@@ -24,6 +24,16 @@ describe('evm', () => {
     expect(evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([].toString());
     expect(evm.storage[0x0]).toBe(0x1);
+
+    expect(evm.step()).toBe(false);
+    expect(evm.stack.toString()).toBe([].toString());
+    expect(evm.storage[0x0]).toBe(0x1);
+  });
+
+  it('should execute a simple contract', () => {
+    // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
+    const evm = new Evm(Buffer.from('6001600081905550', 'hex'));
+    evm.execute();
 
     expect(evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());

@@ -1,7 +1,14 @@
 import secp256k1 from 'secp256k1';
 import createKeccakHash from 'keccak';
+import crypto from 'crypto';
+import _ec from 'elliptic';
 
 export class KeyPair {
+  constructor(
+    public privatekey = crypto.randomBytes(32).toString('hex'),
+    private curve = new _ec.ec('secp256k1')
+  ) {}
+
   public getAddress({ publicKey }: { publicKey: string }) {
     const publicKeyHash = createKeccakHash('keccak256')
       .update(Buffer.from(publicKey, 'hex'))
@@ -14,19 +21,26 @@ export class KeyPair {
     return '0x' + address.toLowerCase();
   }
 
-  public getPublicKey({ privateKey: inputPrivateKey }: { privateKey: string }) {
+  public getPublicKey(options?: { privateKey: string }) {
+    const inputPrivateKey = options ? options.privateKey : this.privatekey;
+
     const privateKey = inputPrivateKey.startsWith('0x')
       ? inputPrivateKey.slice(2)
       : inputPrivateKey;
     if (privateKey.length !== 64) {
-      throw new Error('Invalid private key');
+      throw new Error(
+        `Invalid private key length, expected 64 and got ${privateKey.length}`
+      );
     }
     const privateKeyBuffer = Buffer.from(privateKey, 'hex');
     const publicKeyUINT8Array = secp256k1
       .publicKeyCreate(privateKeyBuffer, false)
       .slice(1);
+
     if (publicKeyUINT8Array.length !== 64) {
-      throw new Error('Invalid public key');
+      throw new Error(
+        `Invalid public key, expected length 64 and got ${publicKeyUINT8Array.length}`
+      );
     }
 
     const publicKey = Buffer.from(publicKeyUINT8Array);
@@ -132,5 +146,28 @@ export class KeyPair {
     return Buffer.from(
       secp256k1.ecdsaRecover(signature, r, message, false).slice(1)
     ).toString('hex');
+  }
+
+  public getEcdh({
+    publicKey: inputPublicKey,
+    privateKey: inputPrivateKey,
+  }: {
+    publicKey: string;
+    privateKey: string;
+  }): Buffer {
+    const publicKey = Buffer.from(`04${inputPublicKey}`, 'hex');
+    const privateKey = new Uint8Array(Buffer.from(inputPrivateKey, 'hex'));
+
+    return Buffer.from(secp256k1.ecdh(publicKey, privateKey));
+  }
+
+  public getCompressedKey({ publicKey }: { publicKey: Buffer }) {
+    const publicKeyHex = publicKey.toString('hex');
+    const rawKey = new Uint8Array(Buffer.from(`04${publicKeyHex}`, 'hex'));
+    if (rawKey.length !== 65) {
+      throw new Error(`Wrong key length expected 65, but got ${rawKey.length}`);
+    }
+
+    return secp256k1.publicKeyConvert(rawKey, true).slice(1);
   }
 }

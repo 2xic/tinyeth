@@ -12,6 +12,11 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Good encoder support
     - (WIP) decoder support (support some primitive types)
 
+
+- [ ] Network support (should be able to fetch a block)
+  - RLPx
+  - Wire protocol
+
 - [x] Signing of transactions
 
   Currently added:
@@ -25,8 +30,3 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Runs a basic contract
 
 - [ ] Data structures like block, transactions, accounts, Merkle Patricia Trie, ethash(?), etc
-
-- [ ] Network support (should be able to fetch a block)
-  - RLPx
-  - Wire protocol
-
