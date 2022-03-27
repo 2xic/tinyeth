@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import {
   DecodingResults,
   EncodingResults,
+  SimpleDecodingResults,
   TypeEncoderDecoder,
 } from './TypeEncoderDecoder';
 
@@ -62,8 +63,11 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     throw new Error('Method not implemented.');
   }
 
-  public decode({ input }: { input: Buffer }): DecodingResults {
-    throw new Error('Method not implemented.');
+  public decode({ input }: { input: Buffer }): SimpleDecodingResults {
+    const number = input.toString('hex');
+    return {
+      decoding: new BigNumber(number, 16),
+    };
   }
 
   public isDecodeType({ input }: { input: number }): boolean {

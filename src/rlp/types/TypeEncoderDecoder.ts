@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { InputTypes } from '../RlpEncoder';
 
 export abstract class TypeEncoderDecoder<T> {
@@ -25,7 +26,7 @@ export abstract class TypeEncoderDecoder<T> {
       input: Buffer;
       index: number;
     }) => DecodingResults;
-  }): DecodingResults;
+  }): DecodingResults | SimpleDecodingResults;
 
   public abstract isDecodeType({ input }: { input: number }): boolean;
 }
@@ -35,7 +36,10 @@ export interface EncodingResults {
   length: number;
 }
 
-export interface DecodingResults {
-  decoding: string | number;
+export interface SimpleDecodingResults {
+  decoding: string | number | BigNumber;
+}
+
+export interface DecodingResults extends SimpleDecodingResults {
   newIndex: number;
 }

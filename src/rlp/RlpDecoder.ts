@@ -48,11 +48,15 @@ export class RlpDecoder {
       item.isDecodeType({ input: typeValue })
     );
     if (decoding) {
-      return decoding.decode({
+      const response = decoding.decode({
         input,
         fromIndex: index,
         decoder: this.getToken.bind(this),
       });
+      if (!('newIndex' in response)) {
+        throw new Error('The decoder function should set a new index');
+      }
+      return response;
     }
 
     throw new Error('Not implemented');

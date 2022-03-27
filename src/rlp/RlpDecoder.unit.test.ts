@@ -34,7 +34,7 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0x8180',
       })
-    ).toBe('120');
+    ).toBe('128');
   });
 
   it('should correctly decode a list', () => {

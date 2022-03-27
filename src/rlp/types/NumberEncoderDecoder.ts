@@ -46,12 +46,27 @@ export class NumberEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     }
   }
 
-  public decode({ input }: { input: Buffer }): DecodingResults {
-    throw new Error('Method not implemented.');
+  public decode({
+    input: inputBuffer,
+    fromIndex,
+  }: {
+    input: Buffer;
+    fromIndex: number;
+  }): DecodingResults {
+    const length = inputBuffer[0] - 0x80;
+    const input = inputBuffer.slice(fromIndex + 1, fromIndex + 1 + length);
+    const { decoding } = new UIntEncoderDecoder().decode({
+      input,
+    });
+
+    return {
+      decoding,
+      newIndex: fromIndex + length + 1,
+    };
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return false;
+    return 0x80 < input && input < 0x80 + 8;
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {
