@@ -13,7 +13,7 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (WIP) decoder support (support some primitive types)
 
 
-- [ ] Network support (should be able to fetch a block)
+- [ ] (WIP) Network support (should be able to fetch a block)
   - RLPx
   - Wire protocol
 
@@ -24,7 +24,7 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Support for creating a raw transactions
     - Support for signing a raw transaction
 
-- [ ] (WIP) Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
+- [ ] (started on) Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
 
   Currently added:
     - Runs a basic contract

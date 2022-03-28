@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
 import { encrypt, decrypt, PrivateKey } from 'eciesjs';
+import { getBufferFromHash } from './getBufferFromHex';
 
 export class Rlpx {
   constructor(public keyPair: KeyPair, private rlpEncoder = new RlpEncoder()) {}
@@ -83,21 +84,33 @@ export class Rlpx {
   // https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/crypto.py#L115
   public encryptedMessage({
     message,
-    responderPublicKey,
+    responderPublicKey: inputResponderPublicKey,
   }: {
     message: Buffer;
-    responderPublicKey: Buffer;
+    responderPublicKey: Buffer | string;
   }): Buffer {
+    const responderPublicKey = this.keyPair.parsePublicKey({
+      input: inputResponderPublicKey,
+    });
     return encrypt(responderPublicKey, message);
   }
 
   public decryptMessage({
     encryptedMessage,
-    responderPublicKey,
+    responderPublicKey: inputResponderPublicKey,
   }: {
     encryptedMessage: Buffer;
-    responderPublicKey: Buffer;
+    responderPublicKey: Buffer | string;
   }) {
+    const responderPublicKey = getBufferFromHash(inputResponderPublicKey);
+    console.log(responderPublicKey);
     return decrypt(responderPublicKey, encryptedMessage);
+  }
+
+  public decryptPacket({ message }: { message: string }): {
+    header: unknown;
+    body: unknown;
+  } {
+    throw new Error('Not implemented');
   }
 }

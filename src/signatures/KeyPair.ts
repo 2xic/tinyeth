@@ -2,6 +2,7 @@ import secp256k1 from 'secp256k1';
 import createKeccakHash from 'keccak';
 import crypto from 'crypto';
 import _ec from 'elliptic';
+import { getBufferFromHash } from '../network/getBufferFromHex';
 
 export class KeyPair {
   constructor(
@@ -155,19 +156,37 @@ export class KeyPair {
     publicKey: string;
     privateKey: string;
   }): Buffer {
-    const publicKey = Buffer.from(`04${inputPublicKey}`, 'hex');
-    const privateKey = new Uint8Array(Buffer.from(inputPrivateKey, 'hex'));
+    const retrievedKey = this.curve.keyFromPrivate(inputPrivateKey, 'hex');
+    const point = this.curve
+      .keyFromPublic(this.parsePublicKey({ input: inputPublicKey }))
+      .getPublic();
+    const sharedKey = retrievedKey.derive(point);
 
-    return Buffer.from(secp256k1.ecdh(publicKey, privateKey));
+    return getBufferFromHash(sharedKey.toString(16));
   }
 
   public getCompressedKey({ publicKey }: { publicKey: Buffer }) {
-    const publicKeyHex = publicKey.toString('hex');
-    const rawKey = new Uint8Array(Buffer.from(`04${publicKeyHex}`, 'hex'));
+    const rawKey = this.parsePublicKey({ input: publicKey });
     if (rawKey.length !== 65) {
       throw new Error(`Wrong key length expected 65, but got ${rawKey.length}`);
     }
 
     return secp256k1.publicKeyConvert(rawKey, true).slice(1);
+  }
+
+  public parsePublicKey({ input }: { input: string | Buffer }): Buffer {
+    if (typeof input === 'string') {
+      return this.addMissingPublicKeyByte({
+        buffer: Buffer.from(input, 'hex'),
+      });
+    }
+    return input;
+  }
+
+  private addMissingPublicKeyByte({ buffer }: { buffer: Buffer }) {
+    if (buffer.length === 64) {
+      return Buffer.concat([getBufferFromHash('04'), buffer]);
+    }
+    return buffer;
   }
 }
