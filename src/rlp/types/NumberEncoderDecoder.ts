@@ -60,13 +60,15 @@ export class NumberEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     });
 
     return {
-      decoding,
+      decoding: `0x${
+        BigNumber.isBigNumber(decoding) ? decoding.toString(16) : decoding
+      }`,
       newIndex: fromIndex + length + 1,
     };
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return 0x80 < input && input < 0x80 + 8;
+    return 0x80 < input && input <= 0x80 + 8;
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {

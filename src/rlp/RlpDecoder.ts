@@ -20,6 +20,8 @@ export class RlpDecoder {
         index,
       });
 
+      console.log(decoding);
+
       parsed += decoding;
       index = newIndex;
     }
@@ -44,19 +46,34 @@ export class RlpDecoder {
       new NumberEncoderDecoder(),
     ];
 
-    const decoding = typeDecoders.find((item) =>
-      item.isDecodeType({ input: typeValue })
-    );
-    if (decoding) {
-      const response = decoding.decode({
-        input,
+    for (const decoder of typeDecoders) {
+      const canDecode = decoder.isDecodeType({
+        input: typeValue,
+        inputBuffer: input,
         fromIndex: index,
-        decoder: this.getToken.bind(this),
       });
-      if (!('newIndex' in response)) {
-        throw new Error('The decoder function should set a new index');
+      if (canDecode) {
+        try {
+          const response = decoder.decode({
+            input,
+            fromIndex: index,
+            decoder: this.getToken.bind(this),
+          });
+
+          console.log([response, decoder]);
+
+          if (!('newIndex' in response)) {
+            throw new Error('The decoder function should set a new index');
+          }
+          return response;
+        } catch (err) {
+          if (err instanceof RangeError) {
+            continue;
+          } else {
+            throw err;
+          }
+        }
       }
-      return response;
     }
 
     throw new Error('Not implemented');

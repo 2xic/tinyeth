@@ -60,9 +60,16 @@ export class StringEncoderDecoder
     fromIndex: number;
   }): DecodingResults {
     const length = input[fromIndex] - 0x80 + 1;
-    const decoding = Buffer.from(
-      input.slice(fromIndex + 1, fromIndex + length)
-    ).toString('ascii');
+    const inputSlice = input.slice(fromIndex + 1, fromIndex + length);
+
+    const aboveAscii = inputSlice.find((item) => item > 127);
+    const belowAscii = inputSlice.find((item) => item < 27);
+
+    if (aboveAscii || belowAscii) {
+      throw new RangeError();
+    }
+
+    const decoding = Buffer.from(inputSlice).toString('ascii');
 
     return {
       decoding,
