@@ -1,8 +1,10 @@
 import { InputTypes, Literal } from '../RlpEncoder';
 import { isValueBetween } from './isBetween';
+import { SimpleTypeEncoderDecoder } from './SimpleTypeEncoderDecoder';
 import {
   DecodingResults,
   EncodingResults,
+  SimpleTypes,
   TypeEncoderDecoder,
 } from './TypeEncoderDecoder';
 
@@ -66,29 +68,60 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
       index: number;
     }) => DecodingResults;
   }): DecodingResults {
-    const length = input[fromIndex] - 0xc0;
-    const arrayResults = [];
+    if (input[fromIndex] === 0xc0) {
+      return {
+        decoding: [],
+        newIndex: fromIndex + 1,
+      };
+    } else if (0xf7 < input[fromIndex]) {
+      const lengthOfLengthBuffer = input[fromIndex] - 0xf7;
+      const actualLength = Number.parseInt(
+        input
+          .slice(fromIndex + 1, fromIndex + 1 + lengthOfLengthBuffer)
+          .toString('hex'),
+        16
+      );
+      const arrayResults: SimpleTypes[] = [];
 
-    let currentIndex = fromIndex + 1;
-    while (currentIndex <= fromIndex + length) {
-      const results = decoder({ input, index: currentIndex });
+      let currentIndex = fromIndex + 2;
+      while (currentIndex <= fromIndex + actualLength) {
+        const results = decoder({ input, index: currentIndex });
 
-      currentIndex = results.newIndex;
-      arrayResults.push(results.decoding);
+        currentIndex = results.newIndex;
+        arrayResults.push(results.decoding);
+      }
+
+      return {
+        decoding: arrayResults,
+        newIndex: currentIndex,
+      };
+    } else {
+      const length = input[fromIndex] - 0xc0;
+      const arrayResults: SimpleTypes[] = [];
+
+      let currentIndex = fromIndex + 1;
+      while (currentIndex <= fromIndex + length) {
+        const results = decoder({ input, index: currentIndex });
+
+        currentIndex = results.newIndex;
+        arrayResults.push(results.decoding);
+      }
+
+      return {
+        decoding: arrayResults,
+        newIndex: currentIndex,
+      };
     }
-
-    return {
-      decoding: JSON.stringify(arrayResults),
-      newIndex: currentIndex,
-    };
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return isValueBetween({
-      value: input,
-      min: 0xc1,
-      max: 0xf7,
-    });
+    return (
+      isValueBetween({
+        value: input,
+        min: 0xc1,
+        max: 0xff,
+      }) || input === 0xc0
+    );
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {

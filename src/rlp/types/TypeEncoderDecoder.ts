@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { InputTypes } from '../RlpEncoder';
+import { SimpleTypeEncoderDecoder } from './SimpleTypeEncoderDecoder';
 
 export abstract class TypeEncoderDecoder<T> {
   public abstract encode({
@@ -37,9 +38,11 @@ export interface EncodingResults {
 }
 
 export interface SimpleDecodingResults {
-  decoding: string | number | BigNumber;
+  decoding: SimpleTypes | SimpleTypes[];
 }
 
 export interface DecodingResults extends SimpleDecodingResults {
   newIndex: number;
 }
+
+export type SimpleTypes = string | number | BigNumber | Array<SimpleTypes>;

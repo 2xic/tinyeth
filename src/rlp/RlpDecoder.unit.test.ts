@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { isTupleTypeNode } from 'typescript';
 import { cleanString } from '../utils';
 import { RlpDecoder } from './RlpDecoder';
 
@@ -30,7 +31,7 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0x05',
       })
-    ).toBe('5');
+    ).toBe(5);
 
     expect(
       new RlpDecoder().decode({
@@ -44,13 +45,13 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0xC50102030405',
       })
-    ).toBe(JSON.stringify([1, 2, 3, 4, 5]));
+    ).toMatchObject([1, 2, 3, 4, 5]);
 
     expect(
       new RlpDecoder().decode({
         input: '0xcc8568656c6c6f85776f726c64',
       })
-    ).toBe(JSON.stringify(['hello', 'world']));
+    ).toMatchObject(['hello', 'world']);
   });
 
   it('should correctly decode a bigint', () => {
@@ -74,7 +75,117 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0xc382270f',
       })
-    ).toBe(JSON.stringify(['0x270f']));
+    ).toMatchObject(['0x270f']);
+  });
+
+  it('should correctly decode falsy values', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xc0',
+      })
+    ).toMatchObject([]);
+
+    expect(
+      new RlpDecoder().decode({
+        input: '0x80',
+      })
+    ).toBe('');
+  });
+
+  it('should correctly decode a array inside a array', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xC7C0C1C0C3C0C1C0'.toLowerCase(),
+      })
+    ).toMatchObject([[], [[]], [[], [[]]]]);
+  });
+
+  it('should correctly decode numbers inside a array', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xC3010203'.toLowerCase(),
+      })
+    ).toMatchObject([1, 2, 3]);
+  });
+
+  it('should be able to decode subarray', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xcdc5836574683dc6846d6f726b16',
+      })
+    ).toMatchObject([
+      ['eth', 61],
+      ['mork', 22],
+    ]);
+
+    expect(
+      new RlpDecoder().decode({
+        input: '0xc9c883666f6f83626172',
+      })
+    ).toMatchObject([['foo', 'bar']]);
+  });
+
+  it('should be able to decode large number', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0x88FFFFFFFFFFFFFFFF',
+      })
+    ).toBe('0xFFFFFFFFFFFFFFFF'.toLowerCase());
+  });
+
+  it('should correctly decode a byte array', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0x8180',
+      })
+    ).toBe('0x80');
+
+    expect(
+      new RlpDecoder().decode({
+        input: '0x83010203',
+      })
+    ).toBe('0x10203');
+  });
+
+  it('should correctly decode array with numbers', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xc482270f03',
+      })
+    ).toMatchObject(['0x270f', 0x03]);
+  });
+
+  it('should correctly decode a byte array', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xe437916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270f',
+      })
+    ).toMatchObject([
+      55,
+      'kneth/v0.91/plan9',
+      [
+        ['eth', 61],
+        ['mork', 22],
+      ],
+      '0x270f',
+    ]);
+
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xe537916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270f03',
+      })
+    ).toMatchObject([
+      55,
+      'kneth/v0.91/plan9',
+      [
+        ['eth', 61],
+        ['mork', 22],
+      ],
+      '0x270f',
+      0x03,
+    ]);
   });
 
   it('should be able to decode a packet', () => {
@@ -103,5 +214,14 @@ describe('RlpDecoder', () => {
         '0x04',
       ])
     );
+  });
+
+  it.only('should correctly decode a long list', () => {
+    const aEncoded = [...new Array(1024)].map(() => '61').join('');
+    expect(
+      new RlpDecoder().decode({
+        input: '0xb90400' + aEncoded,
+      })
+    ).toBe([...new Array(1024)].map(() => 'a').join(''));
   });
 });

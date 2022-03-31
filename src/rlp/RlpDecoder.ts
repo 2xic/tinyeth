@@ -5,13 +5,14 @@ import { SimpleTypeEncoderDecoder } from './types/SimpleTypeEncoderDecoder';
 import { StringEncoderDecoder } from './types/StringEncoderDecoder';
 import {
   DecodingResults,
+  SimpleTypes,
   TypeEncoderDecoder,
 } from './types/TypeEncoderDecoder';
 
 export class RlpDecoder {
-  public decode({ input }: { input: string }): string | undefined {
+  public decode({ input }: { input: string }): SimpleTypes | undefined {
     const strippedInput = Buffer.from(input.substring(2), 'hex');
-    let parsed = '';
+    let parsed = undefined;
 
     let index = 0;
     while (index < strippedInput.length) {
@@ -20,9 +21,25 @@ export class RlpDecoder {
         index,
       });
 
-      console.log(decoding);
+      console.log(parsed, decoding);
 
-      parsed += decoding;
+      if (!parsed) {
+        if (typeof decoding === 'string') {
+          parsed = decoding;
+        } else if (Array.isArray(decoding)) {
+          parsed = decoding;
+        } else if (typeof decoding === 'number') {
+          parsed = decoding;
+        }
+      } else {
+        console.log([parsed, decoding, index, newIndex]);
+        //        console.log(decoding);
+        throw new Error(
+          `Unknown state ${JSON.stringify(parsed)} ${JSON.stringify(decoding)}`
+        );
+      }
+
+      //      parsed += decoding;
       index = newIndex;
     }
 
@@ -39,8 +56,8 @@ export class RlpDecoder {
     const typeValue = input[index];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const typeDecoders: Array<TypeEncoderDecoder<any>> = [
-      new StringEncoderDecoder(),
       new SimpleTypeEncoderDecoder(),
+      new StringEncoderDecoder(),
       new ArrayEncoderDecoder(),
       new IsNonValueEncoderDecoder(),
       new NumberEncoderDecoder(),
@@ -49,9 +66,8 @@ export class RlpDecoder {
     for (const decoder of typeDecoders) {
       const canDecode = decoder.isDecodeType({
         input: typeValue,
-        inputBuffer: input,
-        fromIndex: index,
       });
+
       if (canDecode) {
         try {
           const response = decoder.decode({
@@ -59,8 +75,7 @@ export class RlpDecoder {
             fromIndex: index,
             decoder: this.getToken.bind(this),
           });
-
-          console.log([response, decoder]);
+          console.log([typeValue, decoder, response]);
 
           if (!('newIndex' in response)) {
             throw new Error('The decoder function should set a new index');
@@ -76,6 +91,10 @@ export class RlpDecoder {
       }
     }
 
-    throw new Error('Not implemented');
+    throw new Error(
+      `Not implemented ${input.slice(0, 32).toString('hex')}... (${
+        input.length
+      })`
+    );
   }
 }

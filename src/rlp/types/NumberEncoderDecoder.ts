@@ -53,7 +53,7 @@ export class NumberEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     input: Buffer;
     fromIndex: number;
   }): DecodingResults {
-    const length = inputBuffer[0] - 0x80;
+    const length = inputBuffer[fromIndex] - 0x80;
     const input = inputBuffer.slice(fromIndex + 1, fromIndex + 1 + length);
     const { decoding } = new UIntEncoderDecoder().decode({
       input,
@@ -68,7 +68,7 @@ export class NumberEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return 0x80 < input && input <= 0x80 + 8;
+    return 0x80 < input && input <= 0x80 + 9;
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {

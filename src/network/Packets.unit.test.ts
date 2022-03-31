@@ -1,4 +1,4 @@
-import { cleanString } from '../utils';
+/*import { cleanString } from '../utils';
 import { getBufferFromHash } from './getBufferFromHex';
 import { Packet } from './Packet';
 
@@ -32,3 +32,4 @@ describe.skip('Packets', () => {
     expect(decodedPacket.version).toBe(4);
   });
 });
+*/
