@@ -188,35 +188,139 @@ describe('RlpDecoder', () => {
     ]);
   });
 
-  it('should be able to decode a packet', () => {
+  it('should correctly split list', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xF83C836161618362626283636363836464648365656583666666836767678368686883696969836A6A6A836B6B6B836C6C6C836D6D6D836E6E6E836F6F6F',
+      })
+    ).toMatchObject([
+      'aaa',
+      'bbb',
+      'ccc',
+      'ddd',
+      'eee',
+      'fff',
+      'ggg',
+      'hhh',
+      'iii',
+      'jjj',
+      'kkk',
+      'lll',
+      'mmm',
+      'nnn',
+      'ooo',
+    ]);
+  });
+
+  it('should correctly encode booleans', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0x01',
+      })
+    ).toBe(true);
+
+    expect(
+      new RlpDecoder().decode({
+        input: '0x80',
+      })
+    ).toBe(false);
+  });
+
+  it('should correctly decode subset', () => {
     const input = cleanString(`
-    f87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840
-    fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569
-    bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877c883666f6f836261720304    
-     `);
+      0xf237916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270f82270fc883666f6f836261720304
+       `);
 
     expect(
       new RlpDecoder().decode({
         input,
       })
-    ).toBe(
-      JSON.stringify([
-        '0x37',
-        '0x6b6e6574682f76302e39312f706c616e39',
-        [
-          ['0x657468', '0x3d'],
-          ['0x6d6f726b', '0x16'],
-        ],
-        '0x270f',
-        '0xfda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877',
-        ['0x666f6f', '0x626172'],
-        '0x03',
-        '0x04',
-      ])
-    );
+    ).toMatchObject([
+      55,
+      'kneth/v0.91/plan9',
+      [
+        ['eth', 61],
+        ['mork', 22],
+      ],
+      '0x270f',
+      '0x270f',
+      ['foo', 'bar'],
+      3,
+      4,
+    ]);
   });
 
-  it.only('should correctly decode a long list', () => {
+  it('should correctly decode a long string', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xf842b840fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877',
+      })
+    ).toMatchObject([
+      '0xfda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877',
+    ]);
+  });
+
+  it('should correctly decode a long list', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xf84490aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa90bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb90cccccccccccccccccccccccccccccccc90dddddddddddddddddddddddddddddddd',
+      })
+    ).toMatchObject([
+      '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      '0xcccccccccccccccccccccccccccccccc',
+      '0xdddddddddddddddddddddddddddddddd',
+    ]);
+  });
+
+  it('should correctly decode list after a list', () => {
+    expect(
+      new RlpDecoder().decode({
+        input: '0xc882270fc202020304',
+      })
+    ).toMatchObject(['0x270f', [0x2, 0x2], 0x03, 0x04]);
+  });
+
+  it('should correctly decode a long list after a list', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xf86082270fb8564141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141c202020304',
+      })
+    ).toMatchObject([
+      '0x270f',
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      [0x02, 0x02],
+      0x03,
+      0x04,
+    ]);
+  });
+
+  it.only('should be able to decode a packet', () => {
+    expect(
+      new RlpDecoder().decode({
+        input:
+          '0xf87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877c883666f6f836261720304',
+      })
+    ).toMatchObject([
+      0x37,
+      'kneth/v0.91/plan9',
+      [
+        ['eth', 0x3d],
+        ['mork', 22],
+      ],
+      '0x270f',
+      '0xfda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877',
+      ['foo', 'bar'],
+      0x03,
+      0x04,
+    ]);
+  });
+
+  it('should correctly decode a long list', () => {
     const aEncoded = [...new Array(1024)].map(() => '61').join('');
     expect(
       new RlpDecoder().decode({

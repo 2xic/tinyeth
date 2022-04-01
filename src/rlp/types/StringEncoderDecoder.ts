@@ -59,29 +59,69 @@ export class StringEncoderDecoder
     input: Buffer;
     fromIndex: number;
   }): DecodingResults {
-    const length = input[fromIndex] - 0x80 + 1;
-    const inputSlice = input.slice(fromIndex + 1, fromIndex + length);
+    const isLongString = 0xb7 < input[fromIndex];
 
-    const aboveAscii = inputSlice.find((item) => item > 127);
-    const belowAscii = inputSlice.find((item) => item < 27);
+    if (isLongString) {
+      const byteLength = input[fromIndex++] - 0xb7;
+      const inputSlice = input
+        .slice(fromIndex, fromIndex + byteLength)
+        .toString('hex');
+      const length = Number.parseInt(inputSlice, 16);
 
-    if (aboveAscii || belowAscii) {
-      throw new RangeError();
+      const stringSlice = input.slice(
+        fromIndex + byteLength,
+        fromIndex + byteLength + length
+      );
+
+      console.log(fromIndex);
+
+      const aboveAscii = stringSlice.find((item) => item > 127);
+      const belowAscii = stringSlice.find((item) => item < 27);
+      const newIndex = fromIndex + byteLength + length;
+
+      if (aboveAscii || belowAscii) {
+        const decoding = stringSlice.toString('hex');
+        return {
+          newIndex,
+          decoding: `0x${decoding}`,
+        };
+      }
+
+      const decoding = Buffer.from(stringSlice).toString('ascii');
+
+      return {
+        decoding,
+        newIndex,
+      };
+    } else {
+      const length = input[fromIndex] - 0x80 + 1;
+      const inputSlice = input.slice(fromIndex + 1, fromIndex + length);
+
+      const aboveAscii = inputSlice.find((item) => item > 127);
+      const belowAscii = inputSlice.find((item) => item < 27);
+
+      if (aboveAscii || belowAscii) {
+        const decoding = inputSlice.toString('hex');
+        return {
+          newIndex: fromIndex + length,
+          decoding: `0x${decoding}`,
+        };
+      }
+
+      const decoding = Buffer.from(inputSlice).toString('ascii');
+
+      return {
+        decoding,
+        newIndex: fromIndex + length,
+      };
     }
-
-    const decoding = Buffer.from(inputSlice).toString('ascii');
-
-    return {
-      decoding,
-      newIndex: fromIndex + length,
-    };
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
     return isValueBetween({
       value: input,
       min: 0x82,
-      max: 0xb7,
+      max: 0xbf,
     });
   }
 

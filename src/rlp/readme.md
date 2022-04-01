@@ -14,3 +14,6 @@
 - https://github.com/ethereum/go-ethereum/blob/master/rlp/decode_test.go
 - https://github.com/ethereum/go-ethereum/blob/master/rlp/encode_test.go
 
+## Tools
+. https://toolkit.abdk.consulting/ethereum#transaction,rlp
+    - Used this for debugging, and create test cases

@@ -19,12 +19,28 @@ export class BooleanEncoderDecoder implements TypeEncoderDecoder<boolean> {
     }
   }
 
-  public decode({ input }: { input: Buffer }): DecodingResults {
-    throw new Error('Method not implemented.');
+  public decode({
+    input,
+    fromIndex,
+  }: {
+    input: Buffer;
+    fromIndex: number;
+  }): DecodingResults {
+    if (input[fromIndex] === 0x01) {
+      return {
+        decoding: true,
+        newIndex: fromIndex + 1,
+      };
+    } else {
+      return {
+        decoding: false,
+        newIndex: fromIndex + 1,
+      };
+    }
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    throw new Error('Method not implemented.');
+    return input == 0x01 || input === 0x80;
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {

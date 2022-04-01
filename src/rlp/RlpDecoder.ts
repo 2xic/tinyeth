@@ -1,4 +1,5 @@
 import { ArrayEncoderDecoder } from './types/ArrayEncoderDecoder';
+import { BooleanEncoderDecoder } from './types/BooleanEncoderDecoder';
 import { IsNonValueEncoderDecoder } from './types/IsNonValueEncoderDecoder';
 import { NumberEncoderDecoder } from './types/NumberEncoderDecoder';
 import { SimpleTypeEncoderDecoder } from './types/SimpleTypeEncoderDecoder';
@@ -30,6 +31,8 @@ export class RlpDecoder {
           parsed = decoding;
         } else if (typeof decoding === 'number') {
           parsed = decoding;
+        } else if (typeof decoding === 'boolean') {
+          parsed = decoding;
         }
       } else {
         console.log([parsed, decoding, index, newIndex]);
@@ -56,12 +59,14 @@ export class RlpDecoder {
     const typeValue = input[index];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const typeDecoders: Array<TypeEncoderDecoder<any>> = [
-      new SimpleTypeEncoderDecoder(),
-      new StringEncoderDecoder(),
+      new BooleanEncoderDecoder(),
       new ArrayEncoderDecoder(),
+      new StringEncoderDecoder(),
       new IsNonValueEncoderDecoder(),
       new NumberEncoderDecoder(),
     ];
+
+    typeDecoders.unshift(new SimpleTypeEncoderDecoder());
 
     for (const decoder of typeDecoders) {
       const canDecode = decoder.isDecodeType({
@@ -69,13 +74,14 @@ export class RlpDecoder {
       });
 
       if (canDecode) {
+        console.log([decoder, canDecode]);
         try {
           const response = decoder.decode({
             input,
             fromIndex: index,
             decoder: this.getToken.bind(this),
           });
-          console.log([typeValue, decoder, response]);
+          console.log([typeValue.toString(16), typeValue, decoder, response]);
 
           if (!('newIndex' in response)) {
             throw new Error('The decoder function should set a new index');
@@ -92,9 +98,9 @@ export class RlpDecoder {
     }
 
     throw new Error(
-      `Not implemented ${input.slice(0, 32).toString('hex')}... (${
+      `Not implemented ${input.slice(index, index + 32).toString('hex')}... (${
         input.length
-      })`
+      }), first byte 0x${input[index].toString(16)}`
     );
   }
 }

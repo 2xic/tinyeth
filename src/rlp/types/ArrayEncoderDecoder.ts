@@ -74,17 +74,18 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
         newIndex: fromIndex + 1,
       };
     } else if (0xf7 < input[fromIndex]) {
-      const lengthOfLengthBuffer = input[fromIndex] - 0xf7;
+      const lengthOfLengthBuffer = input[fromIndex++] - 0xf7;
       const actualLength = Number.parseInt(
         input
-          .slice(fromIndex + 1, fromIndex + 1 + lengthOfLengthBuffer)
+          .slice(fromIndex, fromIndex + lengthOfLengthBuffer)
           .toString('hex'),
         16
       );
       const arrayResults: SimpleTypes[] = [];
 
-      let currentIndex = fromIndex + 2;
+      let currentIndex = fromIndex + lengthOfLengthBuffer;
       while (currentIndex <= fromIndex + actualLength) {
+        console.log(['hello index', input[currentIndex].toString(16)]);
         const results = decoder({ input, index: currentIndex });
 
         currentIndex = results.newIndex;
@@ -115,13 +116,14 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    return (
-      isValueBetween({
-        value: input,
-        min: 0xc1,
-        max: 0xff,
-      }) || input === 0xc0
-    );
+    const isLongArray = isValueBetween({
+      value: input,
+      min: 0xc1,
+      max: 0xff,
+    });
+    const isSingleElement = input === 0xc0;
+
+    return isLongArray || isSingleElement;
   }
 
   public isEncodeType({ input }: { input: unknown }): boolean {

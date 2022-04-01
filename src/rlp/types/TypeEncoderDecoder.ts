@@ -45,4 +45,9 @@ export interface DecodingResults extends SimpleDecodingResults {
   newIndex: number;
 }
 
-export type SimpleTypes = string | number | BigNumber | Array<SimpleTypes>;
+export type SimpleTypes =
+  | string
+  | number
+  | BigNumber
+  | boolean
+  | Array<SimpleTypes>;
