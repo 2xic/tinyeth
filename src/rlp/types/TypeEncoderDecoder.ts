@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { InputTypes } from '../RlpEncoder';
-import { SimpleTypeEncoderDecoder } from './SimpleTypeEncoderDecoder';
 
 export abstract class TypeEncoderDecoder<T> {
   public abstract encode({

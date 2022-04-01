@@ -6,16 +6,15 @@ _Just something so I get a better understanding of the core parts of the protoco
 
 ### Plan
 
-- [ ] (WIP) Implement encoding and decoding of RLP
-
-  Currently added:
-    - Good encoder support
-    - (WIP) decoder support (support some primitive types)
-
-
 - [ ] (WIP) Network support (should be able to fetch a block)
   - RLPx
   - Wire protocol
+
+- [x] Implement encoding and decoding of RLP
+
+  Currently added:
+    - Decent encoder support
+    - Decent decoder support
 
 - [x] Signing of transactions
 

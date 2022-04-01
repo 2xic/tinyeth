@@ -12,7 +12,10 @@ import {
 
 export class RlpDecoder {
   public decode({ input }: { input: string }): SimpleTypes | undefined {
-    const strippedInput = Buffer.from(input.substring(2), 'hex');
+    const inputWithoutHexPrefix = input.startsWith('0x')
+      ? input.substring(2)
+      : input;
+    const strippedInput = Buffer.from(inputWithoutHexPrefix, 'hex');
     let parsed = undefined;
 
     let index = 0;
@@ -21,8 +24,6 @@ export class RlpDecoder {
         input: strippedInput,
         index,
       });
-
-      console.log(parsed, decoding);
 
       if (!parsed) {
         if (typeof decoding === 'string') {
@@ -35,14 +36,10 @@ export class RlpDecoder {
           parsed = decoding;
         }
       } else {
-        console.log([parsed, decoding, index, newIndex]);
-        //        console.log(decoding);
         throw new Error(
           `Unknown state ${JSON.stringify(parsed)} ${JSON.stringify(decoding)}`
         );
       }
-
-      //      parsed += decoding;
       index = newIndex;
     }
 
@@ -59,6 +56,7 @@ export class RlpDecoder {
     const typeValue = input[index];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const typeDecoders: Array<TypeEncoderDecoder<any>> = [
+      new SimpleTypeEncoderDecoder(),
       new BooleanEncoderDecoder(),
       new ArrayEncoderDecoder(),
       new StringEncoderDecoder(),
@@ -66,22 +64,18 @@ export class RlpDecoder {
       new NumberEncoderDecoder(),
     ];
 
-    typeDecoders.unshift(new SimpleTypeEncoderDecoder());
-
     for (const decoder of typeDecoders) {
       const canDecode = decoder.isDecodeType({
         input: typeValue,
       });
 
       if (canDecode) {
-        console.log([decoder, canDecode]);
         try {
           const response = decoder.decode({
             input,
             fromIndex: index,
             decoder: this.getToken.bind(this),
           });
-          console.log([typeValue.toString(16), typeValue, decoder, response]);
 
           if (!('newIndex' in response)) {
             throw new Error('The decoder function should set a new index');

@@ -85,7 +85,6 @@ export class ArrayEncoderDecoder implements TypeEncoderDecoder<Array<Literal>> {
 
       let currentIndex = fromIndex + lengthOfLengthBuffer;
       while (currentIndex <= fromIndex + actualLength) {
-        console.log(['hello index', input[currentIndex].toString(16)]);
         const results = decoder({ input, index: currentIndex });
 
         currentIndex = results.newIndex;

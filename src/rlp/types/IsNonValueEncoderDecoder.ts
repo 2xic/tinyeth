@@ -1,4 +1,3 @@
-import { isValueBetween } from './isBetween';
 import {
   DecodingResults,
   EncodingResults,
@@ -10,13 +9,7 @@ export class IsNonValueEncoderDecoder implements TypeEncoderDecoder<any> {
     throw new Error('Method not implemented');
   }
 
-  public decode({
-    input,
-    fromIndex,
-  }: {
-    input: Buffer;
-    fromIndex: number;
-  }): DecodingResults {
+  public decode({ fromIndex }: { fromIndex: number }): DecodingResults {
     const decoding = '';
 
     return {

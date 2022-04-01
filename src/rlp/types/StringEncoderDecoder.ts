@@ -73,8 +73,6 @@ export class StringEncoderDecoder
         fromIndex + byteLength + length
       );
 
-      console.log(fromIndex);
-
       const aboveAscii = stringSlice.find((item) => item > 127);
       const belowAscii = stringSlice.find((item) => item < 27);
       const newIndex = fromIndex + byteLength + length;

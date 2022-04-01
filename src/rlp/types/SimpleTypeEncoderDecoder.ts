@@ -21,7 +21,6 @@ export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
     input: Buffer;
     fromIndex: number;
   }): DecodingResults {
-    console.log(fromIndex);
     let decoding: string | number = input[fromIndex].toString();
     if (!Number.isNaN(decoding)) {
       decoding = Number(decoding);
@@ -34,7 +33,6 @@ export class SimpleTypeEncoderDecoder implements TypeEncoderDecoder<any> {
   }
 
   public isDecodeType({ input }: { input: number }): boolean {
-    console.log(input);
     return isValueBetween({
       value: input,
       min: 0x00,

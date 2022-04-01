@@ -89,10 +89,7 @@ export class Rlpx {
     message: Buffer;
     responderPublicKey: Buffer | string;
   }): Buffer {
-    const responderPublicKey = this.keyPair.parsePublicKey({
-      input: inputResponderPublicKey,
-    });
-    return encrypt(responderPublicKey, message);
+    throw new Error('Not implemented');
   }
 
   public decryptMessage({

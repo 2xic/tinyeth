@@ -26,6 +26,7 @@ describe('StringEncoderDecoder', () => {
       fromIndex: 0,
     });
     expect(decodedString.decoding).toBe(input);
-    expect(decodedString.newIndex).toBe(input.length + 1);
+    // it uses two bytes to decode, one for the length of the length, and the actual length.
+    expect(decodedString.newIndex).toBe(input.length + 2);
   });
 });

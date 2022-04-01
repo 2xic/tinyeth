@@ -4,14 +4,6 @@ import { cleanString } from '../utils';
 import { RlpDecoder } from './RlpDecoder';
 
 describe('RlpDecoder', () => {
-  it('it should decode non values', () => {
-    expect(
-      new RlpDecoder().decode({
-        input: '0x80',
-      })
-    ).toBe('');
-  });
-
   it('should correctly decode a string', () => {
     const decoded = new RlpDecoder().decode({
       input: '0x8b68656c6c6f20776f726c64',
@@ -84,12 +76,6 @@ describe('RlpDecoder', () => {
         input: '0xc0',
       })
     ).toMatchObject([]);
-
-    expect(
-      new RlpDecoder().decode({
-        input: '0x80',
-      })
-    ).toBe('');
   });
 
   it('should correctly decode a array inside a array', () => {
@@ -144,7 +130,7 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0x83010203',
       })
-    ).toBe('0x10203');
+    ).toBe('0x010203');
   });
 
   it('should correctly decode array with numbers', () => {
@@ -218,7 +204,7 @@ describe('RlpDecoder', () => {
       new RlpDecoder().decode({
         input: '0x01',
       })
-    ).toBe(true);
+    ).toBe(1);
 
     expect(
       new RlpDecoder().decode({
@@ -299,7 +285,7 @@ describe('RlpDecoder', () => {
     ]);
   });
 
-  it.only('should be able to decode a packet', () => {
+  it('should be able to decode a packet', () => {
     expect(
       new RlpDecoder().decode({
         input:

@@ -1,14 +1,10 @@
 import secp256k1 from 'secp256k1';
 import createKeccakHash from 'keccak';
 import crypto from 'crypto';
-import _ec from 'elliptic';
 import { getBufferFromHash } from '../network/getBufferFromHex';
 
 export class KeyPair {
-  constructor(
-    public privatekey = crypto.randomBytes(32).toString('hex'),
-    private curve = new _ec.ec('secp256k1')
-  ) {}
+  constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
 
   public getAddress({ publicKey }: { publicKey: string }) {
     const publicKeyHash = createKeccakHash('keccak256')
@@ -154,15 +150,20 @@ export class KeyPair {
     privateKey: inputPrivateKey,
   }: {
     publicKey: string;
-    privateKey: string;
+    privateKey?: string;
   }): Buffer {
-    const retrievedKey = this.curve.keyFromPrivate(inputPrivateKey, 'hex');
-    const point = this.curve
-      .keyFromPublic(this.parsePublicKey({ input: inputPublicKey }))
-      .getPublic();
-    const sharedKey = retrievedKey.derive(point);
+    const privateKey = inputPrivateKey || this.privatekey;
 
-    return getBufferFromHash(sharedKey.toString(16));
+    return Buffer.from(
+      secp256k1
+        .ecdh(
+          Buffer.from(inputPublicKey, 'hex'),
+          Buffer.from(privateKey, 'hex'),
+          { hashfn },
+          Buffer.alloc(33)
+        )
+        .slice(1)
+    );
   }
 
   public getCompressedKey({ publicKey }: { publicKey: Buffer }) {
@@ -189,4 +190,12 @@ export class KeyPair {
     }
     return buffer;
   }
+}
+
+// Borrowed from https://github.com/ethereumjs/ethereumjs-monorepo/blob/ade4233ddffffdd146b386de701762196a8c941c/packages/devp2p/src/rlpx/ecies.ts#L22
+function hashfn(x: Uint8Array, y: Uint8Array) {
+  const pubKey = new Uint8Array(33);
+  pubKey[0] = (y[31] & 1) === 0 ? 0x02 : 0x03;
+  pubKey.set(x, 1);
+  return pubKey;
 }

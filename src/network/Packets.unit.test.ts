@@ -1,8 +1,8 @@
-/*import { cleanString } from '../utils';
+import { cleanString } from '../utils';
 import { getBufferFromHash } from './getBufferFromHex';
 import { Packet } from './Packet';
 
-describe.skip('Packets', () => {
+describe('Packets', () => {
   // from https://github.com/ethereum/go-ethereum/pull/2091/files#diff-a2488b7a37555bfb5c64327072acdbbf703ab127176956f6b6558067950f8f73R455
 
   it('should correctly decode hello packet', () => {
@@ -32,4 +32,3 @@ describe.skip('Packets', () => {
     expect(decodedPacket.version).toBe(4);
   });
 });
-*/
