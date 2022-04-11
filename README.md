@@ -6,9 +6,9 @@ _Just something so I get a better understanding of the core parts of the protoco
 
 ### Plan
 
-- [ ] (WIP) Network support (should be able to fetch a block)
-  - RLPx
-  - Wire protocol
+- [ ] Network support (should be able to fetch a block)
+  - (wip) RLPx
+  - (wip) Wire protocol
 
 - [x] Implement encoding and decoding of RLP
 
@@ -27,5 +27,6 @@ _Just something so I get a better understanding of the core parts of the protoco
 
   Currently added:
     - Runs a basic contract
+    - (todo) you should be able to solve all these https://github.com/fvictorio/evm-puzzles puzzles with logic in this library 
 
 - [ ] Data structures like block, transactions, accounts, Merkle Patricia Trie, ethash(?), etc

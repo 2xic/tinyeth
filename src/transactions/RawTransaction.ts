@@ -3,6 +3,7 @@ import { RlpEncoder } from '../rlp/RlpEncoder';
 import createKeccakHash from 'keccak';
 import { KeyPair } from '../signatures/KeyPair';
 import { SignedTransaction } from './SignedTransaction';
+import { keccak256 } from '../network/keccak256';
 
 export class RawTransaction {
   constructor(
@@ -28,9 +29,7 @@ export class RawTransaction {
     chainId?: number;
   }): SignedTransaction {
     const rawTransaction = this.encode();
-    const message = createKeccakHash('keccak256')
-      .update(Buffer.from(rawTransaction.slice(2), 'hex'))
-      .digest();
+    const message = keccak256(Buffer.from(rawTransaction.slice(2), 'hex'));
 
     const { r, s, v } = new KeyPair().signTransaction({
       privateKey,

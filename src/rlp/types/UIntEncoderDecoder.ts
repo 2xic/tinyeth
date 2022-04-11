@@ -5,6 +5,7 @@ import {
   SimpleDecodingResults,
   TypeEncoderDecoder,
 } from './TypeEncoderDecoder';
+import { Uint } from './Uint';
 
 export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
   public encode({ input }: { input: BigNumber }): EncodingResults {
@@ -17,45 +18,45 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     const isUint56 = input.isLessThan(this.powerOfTwo(56));
 
     if (isUint8) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 0,
-      });
+      }).value;
     } else if (isUint16) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 8,
-      });
+      }).value;
     } else if (isUint24) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 16,
-      });
+      }).value;
     } else if (isUint32) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 24,
-      });
+      }).value;
     } else if (isUint40) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 32,
-      });
+      }).value;
     } else if (isUint48) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 40,
-      });
+      }).value;
     } else if (isUint56) {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 48,
-      });
+      }).value;
     } else {
-      return this.getByteArray({
+      return new Uint({
         input,
         n: 56,
-      });
+      }).value;
     }
   }
 
@@ -72,29 +73,6 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
 
   public isDecodeType({ input }: { input: number }): boolean {
     throw new Error('Method not implemented.');
-  }
-
-  private getByteArray({
-    input,
-    n,
-  }: {
-    input: BigNumber;
-    n: number;
-  }): EncodingResults {
-    const length = n / 8 + 1;
-    const array = [...new Array(length)].map((_, index) => {
-      const padding = n - 8 * index;
-      if (!padding) {
-        return input.modulo(256).toNumber();
-      }
-      const data = BigInt(input.toString()) >> BigInt(padding);
-      return new BigNumber(data.toString()).toNumber();
-    });
-
-    return {
-      length: array.length,
-      encoding: Buffer.from(array).toString('hex'),
-    };
   }
 
   private powerOfTwo(power: number) {

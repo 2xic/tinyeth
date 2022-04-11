@@ -2,14 +2,16 @@ import secp256k1 from 'secp256k1';
 import createKeccakHash from 'keccak';
 import crypto from 'crypto';
 import { getBufferFromHash } from '../network/getBufferFromHex';
+import { keccak256 } from '../network/keccak256';
 
 export class KeyPair {
   constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
 
   public getAddress({ publicKey }: { publicKey: string }) {
-    const publicKeyHash = createKeccakHash('keccak256')
-      .update(Buffer.from(publicKey, 'hex'))
-      .digest('hex');
+    const publicKeyHash = keccak256(Buffer.from(publicKey, 'hex')).toString(
+      'hex'
+    );
+
     if (publicKeyHash.length !== 64) {
       throw new Error('Invalid hash');
     }
@@ -92,9 +94,7 @@ export class KeyPair {
     privateKey: string;
     message: string;
   }) {
-    const hashBuffer = createKeccakHash('keccak256')
-      .update(Buffer.from(inputMessage, 'hex'))
-      .digest();
+    const hashBuffer = keccak256(Buffer.from(inputMessage, 'hex'));
 
     return this.signMessage({
       message: hashBuffer,
