@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { Uint } from '../rlp/types/Uint';
-import { cleanString } from '../utils';
 import { Abi } from './Abi';
 
 describe('Abi', () => {
