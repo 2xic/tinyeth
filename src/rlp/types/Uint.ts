@@ -22,9 +22,9 @@ export class Uint {
     input: BigNumber;
     n: number;
   }): EncodingResults {
-    const length = n / 8 + 1;
+    const length = n / 8;
     const array = [...new Array(length)].map((_, index) => {
-      const padding = n - 8 * index;
+      const padding = n - 8 * (index + 1);
       if (!padding) {
         return input.modulo(256).toNumber();
       }

@@ -20,42 +20,42 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     if (isUint8) {
       return new Uint({
         input,
-        n: 0,
+        n: 8,
       }).value;
     } else if (isUint16) {
       return new Uint({
         input,
-        n: 8,
+        n: 16,
       }).value;
     } else if (isUint24) {
       return new Uint({
         input,
-        n: 16,
+        n: 24,
       }).value;
     } else if (isUint32) {
       return new Uint({
         input,
-        n: 24,
+        n: 32,
       }).value;
     } else if (isUint40) {
       return new Uint({
         input,
-        n: 32,
+        n: 40,
       }).value;
     } else if (isUint48) {
       return new Uint({
         input,
-        n: 40,
+        n: 48,
       }).value;
     } else if (isUint56) {
       return new Uint({
         input,
-        n: 48,
+        n: 56,
       }).value;
     } else {
       return new Uint({
         input,
-        n: 56,
+        n: 64,
       }).value;
     }
   }
