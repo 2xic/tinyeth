@@ -6,6 +6,7 @@ describe('evm', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = new Evm(Buffer.from('6001600081905550', 'hex'), {
       value: new Wei(8),
+      data: Buffer.from('', 'hex'),
     });
     evm.step();
     expect(evm.stack.toString()).toBe([0x1].toString());
@@ -37,6 +38,7 @@ describe('evm', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = new Evm(Buffer.from('6001600081905550', 'hex'), {
       value: new Wei(8),
+      data: Buffer.from('', 'hex'),
     });
     evm.execute();
 
@@ -54,6 +56,7 @@ describe('evm', () => {
       ),
       {
         value: new Wei(8),
+        data: Buffer.from('', 'hex'),
       }
     ).execute();
   });
@@ -62,6 +65,7 @@ describe('evm', () => {
     it('should be possible to run puzzle 1 contract', () => {
       new Evm(Buffer.from('3456FDFDFDFDFDFD5B00', 'hex'), {
         value: new Wei(8),
+        data: Buffer.from('', 'hex'),
       }).execute();
     });
 
@@ -69,6 +73,17 @@ describe('evm', () => {
       const contract = Buffer.from('34380356FDFD5B00FDFD', 'hex');
       const evm = new Evm(contract, {
         value: new Wei(4),
+        data: Buffer.from('', 'hex'),
+      }).execute();
+      expect(contract.length).toBe(10);
+      expect(evm.pc).toBe(0x07);
+    });
+
+    it('should be possible to run puzzle 3 contract', () => {
+      const contract = Buffer.from('3656FDFD5B00', 'hex');
+      const evm = new Evm(contract, {
+        value: new Wei(4),
+        data: Buffer.from('AAAA', 'hex'),
       }).execute();
       expect(contract.length).toBe(10);
       expect(evm.pc).toBe(0x07);

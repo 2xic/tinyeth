@@ -2,7 +2,7 @@ import { InvalidatedProjectKind } from 'typescript';
 import { EvmStack } from './EvmStack';
 import { InvalidPc } from './InvalidPc';
 import { OpCode } from './OpCode';
-import { opcodes } from './Opcodess';
+import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
 
 export class Evm {
@@ -14,11 +14,14 @@ export class Evm {
 
   private _pc: number;
 
+  private _lastPc: number;
+
   private running: boolean;
 
   constructor(public buffer: Buffer, private context: TxContext) {
     this.memory = Buffer.alloc(2048, 0);
     this._pc = 0;
+    this._lastPc = -1;
     this.running = true;
   }
 
@@ -28,14 +31,20 @@ export class Evm {
     }
     if (this.pc < 0) {
       throw new InvalidPc('Negative PC');
+    } else if (this.pc === this._lastPc) {
+      throw new InvalidPc(
+        `Program counter is stuck ${this.currentOpcodeNumber.toString(16)}`
+      );
     }
 
-    const opcode = this.loadOpcode({ opcode: this.buffer[this.pc] });
+    const opcode = this.loadOpcode();
+
     opcode.onExecute({
       evm: this,
       byteIndex: this.pc,
       context: this.context,
     });
+    this._lastPc = this._pc;
     this._pc += opcode.length;
 
     return true;
@@ -49,7 +58,12 @@ export class Evm {
     return this;
   }
 
-  private loadOpcode({ opcode: opcodeNumber }: { opcode: number }): OpCode {
+  private get currentOpcodeNumber() {
+    return this.buffer[this.pc];
+  }
+
+  private loadOpcode(): OpCode {
+    const opcodeNumber = this.currentOpcodeNumber;
     const opcode = opcodes[opcodeNumber];
     if (!opcode) {
       throw new Error(`0x${opcodeNumber.toString(16)}`);
@@ -76,6 +90,7 @@ export class Evm {
 
 interface TxContext {
   value: Wei;
+  data: Buffer;
 }
 
 export interface EvmContext {

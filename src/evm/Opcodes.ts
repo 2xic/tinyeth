@@ -46,6 +46,10 @@ export const opcodes: Record<number, OpCode> = {
   0x34: new OpCode(1, ({ evm, context }) => {
     evm.stack.push(context.value.value);
   }),
+  // CALLDATASIZE
+  0x36: new OpCode(1, ({ evm, context }) => {
+    evm.stack.push(context.data.length);
+  }),
   // JUMP
   0x56: new OpCode(0, ({ evm }) => {
     const pc = evm.stack.pop();
