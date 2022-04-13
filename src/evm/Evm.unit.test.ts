@@ -83,10 +83,51 @@ describe('evm', () => {
       const contract = Buffer.from('3656FDFD5B00', 'hex');
       const evm = new Evm(contract, {
         value: new Wei(4),
-        data: Buffer.from('AAAA', 'hex'),
+        data: Buffer.from('AAAAAAAA', 'hex'),
       }).execute();
-      expect(contract.length).toBe(10);
-      expect(evm.pc).toBe(0x07);
+      expect(evm.isRunning).toBe(false);
+    });
+
+    it('should be possible run puzzle 4 contract', () => {
+      const contract = Buffer.from('34381856FDFDFDFDFDFD5B00', 'hex');
+      const evm = new Evm(contract, {
+        value: new Wei(contract.length ^ 0xa),
+        data: Buffer.from('', 'hex'),
+      }).execute();
+      expect(evm.isRunning).toBe(false);
+    });
+
+    it('should be possible run puzzle 5 contract', () => {
+      const contract = Buffer.from('34800261010014600C57FDFD5B00FDFD', 'hex');
+      const evm = new Evm(contract, {
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      }).execute();
+      expect(evm.isRunning).toBe(false);
+    });
+
+    it('should be possible run puzzle 6 contract', () => {
+      const contract = Buffer.from('60003556FDFDFDFDFDFD5B00', 'hex');
+      const evm = new Evm(contract, {
+        value: new Wei(16),
+        data: Buffer.from(
+          '000000000000000000000000000000000000000000000000000000000000000a',
+          'hex'
+        ),
+      }).execute();
+      expect(evm.isRunning).toBe(false);
+    });
+
+    it('should be possible run puzzle 7 contract', () => {
+      const contract = Buffer.from(
+        '36600080373660006000F03B600114601357FD5B00',
+        'hex'
+      );
+      const evm = new Evm(contract, {
+        value: new Wei(16),
+        data: Buffer.from('00', 'hex'),
+      }).execute();
+      expect(evm.isRunning).toBe(false);
     });
   });
 });

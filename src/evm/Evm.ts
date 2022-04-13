@@ -1,6 +1,6 @@
 import { InvalidatedProjectKind } from 'typescript';
 import { EvmStack } from './EvmStack';
-import { InvalidPc } from './InvalidPc';
+import { InvalidPc } from './errors/InvalidPc';
 import { OpCode } from './OpCode';
 import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
@@ -39,13 +39,15 @@ export class Evm {
 
     const opcode = this.loadOpcode();
 
-    opcode.onExecute({
+    const results = opcode.onExecute({
       evm: this,
       byteIndex: this.pc,
       context: this.context,
     });
-    this._lastPc = this._pc;
-    this._pc += opcode.length;
+
+    if (!results) {
+      this.setPc(this._pc + opcode.length);
+    }
 
     return true;
   }
@@ -71,7 +73,12 @@ export class Evm {
     return opcode;
   }
 
+  public peekBuffer(index: number) {
+    return this.buffer[this.pc + index];
+  }
+
   public setPc(pc: number) {
+    this._lastPc = this._pc;
     this._pc = pc;
   }
 
