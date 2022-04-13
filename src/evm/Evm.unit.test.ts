@@ -17,7 +17,7 @@ describe('evm', () => {
     expect(evm.stack.toString()).toBe([0x1, 0x0, 0x1].toString());
 
     evm.step();
-    expect(evm.stack.toString()).toBe([0x0, 0x1, 0x1].toString());
+    expect(evm.stack.toString()).toBe([0x1, 0x1, 0x0].toString());
     expect(evm.storage[0x0]).toBe(undefined);
 
     expect(evm.step()).toBe(true);

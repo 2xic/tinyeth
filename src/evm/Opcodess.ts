@@ -7,18 +7,18 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // SUB
   0x3: new OpCode(1, ({ evm }) => {
-    const b = evm.stack.shift();
-    const a = evm.stack.shift();
+    const a = evm.stack.pop();
+    const b = evm.stack.pop();
     evm.stack.push(a - b);
   }),
   // POP
   0x50: new OpCode(1, ({ evm }) => {
-    evm.stack.shift();
+    evm.stack.pop();
   }),
   // SSTORAGE
   0x55: new OpCode(1, ({ evm }) => {
-    const key = evm.stack.shift();
-    const value = evm.stack.shift();
+    const key = evm.stack.pop();
+    const value = evm.stack.pop();
 
     evm.storage[key] = value;
   }),
@@ -28,7 +28,7 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // DUP1
   0x80: new OpCode(1, ({ evm }) => {
-    evm.stack.push(evm.stack.get(evm.stack.length - 1));
+    evm.stack.push(evm.stack.get(-1));
   }),
   // DUP2
   0x81: new OpCode(1, ({ evm }) => {
@@ -36,12 +36,11 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // SWAP1
   0x90: new OpCode(1, ({ evm }) => {
-    const startIndex = 0;
-    const prev = evm.stack.get(startIndex + 1);
-    const prevPrev = evm.stack.get(startIndex);
+    const b = evm.stack.pop();
+    const a = evm.stack.pop();
 
-    evm.stack.set(startIndex + 1, prevPrev);
-    evm.stack.set(startIndex, prev);
+    evm.stack.push(b);
+    evm.stack.push(a);
   }),
   // CALLVALUE
   0x34: new OpCode(1, ({ evm, context }) => {
@@ -49,7 +48,7 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // JUMP
   0x56: new OpCode(0, ({ evm }) => {
-    const pc = evm.stack.shift();
+    const pc = evm.stack.pop();
     evm.setPc(pc);
   }),
   // JUMPDEST

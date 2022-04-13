@@ -5,14 +5,18 @@ export class EvmStack {
     this.stack.push(value);
   }
 
-  public shift(): number {
-    const value = this.stack.shift() || 0;
+  public pop(): number {
+    const value = this.stack.pop() || 0;
 
     return value;
   }
 
   get(index: number) {
-    return this.stack[index];
+    if (index < 0) {
+      return this.stack[this.stack.length - Math.abs(index)];
+    } else {
+      return this.stack[index];
+    }
   }
 
   set(index: number, value: number) {
