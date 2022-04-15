@@ -22,15 +22,15 @@ export class Uint {
     input: BigNumber;
     n: number;
   }): EncodingResults {
+    let inputValue = input;
     const length = n / 8;
-    const array = [...new Array(length)].map((_, index) => {
-      const padding = n - 8 * (index + 1);
-      if (!padding) {
-        return input.modulo(256).toNumber();
-      }
-      const data = BigInt(input.toString()) >> BigInt(padding);
-      return new BigNumber(data.toString()).toNumber();
-    });
+    const array = [...new Array(length)]
+      .map(() => {
+        const value = inputValue.modulo(256);
+        inputValue = inputValue.dividedToIntegerBy(256);
+        return value.toNumber();
+      })
+      .reverse();
 
     return {
       length: array.length,

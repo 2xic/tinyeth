@@ -1,12 +1,22 @@
-export class EvmStack {
-  private stack: number[] = [];
+import BigNumber from 'bignumber.js';
+import { StackUnderflow } from './errors/SackUnderflow';
 
-  public push(value: number) {
+export class EvmStack {
+  private stack: BigNumber[] = [];
+
+  public push(inputValue: BigNumber | number) {
+    let value = inputValue;
+    if (typeof value === 'number') {
+      value = new BigNumber(value);
+    }
     this.stack.push(value);
   }
 
-  public pop(): number {
-    const value = this.stack.pop() || 0;
+  public pop(): BigNumber {
+    const value = this.stack.pop();
+    if (!value) {
+      throw new StackUnderflow();
+    }
 
     return value;
   }
@@ -19,7 +29,7 @@ export class EvmStack {
     }
   }
 
-  set(index: number, value: number) {
+  set(index: number, value: BigNumber) {
     this.stack[index] = value;
   }
 

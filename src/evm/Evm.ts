@@ -1,16 +1,19 @@
-import { InvalidatedProjectKind } from 'typescript';
 import { EvmStack } from './EvmStack';
 import { InvalidPc } from './errors/InvalidPc';
 import { OpCode } from './OpCode';
 import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
+import { Network } from './Network';
+import BigNumber from 'bignumber.js';
 
 export class Evm {
   public stack: EvmStack = new EvmStack();
 
+  public network: Network = new Network();
+
   public memory!: Buffer;
 
-  public storage: Record<number, number> = {};
+  public storage: Record<string, BigNumber> = {};
 
   private _pc: number;
 
@@ -74,7 +77,7 @@ export class Evm {
   }
 
   public peekBuffer(index: number) {
-    return this.buffer[this.pc + index];
+    return new BigNumber(this.buffer[this.pc + index]);
   }
 
   public setPc(pc: number) {
