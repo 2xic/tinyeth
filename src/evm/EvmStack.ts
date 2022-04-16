@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { StackUnderflow } from './errors/SackUnderflow';
+import { StackUnderflow } from './errors/StackUnderflow';
 
 export class EvmStack {
   private stack: BigNumber[] = [];
