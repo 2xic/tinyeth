@@ -169,8 +169,6 @@ export const opcodes: Record<number, OpCode> = {
     const offset = evm.stack.pop().toNumber();
     const length = evm.stack.pop().toNumber();
 
-    console.log([value, offset, length]);
-
     const contractBytes = evm.memory.slice(offset, offset + length);
     const contract = new Contract(contractBytes, new BigNumber(value));
 

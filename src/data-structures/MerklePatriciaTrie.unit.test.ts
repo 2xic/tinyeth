@@ -3,14 +3,16 @@ import { MerklePatriciaTrie } from './MerklePatriciaTrie';
 
 // Test from https://medium.com/@chiqing/merkle-patricia-trie-explained-ae3ac6a7e123
 describe('MerkelPatriciaTrie', () => {
-  it('should not find a value if key is not added', () => {
+  it('should correctly get the hash of a basic root node', () => {
     const trie = new MerklePatriciaTrie();
     trie.put(
-      Buffer.from('\x01\x01\x02', 'hex'),
+      Buffer.from('010102', 'hex'),
       Buffer.from(
-        new RlpEncoder().encode({
-          input: ['hello'],
-        }),
+        new RlpEncoder()
+          .encode({
+            input: ['hello'],
+          })
+          .slice(2),
         'hex'
       )
     );
@@ -22,6 +24,7 @@ describe('MerkelPatriciaTrie', () => {
   it.skip('should get the value if it exists', () => {
     const trie = new MerklePatriciaTrie();
     trie.put(Buffer.from([1, 2, 3, 4]), Buffer.from('hello', 'ascii'));
+
     const results = trie.get(Buffer.from([1, 2, 3, 4]));
     expect(results.found).toBe(true);
     expect(results.value?.toString('ascii')).toBe('hello');
@@ -41,11 +44,11 @@ describe('MerkelPatriciaTrie', () => {
   it.skip('should correctly update the hash when the keys are changed', () => {
     const trie = new MerklePatriciaTrie();
 
-    trie.put(Buffer.from([1, 2, 3, 4]), Buffer.from('hello', 'ascii'));
+    // trie.put(Buffer.from([1, 2, 3, 4]), Buffer.from('hello', 'ascii'));
 
     const hash1 = trie.hash;
 
-    trie.put(Buffer.from([1, 2, 3, 4]), Buffer.from('world', 'ascii'));
+    // trie.put(Buffer.from([1, 2, 3, 4]), Buffer.from('world', 'ascii'));
 
     const hash2 = trie.hash;
 

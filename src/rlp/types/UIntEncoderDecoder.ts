@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import {
-  DecodingResults,
   EncodingResults,
   SimpleDecodingResults,
   TypeEncoderDecoder,

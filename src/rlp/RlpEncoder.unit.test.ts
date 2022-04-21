@@ -122,6 +122,12 @@ describe('RlpEncoder', () => {
         input: ['hello', 'world'],
       })
     ).toBe('0xcc8568656c6c6f85776f726c64');
+
+    expect(
+      new RlpEncoder().encode({
+        input: ['cat', 'dog'],
+      })
+    ).toBe('0xc88363617483646f67');
   });
 
   it('should correctly encode a long list', () => {

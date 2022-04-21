@@ -10,21 +10,21 @@ export class StringEncoderDecoder
 {
   public encode({ input }: { input: string | Uint8Array }): EncodingResults {
     const isLongString = 55 < input.length;
-    const isUint8 = input instanceof Uint8Array;
+    const isUint8Array = input instanceof Uint8Array;
     const firstItem = input[0];
     const firstValue =
       typeof firstItem === 'number' || !firstItem
         ? firstItem
         : firstItem.charCodeAt(0);
     const isShortString = input.length === 1 && firstValue < 0x80;
-    const encodedChars = isUint8
+    const encodedChars = isUint8Array
       ? input.map((item) => item)
       : input.split('').map((item) => item.charCodeAt(0));
     const encodedString = Buffer.from(encodedChars).toString('hex');
 
     if (isShortString) {
       return {
-        encoding: isUint8 ? Buffer.from(input).toString('hex') : input,
+        encoding: isUint8Array ? Buffer.from(input).toString('hex') : input,
         length: input.length,
       };
     } else if (isLongString) {

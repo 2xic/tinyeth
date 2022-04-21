@@ -3,6 +3,7 @@
 ## EIP(s)
 
 - https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+- https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md
 
 ### Docs
 - https://ethereum.org/en/developers/docs/transactions/

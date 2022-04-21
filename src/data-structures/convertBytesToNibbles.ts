@@ -1,5 +1,6 @@
-export function bytesToNibbles(bytes: Buffer): number[] {
+export function convertBytesToNibbles(bytes: Buffer): Buffer {
   const results = [];
+
   for (const byte of bytes.toString('ascii')) {
     const number = byte.charCodeAt(0);
     const divided = Math.floor(number / 16);
@@ -7,5 +8,6 @@ export function bytesToNibbles(bytes: Buffer): number[] {
     results.push(divided);
     results.push(remainder);
   }
-  return results;
+
+  return Buffer.from(results);
 }

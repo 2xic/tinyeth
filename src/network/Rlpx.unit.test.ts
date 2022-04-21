@@ -1,5 +1,5 @@
 import { KeyPair } from '../signatures/KeyPair';
-import { getBufferFromHash } from './getBufferFromHex';
+import { getBufferFromHex } from './getBufferFromHex';
 import { Rlpx } from './Rlpx';
 
 // Borrowing test data from https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/tests/test_go_handshake.py
@@ -81,7 +81,7 @@ describe('Rlpx', () => {
 
     const message = intatorRlpx.createAuthMessage({
       ethNodePublicKey: responderRlpx.keyPair.getPublicKey(),
-      nonce: getBufferFromHash(testKeys.initiatorNonce),
+      nonce: getBufferFromHex(testKeys.initiatorNonce),
     });
 
     expect(message.length).toBe(194);
@@ -94,7 +94,7 @@ describe('Rlpx', () => {
 
     const message = intatorRlpx.createAuthMessage({
       ethNodePublicKey: responderRlpx.keyPair.getPublicKey(),
-      nonce: getBufferFromHash(testKeys.initiatorNonce),
+      nonce: getBufferFromHex(testKeys.initiatorNonce),
     });
 
     const responderPublicKey = responderRlpx.keyPair.getPublicKey();
@@ -137,7 +137,7 @@ describe('Rlpx', () => {
   });
 
   it.skip('should correctly construct the auth message', () => {
-    const encryptedMessage = getBufferFromHash(testKeys.authCiphertext);
+    const encryptedMessage = getBufferFromHex(testKeys.authCiphertext);
 
     const responderRlpx = new Rlpx(
       new KeyPair(testKeys.receiverEphemeralPrivateKey)
@@ -160,7 +160,7 @@ describe('Rlpx', () => {
 
     const message = intatorRlpx.createAuthMessage({
       ethNodePublicKey: responderRlpx.keyPair.getPublicKey(),
-      nonce: getBufferFromHash(testKeys.receiverNonce),
+      nonce: getBufferFromHex(testKeys.receiverNonce),
     });
 
     expect(message.length).toBe(194);

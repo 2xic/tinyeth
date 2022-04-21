@@ -22,6 +22,8 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Support for creating a key pair added, signing, and verification
     - Support for creating a raw transactions
     - Support for signing a raw transaction
+    - (todo) Implement EIP 2718
+    - (todo) Implement EIP 1559
 
 - [ ] (started on) Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
 

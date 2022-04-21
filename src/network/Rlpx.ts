@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
 import { encrypt, decrypt, PrivateKey } from 'eciesjs';
-import { getBufferFromHash } from './getBufferFromHex';
+import { getBufferFromHex } from './getBufferFromHex';
 
 export class Rlpx {
   constructor(public keyPair: KeyPair, private rlpEncoder = new RlpEncoder()) {}
@@ -99,7 +99,7 @@ export class Rlpx {
     encryptedMessage: Buffer;
     responderPublicKey: Buffer | string;
   }) {
-    const responderPublicKey = getBufferFromHash(inputResponderPublicKey);
+    const responderPublicKey = getBufferFromHex(inputResponderPublicKey);
     console.log(responderPublicKey);
     return decrypt(responderPublicKey, encryptedMessage);
   }

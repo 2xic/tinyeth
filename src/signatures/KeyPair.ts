@@ -1,7 +1,6 @@
 import secp256k1 from 'secp256k1';
-import createKeccakHash from 'keccak';
 import crypto from 'crypto';
-import { getBufferFromHash } from '../network/getBufferFromHex';
+import { getBufferFromHex } from '../network/getBufferFromHex';
 import { keccak256 } from '../network/keccak256';
 
 export class KeyPair {
@@ -186,7 +185,7 @@ export class KeyPair {
 
   private addMissingPublicKeyByte({ buffer }: { buffer: Buffer }) {
     if (buffer.length === 64) {
-      return Buffer.concat([getBufferFromHash('04'), buffer]);
+      return Buffer.concat([getBufferFromHex('04'), buffer]);
     }
     return buffer;
   }

@@ -1,4 +1,4 @@
-export function getBufferFromHash(inputHash: string | Buffer): Buffer {
+export function getBufferFromHex(inputHash: string | Buffer): Buffer {
   if (typeof inputHash === 'string') {
     const hash = inputHash.startsWith('0x')
       ? `${inputHash.slice(2)}`

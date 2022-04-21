@@ -1,12 +1,12 @@
 import { cleanString } from '../utils';
-import { getBufferFromHash } from './getBufferFromHex';
+import { getBufferFromHex } from './getBufferFromHex';
 import { Packet } from './Packet';
 
 describe('Packets', () => {
   // from https://github.com/ethereum/go-ethereum/pull/2091/files#diff-a2488b7a37555bfb5c64327072acdbbf703ab127176956f6b6558067950f8f73R455
 
   it('should correctly decode hello packet', () => {
-    const helloPacket = getBufferFromHash(
+    const helloPacket = getBufferFromHex(
       cleanString(`
     f87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840
     fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569
@@ -19,7 +19,7 @@ describe('Packets', () => {
   });
 
   it.skip('should correctly decode packet', () => {
-    const pingPacket = getBufferFromHash(
+    const pingPacket = getBufferFromHex(
       cleanString(`
       e9614ccfd9fc3e74360018522d30e1419a143407ffcce748de3e22116b7e8dc92ff74788c0b6663a
       aa3d67d641936511c8f8d6ad8698b820a7cf9e1be7155e9a241f556658c55428ec0563514365799a
