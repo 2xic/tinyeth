@@ -1,6 +1,5 @@
 import { InputTypes, Literal } from '../RlpEncoder';
 import { isValueBetween } from './isBetween';
-import { SimpleTypeEncoderDecoder } from './SimpleTypeEncoderDecoder';
 import {
   DecodingResults,
   EncodingResults,

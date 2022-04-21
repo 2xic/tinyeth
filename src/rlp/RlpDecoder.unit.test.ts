@@ -1,5 +1,3 @@
-import BigNumber from 'bignumber.js';
-import { isTupleTypeNode } from 'typescript';
 import { cleanString } from '../utils';
 import { RlpDecoder } from './RlpDecoder';
 

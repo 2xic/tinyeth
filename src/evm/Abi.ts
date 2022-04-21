@@ -1,5 +1,4 @@
 import { keccak256 } from '../network/keccak256';
-import { InputTypes, RlpEncoder } from '../rlp/RlpEncoder';
 import { Uint } from '../rlp/types/Uint';
 
 export class Abi {

@@ -59,7 +59,7 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     }
   }
 
-  public isEncodeType({ input }: { input: unknown }): boolean {
+  public isEncodeType(): boolean {
     throw new Error('Method not implemented.');
   }
 
@@ -70,7 +70,7 @@ export class UIntEncoderDecoder implements TypeEncoderDecoder<BigNumber> {
     };
   }
 
-  public isDecodeType({ input }: { input: number }): boolean {
+  public isDecodeType(): boolean {
     throw new Error('Method not implemented.');
   }
 

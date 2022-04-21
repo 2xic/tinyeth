@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { RawTransaction } from './RawTransaction';
 import { SignedTransaction } from './SignedTransaction';
 import { Transactions } from './Transaction';
 

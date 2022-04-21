@@ -1,9 +1,5 @@
-import { RlpDecoder } from '../rlp/RlpDecoder';
-import { RlpEncoder } from '../rlp/RlpEncoder';
-import { addTerminator } from './addTerminator';
-import { convertBytesToNibbles } from './convertBytesToNibbles';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MerklePatriciaTrieHelper } from './MerklePatriciaTrieHelper';
-import { packNibbles } from './packNibbles';
 import { TrieNode } from './TrieNode';
 
 export class MerklePatriciaTrie {

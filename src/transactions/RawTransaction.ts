@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { RlpEncoder } from '../rlp/RlpEncoder';
-import createKeccakHash from 'keccak';
 import { KeyPair } from '../signatures/KeyPair';
 import { SignedTransaction } from './SignedTransaction';
 import { keccak256 } from '../network/keccak256';

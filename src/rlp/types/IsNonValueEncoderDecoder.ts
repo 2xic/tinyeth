@@ -4,8 +4,9 @@ import {
   TypeEncoderDecoder,
 } from './TypeEncoderDecoder';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class IsNonValueEncoderDecoder implements TypeEncoderDecoder<any> {
-  public encode({ input }: { input: any }): EncodingResults {
+  public encode(): EncodingResults {
     throw new Error('Method not implemented');
   }
 
@@ -22,7 +23,7 @@ export class IsNonValueEncoderDecoder implements TypeEncoderDecoder<any> {
     return input == 0x80;
   }
 
-  public isEncodeType({ input }: { input: unknown }): boolean {
+  public isEncodeType(): boolean {
     throw new Error('Method not implemented.');
   }
 }
