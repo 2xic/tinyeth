@@ -24,7 +24,7 @@ export class StringEncoderDecoder
 
     if (isShortString) {
       return {
-        encoding: isUint8Array ? Buffer.from(input).toString('hex') : input,
+        encoding: isUint8Array ? encodedString : input,
         length: input.length,
       };
     } else if (isLongString) {

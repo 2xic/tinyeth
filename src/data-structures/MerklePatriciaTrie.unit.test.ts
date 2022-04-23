@@ -1,3 +1,4 @@
+import { getBufferFromHex } from '../network/getBufferFromHex';
 import { RlpEncoder } from '../rlp/RlpEncoder';
 import { MerklePatriciaTrie } from './MerklePatriciaTrie';
 
@@ -16,8 +17,36 @@ describe('MerkelPatriciaTrie', () => {
         'hex'
       )
     );
+    expect(trie.root.key.toString('hex')).toBe('20010102');
     expect(trie.rootHash).toBe(
-      '15da97c42b7ed2e1c0c8dab6a6d7e3d9dc0a75580bbc4f1f29c33996d1415dcc'
+      '4a5b19d151e796482b08a1e020f1f7ef5ea7240c0171fd629598fee612892a7b'
+    );
+  });
+
+  it('should correctly get the hash of a trie with a extension node', () => {
+    const trie = new MerklePatriciaTrie();
+    trie.put(
+      Buffer.from('010102', 'hex'),
+      getBufferFromHex(
+        new RlpEncoder().encode({
+          input: ['hello'],
+        })
+      )
+    );
+    trie.put(
+      Buffer.from('01010255', 'hex'),
+      getBufferFromHex(
+        new RlpEncoder().encode({
+          input: ['hellothere'],
+        })
+      )
+    );
+    expect(trie.root.rawKey.toString('hex')).toBe('00010102');
+    expect(trie.root.rawValue.toString('hex')).toBe(
+      'dc6e2b9778d3bec8fcd3764f8fed3b66ca0b46f4b97c907239efc9fc0e13ca3a'
+    );
+    expect(trie.rootHash).toBe(
+      'b47e5f20cadaf505f1fe660a45def89d80eb04213549f6bb04f57d6c2e8fc479'
     );
   });
 

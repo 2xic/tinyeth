@@ -29,4 +29,16 @@ describe('StringEncoderDecoder', () => {
     // it uses two bytes to decode, one for the length of the length, and the actual length.
     expect(decodedString.newIndex).toBe(input.length + 2);
   });
+
+  // TODO: Fix this, it should not output non deterministic results
+  //      it should only output hex, because if not it will mess up buffer.from
+  it.skip('should correctly encode a string as buffer and string', () => {
+    const encodedString = new StringEncoderDecoder().encode({
+      input: '5',
+    });
+    const encodedBuffer = new StringEncoderDecoder().encode({
+      input: Buffer.from('5', 'ascii'),
+    });
+    expect(encodedBuffer.encoding).toBe(encodedString.encoding);
+  });
 });

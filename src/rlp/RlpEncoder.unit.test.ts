@@ -1,4 +1,7 @@
 import BigNumber from 'bignumber.js';
+import { getBufferFromHex } from '../network/getBufferFromHex';
+import { keccak256 } from '../network/keccak256';
+import { sha3_256 } from '../network/sha3_256';
 import { RlpEncoder } from './RlpEncoder';
 
 describe('RlpEncoder', () => {
@@ -197,5 +200,61 @@ describe('RlpEncoder', () => {
         input: [1, 2, 3],
       })
     ).toBe('0xC3010203'.toLowerCase());
+  });
+
+  it('should correctly encode mix of buffers and string', () => {
+    const input = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      [
+        Buffer.from('35', 'hex'),
+        Buffer.concat([
+          Buffer.from('cb8a', 'hex'),
+          Buffer.from('hellothere', 'ascii'),
+        ]),
+      ],
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      Buffer.concat([
+        Buffer.from('c685', 'hex'),
+        Buffer.from('hello', 'ascii'),
+      ]),
+    ];
+    expect(
+      new RlpEncoder().encode({
+        input,
+      })
+    ).toBe(
+      '0xe68080808080ce358ccb8a68656C6C6F74686572658080808080808080808087c68568656C6C6F'.toLowerCase()
+    );
+  });
+
+  it('should correctly encode a specific list', () => {
+    const encoded = new RlpEncoder().encode({
+      input: [
+        Buffer.from('00010102', 'hex'),
+        Buffer.from(
+          'dc6e2b9778d3bec8fcd3764f8fed3b66ca0b46f4b97c907239efc9fc0e13ca3a',
+          'hex'
+        ),
+      ],
+    });
+    expect(encoded).toBe(
+      '0xe68400010102a0dc6e2b9778d3bec8fcd3764f8fed3b66ca0b46f4b97c907239efc9fc0e13ca3a'
+    );
+    expect(sha3_256(getBufferFromHex(encoded)).toString('hex')).toBe(
+      'b47e5f20cadaf505f1fe660a45def89d80eb04213549f6bb04f57d6c2e8fc479'
+    );
   });
 });

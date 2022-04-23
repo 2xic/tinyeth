@@ -1,6 +1,10 @@
 import { getBufferFromHex } from '../network/getBufferFromHex';
 import { RlpEncoder } from '../rlp/RlpEncoder';
-import { MerklePatriciaTrieHelper as MerklePatriciaTrieHelper } from './MerklePatriciaTrieHelper';
+import {
+  CommonPrefixResultType,
+  MerklePatriciaTrieHelper as MerklePatriciaTrieHelper,
+} from './MerklePatriciaTrieHelper';
+import { singleHexDigitString } from './singleHexDigitString';
 
 describe('MerklePatriciaTrieHelper', () => {
   it('should correctly encode key and value', () => {
@@ -22,5 +26,32 @@ describe('MerklePatriciaTrieHelper', () => {
       input: Buffer.from('010102', 'hex'),
     });
     expect(key.toString('hex')).toBe('20010102');
+  });
+
+  it('should correctly recover a converted key', () => {
+    const key = new MerklePatriciaTrieHelper().recoverKey({
+      input: Buffer.from('20010102', 'hex'),
+    });
+    expect(singleHexDigitString(key)).toBe('010102');
+  });
+
+  it('should correctly find the length of the common prefix', () => {
+    const commonPrefixResult =
+      new MerklePatriciaTrieHelper().commonPrefixLength({
+        key1: Buffer.from('test', 'ascii'),
+        key2: Buffer.from('teppe', 'ascii'),
+      });
+    expect(commonPrefixResult.length).toBe(2);
+    expect(commonPrefixResult.type).toBe(undefined);
+  });
+
+  it('should correctly find the length of the common prefix', () => {
+    const commonPrefixResult =
+      new MerklePatriciaTrieHelper().commonPrefixLength({
+        key1: Buffer.from('test', 'ascii'),
+        key2: Buffer.from('test', 'ascii'),
+      });
+    expect(commonPrefixResult.length).toBe(4);
+    expect(commonPrefixResult.type).toBe(CommonPrefixResultType.EQUAL);
   });
 });
