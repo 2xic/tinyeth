@@ -1,19 +1,20 @@
 import BigNumber from 'bignumber.js';
 import { getBufferFromHex } from '../network/getBufferFromHex';
-import { keccak256 } from '../network/keccak256';
 import { sha3_256 } from '../network/sha3_256';
 import { RlpEncoder } from './RlpEncoder';
 
 describe('RlpEncoder', () => {
+  const interactor = new RlpEncoder();
+
   it('should correctly encode booleans', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: true,
       })
     ).toBe('0x01');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: false,
       })
     ).toBe('0x80');
@@ -21,19 +22,19 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode falsy values', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: [],
       })
     ).toBe('0xc0');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: '',
       })
     ).toBe('0x80');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 0,
       })
     ).toBe('0x80');
@@ -41,49 +42,49 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode numbers', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 127,
       })
     ).toBe('0x7f');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 128,
       })
     ).toBe('0x8180');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 256,
       })
     ).toBe('0x820100');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 1024,
       })
     ).toBe('0x820400');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 0xffffff,
       })
     ).toBe('0x83ffffff');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 0xffffffff,
       })
     ).toBe('0x84ffffffff');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 0xffffffff,
       })
     ).toBe('0x84ffffffff');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: new BigNumber('0xFFFFFFFFFFFFFF'),
       })
     ).toBe('0x87ffffffffffffff');
@@ -91,19 +92,19 @@ describe('RlpEncoder', () => {
 
   it('should correctly encoded strings', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 'dog',
       })
     ).toBe('0x83646f67');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 'hello world',
       })
     ).toBe('0x8b68656c6c6f20776f726c64');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 'Lorem ipsum dolor sit amet, consectetur adipisicing eli',
       })
     ).toBe(
@@ -111,7 +112,7 @@ describe('RlpEncoder', () => {
     );
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit',
       })
     ).toBe(
@@ -121,13 +122,13 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode a list of words', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: ['hello', 'world'],
       })
     ).toBe('0xcc8568656c6c6f85776f726c64');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: ['cat', 'dog'],
       })
     ).toBe('0xc88363617483646f67');
@@ -136,13 +137,13 @@ describe('RlpEncoder', () => {
   it('should correctly encode a long list', () => {
     const aEncoded = [...new Array(1024)].map(() => '61').join('');
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: [...new Array(1024)].map(() => 'a').join(''),
       })
     ).toBe('0xb90400' + aEncoded);
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: [
           'aaa',
           'bbb',
@@ -168,19 +169,19 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode a byte array', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: new Uint8Array([0x80]),
       })
     ).toBe('0x8180');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: new Uint8Array([0xff]),
       })
     ).toBe('0x81ff');
 
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: new Uint8Array([1, 2, 3]),
       })
     ).toBe('0x83010203');
@@ -188,7 +189,7 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode a array inside a array', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: [[], [[]], [[], [[]]]],
       })
     ).toBe('0xC7C0C1C0C3C0C1C0'.toLowerCase());
@@ -196,7 +197,7 @@ describe('RlpEncoder', () => {
 
   it('should correctly encode numbers inside a array', () => {
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input: [1, 2, 3],
       })
     ).toBe('0xC3010203'.toLowerCase());
@@ -232,7 +233,7 @@ describe('RlpEncoder', () => {
       ]),
     ];
     expect(
-      new RlpEncoder().encode({
+      interactor.encode({
         input,
       })
     ).toBe(
@@ -241,7 +242,7 @@ describe('RlpEncoder', () => {
   });
 
   it('should correctly encode a specific list', () => {
-    const encoded = new RlpEncoder().encode({
+    const encoded = interactor.encode({
       input: [
         Buffer.from('00010102', 'hex'),
         Buffer.from(

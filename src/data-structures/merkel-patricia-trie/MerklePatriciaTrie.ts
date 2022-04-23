@@ -1,17 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  isNamedExportBindings,
-  isPrefixUnaryExpression,
-  isTypePredicateNode,
-} from 'typescript';
-import { TuplePair } from 'typescript-logging/dist/commonjs/utils/DataStructures';
-import { RlpEncoder } from '../rlp/RlpEncoder';
 import { convertBytesToNibbles } from './convertBytesToNibbles';
-import { InMemoryDatabase } from './InMemoryDatabase';
-import {
-  CommonPrefixResultType,
-  MerklePatriciaTrieHelper,
-} from './MerklePatriciaTrieHelper';
+import { InMemoryDatabase } from '../utils/InMemoryDatabase';
+import { MerklePatriciaTrieHelper } from './MerklePatriciaTrieHelper';
 import { packNibbles } from './packNibbles';
 import { addTerminator, removeTerminator } from './terminatorUtils';
 import { NodeType, TrieNode } from './TrieNode';
@@ -125,7 +115,6 @@ export class MerklePatriciaTrie {
       if (!commonPrefixResult.length) {
         return newNode;
       } else {
-
         const value = new MerklePatriciaTrieHelper().encodeNodeChildren(
           newNode.childrenValues
         );
@@ -133,7 +122,6 @@ export class MerklePatriciaTrie {
         if (value instanceof TrieNode) {
           throw new Error('Not supported');
         }
-
 
         return new TrieNode({
           key: packNibbles(currentKey.slice(0, commonPrefixResult.length)),

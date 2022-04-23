@@ -3,7 +3,7 @@ import { KeyPair } from '../signatures/KeyPair';
 import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
-import { encrypt, decrypt, PrivateKey } from 'eciesjs';
+import { decrypt } from 'eciesjs';
 import { getBufferFromHex } from './getBufferFromHex';
 
 export class Rlpx {

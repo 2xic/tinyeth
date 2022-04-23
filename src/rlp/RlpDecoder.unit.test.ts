@@ -2,14 +2,16 @@ import { cleanString } from '../utils';
 import { RlpDecoder } from './RlpDecoder';
 
 describe('RlpDecoder', () => {
+  const interactor = new RlpDecoder();
+
   it('should correctly decode a string', () => {
-    const decoded = new RlpDecoder().decode({
+    const decoded = interactor.decode({
       input: '0x8b68656c6c6f20776f726c64',
     });
     expect(decoded).toBe('hello world');
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xB74C6F72656D20697073756D20646F6C6F722073697420616D65742C20636F6E7365637465747572206164697069736963696E6720656C69',
       })
@@ -18,13 +20,13 @@ describe('RlpDecoder', () => {
 
   it('should decode numbers', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x05',
       })
     ).toBe(5);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x8180',
       })
     ).toBe('0x80');
@@ -32,13 +34,13 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xC50102030405',
       })
     ).toMatchObject([1, 2, 3, 4, 5]);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xcc8568656c6c6f85776f726c64',
       })
     ).toMatchObject(['hello', 'world']);
@@ -46,7 +48,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a bigint', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x87ffffffffffffff',
       })
     ).toBe('0xffffffffffffff');
@@ -54,7 +56,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a bigint', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x87ffffffffffffff',
       })
     ).toBe('0xffffffffffffff');
@@ -62,7 +64,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a number in list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xc382270f',
       })
     ).toMatchObject(['0x270f']);
@@ -70,7 +72,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode falsy values', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xc0',
       })
     ).toMatchObject([]);
@@ -78,7 +80,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a array inside a array', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xC7C0C1C0C3C0C1C0'.toLowerCase(),
       })
     ).toMatchObject([[], [[]], [[], [[]]]]);
@@ -86,7 +88,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode numbers inside a array', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xC3010203'.toLowerCase(),
       })
     ).toMatchObject([1, 2, 3]);
@@ -94,7 +96,7 @@ describe('RlpDecoder', () => {
 
   it('should be able to decode subarray', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xcdc5836574683dc6846d6f726b16',
       })
     ).toMatchObject([
@@ -103,7 +105,7 @@ describe('RlpDecoder', () => {
     ]);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xc9c883666f6f83626172',
       })
     ).toMatchObject([['foo', 'bar']]);
@@ -111,7 +113,7 @@ describe('RlpDecoder', () => {
 
   it('should be able to decode large number', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x88FFFFFFFFFFFFFFFF',
       })
     ).toBe('0xFFFFFFFFFFFFFFFF'.toLowerCase());
@@ -119,13 +121,13 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a byte array', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x8180',
       })
     ).toBe('0x80');
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x83010203',
       })
     ).toBe('0x010203');
@@ -133,7 +135,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode array with numbers', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xc482270f03',
       })
     ).toMatchObject(['0x270f', 0x03]);
@@ -141,7 +143,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a byte array', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xe437916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270f',
       })
@@ -156,7 +158,7 @@ describe('RlpDecoder', () => {
     ]);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xe537916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270f03',
       })
@@ -174,7 +176,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly split list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xF83C836161618362626283636363836464648365656583666666836767678368686883696969836A6A6A836B6B6B836C6C6C836D6D6D836E6E6E836F6F6F',
       })
@@ -199,13 +201,13 @@ describe('RlpDecoder', () => {
 
   it('should correctly encode booleans', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x01',
       })
     ).toBe(1);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0x80',
       })
     ).toBe(false);
@@ -217,7 +219,7 @@ describe('RlpDecoder', () => {
        `);
 
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input,
       })
     ).toMatchObject([
@@ -237,7 +239,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a long string', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xf842b840fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877',
       })
@@ -248,7 +250,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a long list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xf84490aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa90bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb90cccccccccccccccccccccccccccccccc90dddddddddddddddddddddddddddddddd',
       })
@@ -262,7 +264,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode list after a list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xc882270fc202020304',
       })
     ).toMatchObject(['0x270f', [0x2, 0x2], 0x03, 0x04]);
@@ -270,7 +272,7 @@ describe('RlpDecoder', () => {
 
   it('should correctly decode a long list after a list', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xf86082270fb8564141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141c202020304',
       })
@@ -285,7 +287,7 @@ describe('RlpDecoder', () => {
 
   it('should be able to decode a packet', () => {
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input:
           '0xf87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877c883666f6f836261720304',
       })
@@ -307,7 +309,7 @@ describe('RlpDecoder', () => {
   it('should correctly decode a long list', () => {
     const aEncoded = [...new Array(1024)].map(() => '61').join('');
     expect(
-      new RlpDecoder().decode({
+      interactor.decode({
         input: '0xb90400' + aEncoded,
       })
     ).toBe([...new Array(1024)].map(() => 'a').join(''));

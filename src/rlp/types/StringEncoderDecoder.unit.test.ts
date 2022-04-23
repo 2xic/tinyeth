@@ -1,13 +1,15 @@
 import { StringEncoderDecoder } from './StringEncoderDecoder';
 
 describe('StringEncoderDecoder', () => {
+  const interactor = new StringEncoderDecoder();
+
   it('should correctly decode a short string', () => {
     const input = [...new Array(32)].map(() => 'A').join('');
-    const encodedString = new StringEncoderDecoder().encode({
+    const encodedString = interactor.encode({
       input,
     });
 
-    const decodedString = new StringEncoderDecoder().decode({
+    const decodedString = interactor.decode({
       input: Buffer.from(`${encodedString.encoding}`, 'hex'),
       fromIndex: 0,
     });
@@ -17,11 +19,11 @@ describe('StringEncoderDecoder', () => {
 
   it('should correctly decode a long string', () => {
     const input = [...new Array(128)].map(() => 'A').join('');
-    const encodedString = new StringEncoderDecoder().encode({
+    const encodedString = interactor.encode({
       input,
     });
 
-    const decodedString = new StringEncoderDecoder().decode({
+    const decodedString = interactor.decode({
       input: Buffer.from(`${encodedString.encoding}`, 'hex'),
       fromIndex: 0,
     });
@@ -33,10 +35,10 @@ describe('StringEncoderDecoder', () => {
   // TODO: Fix this, it should not output non deterministic results
   //      it should only output hex, because if not it will mess up buffer.from
   it.skip('should correctly encode a string as buffer and string', () => {
-    const encodedString = new StringEncoderDecoder().encode({
+    const encodedString = interactor.encode({
       input: '5',
     });
-    const encodedBuffer = new StringEncoderDecoder().encode({
+    const encodedBuffer = interactor.encode({
       input: Buffer.from('5', 'ascii'),
     });
     expect(encodedBuffer.encoding).toBe(encodedString.encoding);

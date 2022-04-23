@@ -1,12 +1,11 @@
-import { RlpEncoder } from '../rlp/RlpEncoder';
+import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { addTerminator, removeTerminator } from './terminatorUtils';
 import { convertBytesToNibbles } from './convertBytesToNibbles';
 import { packNibbles } from './packNibbles';
-import { keccak256 } from '../network/keccak256';
-import { getBufferFromHex } from '../network/getBufferFromHex';
+import { getBufferFromHex } from '../../network/getBufferFromHex';
 import { TrieNode } from './TrieNode';
 import { TrieNodeReference } from './TrieNodeReference';
-import { sha3_256 } from '../network/sha3_256';
+import { sha3_256 } from '../../network/sha3_256';
 import { unpackNibbles } from './unpackNibbles';
 
 export class MerklePatriciaTrieHelper {

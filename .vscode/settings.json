@@ -9,6 +9,7 @@
     "source.fixAll.eslint": true
   },
   "cSpell.words": [
+    "interactor",
     "Merkle"
   ]
 }

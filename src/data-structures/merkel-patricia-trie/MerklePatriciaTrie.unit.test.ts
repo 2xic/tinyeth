@@ -1,5 +1,5 @@
-import { getBufferFromHex } from '../network/getBufferFromHex';
-import { RlpEncoder } from '../rlp/RlpEncoder';
+import { getBufferFromHex } from '../../network/getBufferFromHex';
+import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { MerklePatriciaTrie } from './MerklePatriciaTrie';
 
 // Test from https://medium.com/@chiqing/merkle-patricia-trie-explained-ae3ac6a7e123
