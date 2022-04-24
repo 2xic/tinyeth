@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { convertBytesToNibbles } from './convertBytesToNibbles';
+import { convertBytesToNibbles } from './utils/convertBytesToNibbles';
 import { InMemoryDatabase } from '../utils/InMemoryDatabase';
 import { MerklePatriciaTrieHelper } from './MerklePatriciaTrieHelper';
-import { packNibbles } from './packNibbles';
-import { addTerminator, removeTerminator } from './terminatorUtils';
-import { NodeType, TrieNode } from './TrieNode';
-import { TrieNodeRawKeyValue } from './TrieNodeRawKeyValue';
-import { TrieNodeRawValue } from './TrieNodeRawValue';
-import { unpackNibbles } from './unpackNibbles';
+import { packNibbles } from './utils/packNibbles';
+import { addTerminator, removeTerminator } from './utils/terminatorUtils';
+import { NodeType, TrieNode } from './nodes/TrieNode';
+import { TrieNodeRawKeyValue } from './nodes/TrieNodeRawKeyValue';
+import { TrieNodeRawValue } from './nodes/TrieNodeRawValue';
+import { unpackNibbles } from './utils/unpackNibbles';
 
 export class MerklePatriciaTrie {
   private _root: TrieNode;
@@ -89,28 +89,6 @@ export class MerklePatriciaTrie {
           )
         );
       }
-
-      /*
-      newNode.addNode(
-        remainingKey[0].toString(),
-        new MerklePatriciaTrieHelper().encodeNode({
-          key: packNibbles(addTerminator(remainingKey)),
-          value,
-        })
-      );
-
-      const keySource = remainingCurrentKey.length
-        ? remainingCurrentKey
-        : remainingKey;
-
-      newNode.addNode(
-        keySource[0].toString(),
-        new MerklePatriciaTrieHelper().encodeNode({
-          key: packNibbles(addTerminator(keySource)),
-          value: node.rawValue,
-        })
-      );
-      */
 
       if (!commonPrefixResult.length) {
         return newNode;

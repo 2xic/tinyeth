@@ -1,12 +1,12 @@
 import { RlpEncoder } from '../../rlp/RlpEncoder';
-import { addTerminator, removeTerminator } from './terminatorUtils';
-import { convertBytesToNibbles } from './convertBytesToNibbles';
-import { packNibbles } from './packNibbles';
+import { addTerminator, removeTerminator } from './utils/terminatorUtils';
+import { convertBytesToNibbles } from './utils/convertBytesToNibbles';
+import { packNibbles } from './utils/packNibbles';
 import { getBufferFromHex } from '../../network/getBufferFromHex';
-import { TrieNode } from './TrieNode';
-import { TrieNodeReference } from './TrieNodeReference';
+import { TrieNode } from './nodes/TrieNode';
+import { TrieNodeReference } from './nodes/TrieNodeReference';
 import { sha3_256 } from '../../network/sha3_256';
-import { unpackNibbles } from './unpackNibbles';
+import { unpackNibbles } from './utils/unpackNibbles';
 
 export class MerklePatriciaTrieHelper {
   public encodeNode({ key, value }: { key: Buffer; value: Buffer }) {
