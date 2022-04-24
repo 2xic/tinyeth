@@ -30,6 +30,8 @@
     "prettier": "^2.6.1"
   },
   "dependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
     "bignumber.js": "^9.0.2",
     "bn.js": "^5.2.0",
     "ecies-parity": "github:sigp/ecies-parity",

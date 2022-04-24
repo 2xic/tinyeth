@@ -11,7 +11,13 @@ import {
 } from './types/TypeEncoderDecoder';
 
 export class RlpDecoder {
-  public decode({ input }: { input: string }): SimpleTypes | undefined {
+  public decode({
+    input,
+    returnOnError,
+  }: {
+    input: string;
+    returnOnError?: boolean;
+  }): SimpleTypes | undefined {
     const inputWithoutHexPrefix = input.startsWith('0x')
       ? input.substring(2)
       : input;
@@ -36,6 +42,9 @@ export class RlpDecoder {
           parsed = decoding;
         }
       } else {
+        if (returnOnError) {
+          return parsed;
+        }
         throw new Error(
           `Unknown state ${JSON.stringify(parsed)} ${JSON.stringify(decoding)}`
         );

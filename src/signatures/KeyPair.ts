@@ -1,7 +1,7 @@
 import secp256k1 from 'secp256k1';
 import crypto from 'crypto';
-import { getBufferFromHex } from '../network/getBufferFromHex';
 import { keccak256 } from '../network/keccak256';
+import { addMissingPublicKeyByte } from './addMissingPublicKyeByte';
 
 export class KeyPair {
   constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
@@ -108,7 +108,7 @@ export class KeyPair {
     privateKey: string;
     message: Buffer;
   }) {
-    const privateKey = new Uint8Array(Buffer.from(inputPrivateKey, 'hex'));
+    const privateKey = Buffer.from(inputPrivateKey, 'hex');
     if (privateKey.length !== 32) {
       throw new Error('Invalid privatekey');
     }
@@ -151,13 +151,22 @@ export class KeyPair {
     publicKey: string;
     privateKey?: string;
   }): Buffer {
-    const privateKey = inputPrivateKey || this.privatekey;
+    const privateKey = Buffer.from(inputPrivateKey || this.privatekey, 'hex');
+    const publicKey = this.parsePublicKey({
+      input: inputPublicKey,
+    });
+
+    if (privateKey.length !== 32) {
+      throw new Error(`Wrong private key length ${privateKey.length}`);
+    } else if (publicKey.length !== 65) {
+      throw new Error(`Wrong public key length ${publicKey.length}`);
+    }
 
     return Buffer.from(
       secp256k1
         .ecdh(
-          Buffer.from(inputPublicKey, 'hex'),
-          Buffer.from(privateKey, 'hex'),
+          new Uint8Array(publicKey),
+          new Uint8Array(privateKey),
           { hashfn },
           Buffer.alloc(33)
         )
@@ -176,18 +185,11 @@ export class KeyPair {
 
   public parsePublicKey({ input }: { input: string | Buffer }): Buffer {
     if (typeof input === 'string') {
-      return this.addMissingPublicKeyByte({
+      return addMissingPublicKeyByte({
         buffer: Buffer.from(input, 'hex'),
       });
     }
     return input;
-  }
-
-  private addMissingPublicKeyByte({ buffer }: { buffer: Buffer }) {
-    if (buffer.length === 64) {
-      return Buffer.concat([getBufferFromHex('04'), buffer]);
-    }
-    return buffer;
   }
 }
 

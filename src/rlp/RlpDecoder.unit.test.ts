@@ -314,4 +314,15 @@ describe('RlpDecoder', () => {
       })
     ).toBe([...new Array(1024)].map(() => 'a').join(''));
   });
+
+  it('should correctly decode rlp for a packet', () => {
+    /*
+      ["0x022b",["0x20010db83c4d001500000000abcdef12","0x0cfa","0x15a8"],["0x20010db885a308d313198a2e03707348","0x08ae","0x823a"],"0x43b9a355",["0x01","0x02","0x03","0x04","0x05"]]
+    */
+    const packet =
+      '0xf83e82022bd79020010db83c4d001500000000abcdef12820cfa8215a8d79020010db885a308d313198a2e037073488208ae82823a8443b9a355c50102030405';
+    interactor.decode({
+      input: packet,
+    });
+  });
 });

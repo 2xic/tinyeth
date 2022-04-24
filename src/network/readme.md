@@ -28,7 +28,13 @@
     - More detailed of the actual auth message, the part in the docs is kinda short.
 - https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/tests/test_go_handshake.py
     - Borrowing test data, thank you <3
-     
+- https://github.com/stateview/atoms/tree/6c3513c0775e1e1e69a7c9e5c86255804fa3fb36/p2p/rlpx
+    - Looks like they have some good tests also
+- https://github.com/ethereumjs/ethereumjs-devp2p/pull/15/files
+    - PR used for ethereumjs for eip-8
+    
+
+
 # Other info
 ## Node list
 - Bootstrap nodes

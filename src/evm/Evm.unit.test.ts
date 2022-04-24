@@ -47,9 +47,9 @@ describe('evm', () => {
     expect(evm.storage[0x0].toNumber()).toBe(0x1);
   });
 
-  it.skip('should be able to run a basic contract', () => {
+  it('should be able to run a basic contract', () => {
     // example from https://medium.com/@eiki1212/explaining-ethereum-contract-abi-evm-bytecode-6afa6e917c3b
-    new Evm(
+    const evm = new Evm(
       Buffer.from(
         '6080604052348015600f57600080fd5b5060878061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063037a417c14602d575b600080fd5b60336049565b6040518082815260200191505060405180910390f35b6000600190509056fea265627a7a7230582050d33093e20eb388eec760ca84ba30ec42dadbdeb8edf5cd8b261e89b8d4279264736f6c634300050a0032',
         'hex'
@@ -58,7 +58,22 @@ describe('evm', () => {
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       }
-    ).execute();
+    ).execute({
+      stopAtOpcode: 0x39,
+    });
+    evm.step();
+
+    expect(
+      evm.memory
+        .toString('hex')
+        .startsWith(
+          '6080604052348015600f57600080fd5b506004361060285760003560e01c8063037a417c14602d575b600080fd5b60336049565b6040518082815260200191505060405180910390f35b6000600190509056fea265627a7a7230582050d33093e20eb388eec760ca84ba30ec42dadbdeb8edf5cd8b261e89b8d4279264736f6c634300050a003200000000000000000000000000000000000000000000000000'
+        )
+    ).toBe(true);
+
+    evm.execute();
+
+    expect(evm.callingContextReturnData).toBeTruthy();
   });
 
   it('should correctly run simple CREATE opcode contract', () => {

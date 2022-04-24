@@ -32,11 +32,27 @@ export const opcodes: Record<number, OpCode> = {
 
     evm.stack.push(Number(a === b));
   }),
+  // ISZERO
+  0x15: new OpCode(1, ({ evm }) => {
+    const a = evm.stack.pop().toNumber();
+
+    evm.stack.push(Number(a === 0));
+  }),
   // XOR
   0x18: new OpCode(1, ({ evm }) => {
     const a = evm.stack.pop().toNumber();
     const b = evm.stack.pop().toNumber();
     evm.stack.push(a ^ b);
+  }),
+  // CODECOPY
+  0x39: new OpCode(1, ({ evm }) => {
+    const destOffset = evm.stack.pop().toNumber();
+    const offset = evm.stack.pop().toNumber();
+    const size = evm.stack.pop().toNumber();
+
+    for (let i = 0; i < size; i++) {
+      evm.memory[destOffset + i] = evm.program[offset + i];
+    }
   }),
   // POP
   0x50: new OpCode(1, ({ evm }) => {
@@ -106,7 +122,7 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // CODESIZE
   0x38: new OpCode(1, ({ evm }) => {
-    evm.stack.push(evm.buffer.length);
+    evm.stack.push(evm.program.length);
   }),
   // EXTCODESIZE
   0x3b: new OpCode(1, ({ evm }) => {
@@ -134,7 +150,7 @@ export const opcodes: Record<number, OpCode> = {
   // JUMP
   0x56: new OpCode(1, ({ evm }) => {
     const pc = evm.stack.pop().toNumber();
-    const opcode = evm.buffer[pc] == JUMP_DEST;
+    const opcode = evm.program[pc] == JUMP_DEST;
     if (!opcode) {
       throw new InvalidJump();
     }
@@ -149,7 +165,7 @@ export const opcodes: Record<number, OpCode> = {
     const condition = evm.stack.pop();
 
     if (condition) {
-      const opcode = evm.buffer[pc] == JUMP_DEST;
+      const opcode = evm.program[pc] == JUMP_DEST;
       if (!opcode) {
         throw new InvalidJump();
       }
@@ -174,6 +190,13 @@ export const opcodes: Record<number, OpCode> = {
 
     evm.network.register({ contract });
     evm.stack.push(new BigNumber(contract.address, 16));
+  }),
+  // RETURN
+  0xf3: new OpCode(1, ({ evm }) => {
+    const offset = evm.stack.pop().toNumber();
+    const size = evm.stack.pop().toNumber();
+
+    evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
   }),
   // REVERT
   0xfd: new OpCode(1, () => {

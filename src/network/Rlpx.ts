@@ -3,12 +3,18 @@ import { KeyPair } from '../signatures/KeyPair';
 import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
-import { decrypt } from 'eciesjs';
+import { decrypt, encrypt } from 'eciesjs';
 import { getBufferFromHex } from './getBufferFromHex';
+import { addMissingPublicKeyByte } from '../signatures/addMissingPublicKyeByte';
 
 export class Rlpx {
-  constructor(public keyPair: KeyPair, private rlpEncoder = new RlpEncoder()) {}
+  constructor(
+    public keyPair: KeyPair,
+    private ephemeralPrivateKey: Buffer,
+    private rlpEncoder = new RlpEncoder()
+  ) {}
 
+  // EIP-8 style
   public createAuthMessage({
     ethNodePublicKey,
     nonce: inputNonce,
@@ -16,32 +22,19 @@ export class Rlpx {
     ethNodePublicKey: string;
     nonce?: Buffer;
   }): Buffer {
-    // This is actually the encrypted code in the pydevp2p
-    const authMessage = [
-      // auth = auth-size || enc-auth-body
-      // auth-size = size of enc-auth-body, encoded as a big-endian 16-bit integer
-      Buffer.from([0x04]),
-    ];
-    /*    
-        auth-body = [sig, initiator-pubk, initiator-nonce, auth-vsn, ...]
-        enc-auth-body = ecies.encrypt(recipient-pubk, auth-body || auth-padding, auth-size)
-        auth-padding = arbitrary data
-    */
-    const body = this.rlpEncoder.encode({ input: authMessage });
     const nonce = inputNonce || crypto.randomBytes(32);
-
-    const token = Buffer.from(
+    const ecdhKey = Buffer.from(
       this.keyPair.getEcdh({
         publicKey: ethNodePublicKey,
         privateKey: this.keyPair.privatekey,
       })
     );
-    const tokenXorNonce = xor(token, nonce);
+    const tokenXorNonce = xor(ecdhKey, nonce);
     if (tokenXorNonce.length !== 32) {
       throw new Error('Something is wrong with the xor token function');
     }
     const { fullSignature } = new KeyPair().signMessage({
-      privateKey: this.keyPair.privatekey,
+      privateKey: this.ephemeralPrivateKey.toString('hex'), // this.keyPair.privatekey,
       message: tokenXorNonce,
     });
     const bufferSignature = Buffer.from(fullSignature, 'hex');
@@ -50,18 +43,13 @@ export class Rlpx {
         `Something is wrong with the signature function, expected length 65, but received ${bufferSignature.length}`
       );
     }
-    /*
-            static-shared-secret = ecdh.agree(privkey, remote-pubk)
-            ephemeral-key = ecdh.agree(ephemeral-privkey, remote-ephemeral-pubk)
-            shared-secret = keccak256(ephemeral-key || keccak256(nonce || initiator-nonce))
-            aes-secret = keccak256(ephemeral-key || shared-secret)
-            mac-secret = keccak256(ephemeral-key || aes-secret)
-    */
-
-    // https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/rlpxcipher.py#L194
-    // S || H(ephemeral-pubk) || pubk || nonce || 0x0
-    const hashSignature = keccak256(
-      Buffer.from(this.keyPair.getPublicKey(), 'hex')
+    const hashPublicKey = keccak256(
+      Buffer.from(
+        this.keyPair.getPublicKey({
+          privateKey: this.ephemeralPrivateKey.toString('hex'),
+        }),
+        'hex'
+      )
     );
     const rawPublicKey = Buffer.from(this.keyPair.getPublicKey(), 'hex');
 
@@ -73,10 +61,10 @@ export class Rlpx {
 
     return Buffer.concat([
       bufferSignature,
-      hashSignature,
+      hashPublicKey,
       rawPublicKey,
       nonce,
-      Buffer.from(String.fromCharCode(0x0)),
+      Buffer.from(String.fromCharCode(4)),
     ]);
   }
 
@@ -89,7 +77,10 @@ export class Rlpx {
     message: Buffer;
     responderPublicKey: Buffer | string;
   }): Buffer {
-    throw new Error('Not implemented');
+    const responderPublicKey = addMissingPublicKeyByte({
+      buffer: getBufferFromHex(inputResponderPublicKey),
+    });
+    return encrypt(responderPublicKey, message);
   }
 
   public decryptMessage({
@@ -99,8 +90,9 @@ export class Rlpx {
     encryptedMessage: Buffer;
     responderPublicKey: Buffer | string;
   }) {
-    const responderPublicKey = getBufferFromHex(inputResponderPublicKey);
-    console.log(responderPublicKey);
+    const responderPublicKey = addMissingPublicKeyByte({
+      buffer: getBufferFromHex(inputResponderPublicKey),
+    });
     return decrypt(responderPublicKey, encryptedMessage);
   }
 

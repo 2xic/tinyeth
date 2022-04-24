@@ -20,8 +20,9 @@ export class Evm {
   private _lastPc: number;
 
   private running: boolean;
+  private _callingContextReturnData?: Buffer;
 
-  constructor(public buffer: Buffer, private context: TxContext) {
+  constructor(public program: Buffer, private context: TxContext) {
     this.memory = Buffer.alloc(2048, 0);
     this._pc = 0;
     this._lastPc = -1;
@@ -55,16 +56,19 @@ export class Evm {
     return true;
   }
 
-  public execute() {
+  public execute(options?: { stopAtOpcode?: number }) {
     while (this.isRunning) {
       this.step();
+      if (options?.stopAtOpcode == this.currentOpcodeNumber) {
+        break;
+      }
     }
 
     return this;
   }
 
   private get currentOpcodeNumber() {
-    return this.buffer[this.pc];
+    return this.program[this.pc];
   }
 
   private loadOpcode(): OpCode {
@@ -77,7 +81,7 @@ export class Evm {
   }
 
   public peekBuffer(index: number) {
-    return new BigNumber(this.buffer[this.pc + index]);
+    return new BigNumber(this.program[this.pc + index]);
   }
 
   public setPc(pc: number) {
@@ -94,7 +98,19 @@ export class Evm {
   }
 
   public get isRunning() {
-    return this.pc < this.buffer.length && this.running;
+    return (
+      this.pc < this.program.length &&
+      this.running &&
+      !this.callingContextReturnData
+    );
+  }
+
+  public setCallingContextReturnData(buffer: Buffer) {
+    this._callingContextReturnData = buffer;
+  }
+
+  public get callingContextReturnData() {
+    return this._callingContextReturnData;
   }
 }
 
