@@ -185,6 +185,12 @@ describe('RlpEncoder', () => {
         input: new Uint8Array([1, 2, 3]),
       })
     ).toBe('0x83010203');
+
+    expect(
+      interactor.encode({
+        input: '1',
+      })
+    ).toBe('0x31');
   });
 
   it('should correctly encode a array inside a array', () => {
@@ -256,6 +262,36 @@ describe('RlpEncoder', () => {
     );
     expect(sha3_256(getBufferFromHex(encoded)).toString('hex')).toBe(
       'b47e5f20cadaf505f1fe660a45def89d80eb04213549f6bb04f57d6c2e8fc479'
+    );
+  });
+
+  it('should correctly encode a spesific list', () => {
+    const encoded = interactor.encode({
+      input: [
+        Buffer.from('0001', 'hex'),
+        [
+          [Buffer.from('320304', 'hex'), '2'],
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '1',
+        ],
+      ],
+    });
+    expect(encoded).toBe(
+      '0xda820001d6c5833203043280808080808080808080808080808031'
     );
   });
 });

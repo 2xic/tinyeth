@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { convertBytesToNibbles } from './utils/convertBytesToNibbles';
 import { InMemoryDatabase } from '../utils/InMemoryDatabase';
-import { MerklePatriciaTrieHelper } from './MerklePatriciaTrieHelper';
+import {
+  CommonPrefixResultType,
+  MerklePatriciaTrieHelper,
+} from './MerklePatriciaTrieHelper';
 import { packNibbles } from './utils/packNibbles';
 import { addTerminator, removeTerminator } from './utils/terminatorUtils';
 import { NodeType, TrieNode } from './nodes/TrieNode';
@@ -35,7 +38,11 @@ export class MerklePatriciaTrie {
         key: convertBytesToNibbles(key),
         value,
       });
+    } else if (this._root.type === NodeType.BRANCH) {
+      throw new Error('oh no');
     }
+
+    console.log(this._root.childrenValues);
 
     return {
       success: true,
@@ -43,10 +50,6 @@ export class MerklePatriciaTrie {
   }
 
   public del(key: Buffer): { success: boolean } {
-    throw new Error('Not implemented');
-  }
-
-  public get hash(): string {
     throw new Error('Not implemented');
   }
 
@@ -71,17 +74,15 @@ export class MerklePatriciaTrie {
         key2: currentKey,
       });
 
-    if (!commonPrefixResult.type) {
+    const remainingKey = key.slice(commonPrefixResult.length);
+    const remainingCurrentKey = currentKey.slice(commonPrefixResult.length);
+
+    if (commonPrefixResult.type === CommonPrefixResultType.KEY2_PREFIX) {
       const newNode = new TrieNode();
-      newNode.seedEmptyNodes();
-
-      const remainingKey = key.slice(commonPrefixResult.length);
-      const remainingCurrentKey = currentKey.slice(commonPrefixResult.length);
-
       if (!remainingCurrentKey.length) {
         newNode.seedEmptyNodes();
-        newNode.addNode('-1', new TrieNodeRawValue(node.rawValue));
-        newNode.addNode(
+        newNode.insertNode('-1', new TrieNodeRawValue(node.rawValue));
+        newNode.insertNode(
           remainingKey[0].toString(),
           new TrieNodeRawKeyValue(
             packNibbles(addTerminator(remainingKey.slice(1))),
@@ -97,8 +98,12 @@ export class MerklePatriciaTrie {
           newNode.childrenValues
         );
 
-        if (value instanceof TrieNode) {
-          throw new Error('Not supported');
+        if (Array.isArray(value)) {
+          return new TrieNode({
+            key: packNibbles(currentKey.slice(0, commonPrefixResult.length)),
+            value: Buffer.from([]),
+            rawNodeValue: value,
+          });
         }
 
         return new TrieNode({
@@ -107,8 +112,40 @@ export class MerklePatriciaTrie {
           skipConverting: true,
         });
       }
+    } else if (!commonPrefixResult.type) {
+      if (remainingCurrentKey.length == 1) {
+        throw new Error('Not dealt with');
+      }
+
+      const newNode = new TrieNode();
+      newNode.seedEmptyNodes();
+      newNode.insertNode(
+        remainingCurrentKey[0].toString(),
+        new TrieNode({
+          key: packNibbles(addTerminator(remainingCurrentKey.slice(1))),
+          value: Buffer.from([]),
+          rawNodeValue: node.childrenValues,
+        })
+      );
+      if (remainingKey.length === 0) {
+        throw new Error('Not dealt with');
+      } else {
+        newNode.insertNode(
+          remainingKey[0].toString(),
+          new TrieNodeRawKeyValue(
+            packNibbles(addTerminator(remainingKey.slice(1))),
+            value
+          )
+        );
+      }
+      console.log(['children values', newNode.childrenValues]);
+      return new TrieNode({
+        key: packNibbles(currentKey.slice(0, commonPrefixResult.length)),
+        value: value,
+        skipConverting: true,
+      });
     }
-    throw new Error('Not implemented');
+    throw new Error(`Not implemented handling of ${commonPrefixResult.type}`);
   }
 
   public get root(): TrieNode {

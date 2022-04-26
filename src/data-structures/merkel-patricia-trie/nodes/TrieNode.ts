@@ -1,10 +1,19 @@
 import { getBufferFromHex } from '../../../network/getBufferFromHex';
 import { sha3_256 } from '../../../network/sha3_256';
+import { RlpEncoder } from '../../../rlp/RlpEncoder';
 import { MerklePatriciaTrieHelper } from '../MerklePatriciaTrieHelper';
 import { TrieNodeRawKeyValue } from './TrieNodeRawKeyValue';
 import { TrieNodeRawValue } from './TrieNodeRawValue';
 import { TrieNodeReference } from './TrieNodeReference';
 
+/*
+  TODO:
+    TrieNode is currently a mess, and should be simplified.
+      - For instance the options that can be sent into the constructor should be simplified
+        - remove skipConverting
+        - remove rawNodeValue
+      - I think it's "nice" if we follow the pattern described in https://eth.wiki/fundamentals/patricia-tree for the trie node names (null, branch, leaf, extension)
+ */
 export class TrieNode {
   private children: Array<
     TrieNode | TrieNodeRawValue | TrieNodeRawKeyValue | TrieNodeReference | ''
@@ -18,18 +27,20 @@ export class TrieNode {
 
   private _rawValue?: Buffer;
 
-  private inputKey?: Buffer;
-
-  private inputValue?: Buffer;
-
   constructor(
-    options?: {
+    private options?: {
       key: Buffer;
       value: Buffer;
       skipConverting?: boolean;
-    },
-    private _level = 0
+      rawNodeValue?: (string | Buffer | (string | Buffer)[])[];
+    }
   ) {
+    const _key = options?.key
+      ? new MerklePatriciaTrieHelper().convertKey({
+          input: options.key,
+        })
+      : undefined;
+    this._key = _key;
     const _value = options
       ? new MerklePatriciaTrieHelper().encodeKeyAndValue({
           key: options.key,
@@ -37,26 +48,19 @@ export class TrieNode {
           skipConverting: options.skipConverting,
         })
       : undefined;
-    this._key = options?.key
-      ? new MerklePatriciaTrieHelper().convertKey({
-          input: options.key,
-        })
-      : undefined;
+    this._value = _value;
+
     this._rawValue = options?.value;
     this._rawKey = options?.key;
 
     this.children = [];
-    this._value = _value;
-
-    this.inputKey = options?.key;
-    this.inputValue = options?.value;
   }
 
   public seedEmptyNodes() {
     this.children = [...new Array(16)].map(() => '');
   }
 
-  public addNode(
+  public insertNode(
     index: string,
     node: TrieNode | TrieNodeReference | TrieNodeRawKeyValue | TrieNodeRawValue
   ) {
@@ -91,12 +95,14 @@ export class TrieNode {
     return this._rawValue;
   }
 
-  public get level() {
-    return this._level;
-  }
-
   public get hash(): string {
-    return sha3_256(getBufferFromHex(this.value || '')).toString('hex');
+    let value = this.value;
+    if (this.options?.rawNodeValue) {
+      value = new RlpEncoder().encode({
+        input: [this.options.key, this.options.rawNodeValue],
+      });
+    }
+    return sha3_256(getBufferFromHex(value || '')).toString('hex');
   }
 
   public get type(): NodeType {
@@ -104,6 +110,8 @@ export class TrieNode {
       return NodeType.UNINITIALIZED;
     } else if (this.value) {
       return NodeType.LEAF;
+    } else if (this.options?.rawNodeValue) {
+      return NodeType.BRANCH;
     }
     return NodeType.UNKNOWN;
   }
@@ -116,6 +124,9 @@ export class TrieNode {
   }
 
   public get childrenValues(): Array<string | Buffer | Array<string | Buffer>> {
+    if (this.options?.rawNodeValue) {
+      return this.options.rawNodeValue;
+    }
     const values = this.children.map((item) => {
       if (item instanceof TrieNode) {
         if (!item.value) {
@@ -131,7 +142,7 @@ export class TrieNode {
       } else if (item instanceof TrieNodeRawKeyValue) {
         return [item.key, item.value];
       } else {
-        throw new Error('??');
+        throw new Error('Unknown trie node type');
       }
     });
 
@@ -143,4 +154,5 @@ export enum NodeType {
   UNKNOWN,
   LEAF,
   UNINITIALIZED,
+  BRANCH,
 }

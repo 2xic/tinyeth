@@ -32,9 +32,14 @@ describe('StringEncoderDecoder', () => {
     expect(decodedString.newIndex).toBe(input.length + 2);
   });
 
-  // TODO: Fix this, it should not output non deterministic results
-  //      it should only output hex, because if not it will mess up buffer.from
-  it.skip('should correctly encode a string as buffer and string', () => {
+  it('should correctly decode a number as string', () => {
+    const encodedString = interactor.encode({
+      input: '1',
+    }).encoding;
+    expect(encodedString).toBe('31');
+  });
+
+  it('should correctly encode a string as buffer and string', () => {
     const encodedString = interactor.encode({
       input: '5',
     });

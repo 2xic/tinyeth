@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npx tsc",
     "test": "npm run build && jest",
+    "unit": "npm run test",
     "lint": "npx eslint ./ --fix"
   },
   "author": "",

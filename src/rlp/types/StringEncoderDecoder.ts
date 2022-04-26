@@ -24,7 +24,7 @@ export class StringEncoderDecoder
 
     if (isShortString) {
       return {
-        encoding: isUint8Array ? encodedString : input,
+        encoding: encodedString,
         length: input.length,
       };
     } else if (isLongString) {

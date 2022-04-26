@@ -28,6 +28,9 @@ export class MerklePatriciaTrieHelper {
     const data = new RlpEncoder().encode({
       input: children,
     });
+    if (getBufferFromHex(data).length < 32) {
+      return children;
+    }
     return sha3_256(getBufferFromHex(data));
   }
 
@@ -93,11 +96,23 @@ export class MerklePatriciaTrieHelper {
       return CommonPrefixResultType.EQUAL;
     } else if (key1.length < commonPrefix) {
       return CommonPrefixResultType.KEY1_EXHAUSTED;
+    } else if (key2.length < commonPrefix) {
+      return CommonPrefixResultType.KEY2_EXHAUSTED;
+    } else if (key2.length == commonPrefix) {
+      return CommonPrefixResultType.KEY2_PREFIX;
+    } else if (key1.length == commonPrefix) {
+      return CommonPrefixResultType.KEY1_PREFIX;
+    } else if (commonPrefix === 0) {
+      return CommonPrefixResultType.NO_PREFIX;
     }
   }
 }
 
 export enum CommonPrefixResultType {
+  NO_PREFIX,
   EQUAL,
   KEY1_EXHAUSTED,
+  KEY2_EXHAUSTED,
+  KEY1_PREFIX,
+  KEY2_PREFIX,
 }
