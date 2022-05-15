@@ -3,7 +3,7 @@ import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { MerklePatriciaTrie } from './MerklePatriciaTrie';
 
 // Test from https://medium.com/@chiqing/merkle-patricia-trie-explained-ae3ac6a7e123
-describe('MerklePatriciaTrie', () => {
+describe.skip('MerklePatriciaTrie', () => {
   it('should correctly get the hash of a basic root node', () => {
     const trie = new MerklePatriciaTrie();
     trie.put(

@@ -33,8 +33,6 @@
 - https://github.com/ethereumjs/ethereumjs-devp2p/pull/15/files
     - PR used for ethereumjs for eip-8
     
-
-
 # Other info
 ## Node list
 - Bootstrap nodes
@@ -43,7 +41,8 @@
     - https://eth.wiki/en/fundamentals/enode-url-format
     - https://ethereum.stackexchange.com/questions/28970/how-to-produce-enode-from-node-key
 
-
+- https://www.ethernodes.org/nodes
+    - Active nodes    
 
 ### Breakdown of the handshakes
 We know that from https://github.com/ethereum/devp2p/blob/master/rlpx.md that the following primitives are necessary

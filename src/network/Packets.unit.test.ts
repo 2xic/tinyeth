@@ -1,6 +1,7 @@
 import { cleanString } from '../utils';
 import { getBufferFromHex } from './getBufferFromHex';
 import { Packet, PacketTypes } from './Packet';
+import ip6addr from 'ip6addr';
 
 describe('Packets', () => {
   // from https://github.com/ethereum/go-ethereum/pull/2091/files#diff-a2488b7a37555bfb5c64327072acdbbf703ab127176956f6b6558067950f8f73R455
@@ -39,9 +40,36 @@ describe('Packets', () => {
     }
     expect(decodedPacket.packetType).toBe(PacketTypes.PING);
     expect(decodedPacket.version).toBe(4);
+    expect(decodedPacket.expiration).toBe(1136239445);
+    expect(decodedPacket.fromIp).toBe('127.0.0.1');
+    expect(decodedPacket.fromTcpPort).toBe(5544);
+    expect(decodedPacket.fromUdpPort).toBe(3322);
+
+    //expect(decodedPacket.toIp).toBe('0.0.0.0');
+    expect(decodedPacket.toUdpPort).toBe(2222);
+    expect(decodedPacket.toTcpPort).toBe(3333);
   });
 
-  it('should correctly decode a ping packet with random data', () => {
+  it.only('should correctly encode a ping packet', () => {
+    // https://github.com/ethereum/devp2p/blob/master/discv4.md#ping-packet-0x01
+    const packet = new Packet().encodePing({
+      version: 4,
+      fromIp: '127.0.0.1',
+      fromTcpPort: '5544',
+      fromUdpPort: '3322',
+      toIp: '::1',
+      toUdpPort: '2222',
+      toTcpPort: '3333',
+      expiration: 1136239445,
+      sequence: [0x1, 0x2],
+    });
+
+    expect(packet).toBe(
+      '0xec04cb847f000001820cfa8215a8d790000000000000000000000000000000018208ae820d058443b9a3550102'
+    );
+  });
+
+  it.skip('should correctly decode a ping packet with random data', () => {
     // from https://eips.ethereum.org/EIPS/eip-8
     const pingPacket = getBufferFromHex(
       cleanString(`

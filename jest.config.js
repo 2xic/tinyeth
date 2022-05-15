@@ -1,7 +1,7 @@
 module.exports = {
-  testRegex: ".*.test.ts$",
+  testRegex: [".*.unit.test.js"],
   transform: {
     '\\.(js|ts|jsx|tsx)$': 'babel-jest',
   },
-  verbose: true,
+  // verbose: true,
 };

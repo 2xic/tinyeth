@@ -1,4 +1,5 @@
 import { RlpDecoder } from '../rlp/RlpDecoder';
+import { InputTypes, RlpEncoder } from '../rlp/RlpEncoder';
 import { keccak256 } from './keccak256';
 import {
   FindNodePacket,
@@ -17,33 +18,62 @@ import {
   PongPacket,
   PongPacketEncodeDecode,
 } from './packet-types/PongPacketEncodeDecode';
+import { ReadOutRlp } from './ReadOutRlp';
+import ip6addr from 'ip6addr';
+import { convertNumberToPadHex } from './convertNumberToPadHex';
 
 export class Packet {
+  public encodePing(_input: PingPacket): string {
+    /*
+      packet-data = [4, from, to, expiration, enr-seq ...]
+      from = [sender-ip, sender-udp-port, sender-tcp-port]
+      to = [recipient-ip, recipient-udp-port, 0]
+    */
+    const input: InputTypes = [
+      0x4,
+      [
+        Buffer.from(ip6addr.parse(_input.fromIp).toBuffer().slice(-4)),
+        Buffer.from(convertNumberToPadHex(_input.fromUdpPort), 'hex'),
+        Buffer.from(convertNumberToPadHex(_input.fromTcpPort), 'hex'),
+      ],
+      [
+        Buffer.from(ip6addr.parse(_input.toIp).toBuffer()),
+        Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex'),
+        Buffer.from(convertNumberToPadHex(_input.toTcpPort), 'hex'),
+      ],
+      Buffer.from(convertNumberToPadHex(_input.expiration), 'hex'),
+      ...(_input.sequence ? _input.sequence : []),
+    ];
+
+    return new RlpEncoder().encode({
+      input,
+    });
+  }
+
   public decodeHello({ input }: { input: Buffer }): ParsedHelloPacket {
     const data = new RlpDecoder().decode({ input: input.toString('hex') });
-    if (!Array.isArray(data)) {
-      throw new Error('Something is wrong');
-    }
-    const [_length, client, version, _authLength, pubKey, _x, _y, _z] = data;
-    if (typeof client !== 'string') {
-      throw new Error(
-        'Error while decoding packet, expected client host to be a string'
-      );
-    }
-    if (!Array.isArray(version)) {
-      throw new Error('Expected version to be part of a list');
-    }
-    if (!Array.isArray(version[1])) {
-      throw new Error('Expected version to be part of a list');
-    }
+    const rlpReader = new ReadOutRlp(data);
 
-    if (typeof version[1][1] !== 'number') {
-      throw new Error('Expected version to be part of a list');
-    }
+    const [client] = rlpReader.readArray<string>({
+      skip: 1,
+      length: 1,
+    });
+
+    const [version] = rlpReader.readArray<number>({
+      length: 2,
+      isNumeric: true,
+      valueFetcher: (item) => {
+        if (Array.isArray(item) && Array.isArray(item[1])) {
+          return [item[1][1] as number];
+        } else {
+          throw new Error('Missing data');
+        }
+      },
+    });
 
     return {
       userAgent: client,
-      version: version[1][1],
+      version,
     };
   }
 
