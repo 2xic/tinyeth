@@ -1,6 +1,11 @@
+import { encrypt } from 'ecies-geth';
+import { resolveModuleName } from 'typescript';
 import { KeyPair } from '../signatures/KeyPair';
 import { getBufferFromHex } from './getBufferFromHex';
 import { Rlpx } from './Rlpx';
+import secp256k1 from 'secp256k1';
+import { xor } from '@ethereumjs/devp2p';
+import { keccak256 } from './keccak256';
 
 // Borrowing test data from https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/tests/test_go_handshake.py
 describe('Rlpx', () => {
@@ -88,7 +93,7 @@ describe('Rlpx', () => {
     );
 
     const ethNodePublicKey = responderRlpx.keyPair.getPublicKey();
-    const message = intatorRlpx.createAuthMessage({
+    const message = intatorRlpx.createAuthMessageEip8({
       ethNodePublicKey,
       nonce: getBufferFromHex(testKeys.initiatorNonce),
     });
@@ -104,7 +109,7 @@ describe('Rlpx', () => {
     );
   });
 
-  it('should encrypt, and decrypt correctly', () => {
+  it('should encrypt, and decrypt correctly', async () => {
     const intatorRlpx = new Rlpx(
       new KeyPair(testKeys.initiatorPrivateKey),
       getBufferFromHex(testKeys.initiatorEphemeralPrivateKey)
@@ -114,20 +119,18 @@ describe('Rlpx', () => {
       getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
     );
 
-    const message = intatorRlpx.createAuthMessage({
+    const message = intatorRlpx.createAuthMessageEip8({
       ethNodePublicKey: responderRlpx.keyPair.getPublicKey(),
       nonce: getBufferFromHex(testKeys.initiatorNonce),
     });
 
-    const responderPublicKey = responderRlpx.keyPair.getPublicKey();
-    const encryptedMessage = intatorRlpx.encryptedMessage({
+    const responderPublicKey = intatorRlpx.keyPair.getPublicKey();
+    const encryptedMessage = await responderRlpx.encryptedMessage({
       message,
       responderPublicKey,
     });
-    expect(encryptedMessage).toBeTruthy();
-    const encryptedDecryptedMessage = intatorRlpx.decryptMessage({
+    const encryptedDecryptedMessage = await intatorRlpx.decryptMessage({
       encryptedMessage,
-      responderPublicKey: Buffer.from(responderRlpx.keyPair.privatekey, 'hex'),
     });
 
     expect(message.toString('hex')).toBe(
@@ -173,5 +176,123 @@ describe('Rlpx', () => {
       message: testKeys.initiatorHelloPacket,
     });
     expect(decryptedPacket).toBeTruthy();
+  });
+
+  it('should correctly create an non eip8 comaptabile auth packet', async () => {
+    // Tested against the vaporjs-devp2p implementation
+    const responderRlpx = new Rlpx(
+      new KeyPair(
+        'c050056ba8b27cc2191305832f3f6837f5df839872f04d84416d78a1cd005f92'
+      ),
+      getBufferFromHex(
+        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
+      )
+    );
+    const packet = responderRlpx.createAuthMessagePreEip8({
+      ethNodePublicKey:
+        'ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55',
+      nonce: Buffer.from([...Array(32)]),
+    });
+    expect(packet.toString('hex')).toBe(
+      'e4214ac8fff44ec9455c6a49f3b44b00f4fdf5676ec4938fbd7c94735ae5d476259f095b19000d7e9827a9c461c688e06dcb4acaa84ba3b3f313ad38ea1f040301a448f24c6d18e575453db13171562b71999873db5b286df957af199ec94617f70470d4dc07721330a47a0c7e155f92a9bca26533a5ac74a5e9e790c3f470f0afec53efb116f81f0ca1352d8178ff70ab86ab9767ac81d1f08fa396dda825f765db000000000000000000000000000000000000000000000000000000000000000000'
+    );
+
+    const encryptedPacket = await responderRlpx.encryptedMessage({
+      message: packet,
+      responderPublicKey:
+        'ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55',
+      iv: Buffer.from([...Array(16)]),
+    });
+    expect(encryptedPacket.toString('hex')).toBe(
+      '04ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f000000000000000000000000000000004b6dc9b43348b5479de3a32fd63ff15cdcc6d27825bee52c3b280bffdb33818d851434d2495cf0be3e4904e0cfa971caad5cfdccaa7b23eebfc20d564ab07252e50b65532f30741b69b1c763cff9f377c11b3d551e51e813e3d82e220de81f110b7c2ebb648e29fafd5829210ddd1a03e74148b7600c31ac9969131e5ad7562c7679afe849dbb32dbcbef61aab750f04fcc3ceffc2694fcef6b93595b1301a5c794ad97de6ed6890cc9095aab7ca797142467a2b95c691e5d65395d83b5d9e2b235cd8a7be2a22aa412fc1010e78b2b373b18bca8df89eec02494f77666a8886f5e2de'
+    );
+  });
+
+  it('should decrypt correctly', async () => {
+    const message = getBufferFromHex(
+      '048ca79ad18e4b0659fab4853fe5bc58eb83992980f4c9cc147d2aa31532efd29a3d3dc6a3d89eaf' +
+        '913150cfc777ce0ce4af2758bf4810235f6e6ceccfee1acc6b22c005e9e3a49d6448610a58e98744' +
+        'ba3ac0399e82692d67c1f58849050b3024e21a52c9d3b01d871ff5f210817912773e610443a9ef14' +
+        '2e91cdba0bd77b5fdf0769b05671fc35f83d83e4d3b0b000c6b2a1b1bba89e0fc51bf4e460df3105' +
+        'c444f14be226458940d6061c296350937ffd5e3acaceeaaefd3c6f74be8e23e0f45163cc7ebd7622' +
+        '0f0128410fd05250273156d548a414444ae2f7dea4dfca2d43c057adb701a715bf59f6fb66b2d1d2' +
+        '0f2c703f851cbf5ac47396d9ca65b6260bd141ac4d53e2de585a73d1750780db4c9ee4cd4d225173' +
+        'a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8'
+    );
+    expect(message.length).toBe(307);
+    const responderRlpx = new Rlpx(
+      new KeyPair(
+        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
+      ),
+      getBufferFromHex(
+        'b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4'
+      )
+    );
+
+    const decrypttedMessage = await responderRlpx.decryptMessage({
+      encryptedMessage: message,
+    });
+    expect(decrypttedMessage).toBeTruthy();
+  });
+
+  it('should correctly create an encrypted auth message', async () => {
+    const initatorRlpx = new Rlpx(
+      new KeyPair(
+        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
+      ),
+      getBufferFromHex(
+        'e238eb8e04fee6511ab04c6dd3c89ce097b11f25d584863ac2b6d5b35b1847e4'
+      )
+    );
+    const authMessage = await initatorRlpx.getEncryptedAuthMessagePreEip8({
+      ethNodePublicKey:
+        'ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55',
+    });
+    expect(authMessage.toString('hex').startsWith('04')).toBeTruthy();
+    expect(authMessage).toHaveLength(308);
+
+    const authMessagePrefix = await initatorRlpx.getEncryptedAuthMessagePreEip8(
+      {
+        ethNodePublicKey:
+          '04ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55',
+      }
+    );
+    expect(authMessagePrefix.toString('hex').startsWith('04')).toBeTruthy();
+    expect(authMessagePrefix).toHaveLength(308);
+
+    const responderRlpx = new Rlpx(
+      new KeyPair(
+        '482a0144fb169c3a55d9e2e177b25ba889d7cbe7a8b6d818f7f2e568d754697c'
+      ),
+      getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
+    );
+    const decrypttedMessage = await responderRlpx.decryptMessage({
+      encryptedMessage: authMessage,
+    });
+    expect(decrypttedMessage[decrypttedMessage.length - 1]).toBe(0);
+    expect(decrypttedMessage.length).toBe(195);
+
+    const signature = decrypttedMessage.slice(0, 64);
+    const recoveryId = decrypttedMessage[64];
+    const hash = decrypttedMessage.slice(65, 97);
+    const remotePublicKey = decrypttedMessage.slice(97, 162);
+    const nonce = decrypttedMessage.slice(162, 194);
+
+    const echdx = responderRlpx.keyPair.getEcdh({
+      publicKey: remotePublicKey.toString('hex'),
+    });
+    expect(remotePublicKey.length).toBe(65);
+    expect(nonce.length).toBe(32);
+    expect(hash.length).toBe(32);
+
+    const remoteEphermalPublicKey = await new KeyPair().verifyMessage({
+      signature,
+      r: recoveryId,
+      message: xor(echdx, nonce),
+    });
+
+    expect(
+      keccak256(Buffer.from(remoteEphermalPublicKey, 'hex')).toString('hex')
+    ).toBe(hash.toString('hex'));
   });
 });

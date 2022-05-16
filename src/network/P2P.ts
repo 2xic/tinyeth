@@ -20,7 +20,7 @@ export class P2P {
     const [address, port] = ip.split(':');
 
     return {
-      publicKey,
+      publicKey: publicKey.replace('enode://', ''),
       address,
       port: Number(port),
     };
