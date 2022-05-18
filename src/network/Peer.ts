@@ -27,7 +27,7 @@ export class Peer {
     socket.on('close', () => {
       console.log('Connection closed');
       socket.destroy();
-      throw new Error('Disconnected');
+      // throw new Error('Disconnected');
     });
     socket.on('ready', () => {
       console.log('Ready');

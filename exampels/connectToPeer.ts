@@ -1,17 +1,22 @@
 const tinyeth = require('../dist/tinyeth');
+//import tinyeth from '../dist/tinyeth';
 
 (async () => {
-  const node = new tinyeth.Peer();
+  await Promise.all(
+    tinyeth.enocdes.map(async (item: string) => {
+      const node = new tinyeth.Peer();
 
-  await node.connect();
+      await node.connect(tinyeth.parseEncode(item));
 
-  /*  await node.sendMessage({
-    type: tinyeth.MessageType.AUTH,
-  });
-*/
-  await node.sendMessage({
-    type: tinyeth.MessageType.AUTH,
-  });
+      /*  await node.sendMessage({
+      type: tinyeth.MessageType.AUTH,
+    });
+  */
+      await node.sendMessage({
+        type: tinyeth.MessageType.AUTH,
+      });
+    })
+  );
 
   // eslint-disable-next-line no-constant-condition
   while (true) {

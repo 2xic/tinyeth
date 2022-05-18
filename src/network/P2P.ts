@@ -11,26 +11,13 @@ export class P2P {
     return `enode://${publicKey}@${this.ip}:${this.port}`;
   }
 
-  public parseEncode(enode: string): {
-    publicKey: string;
-    address: string;
-    port: number;
-  } {
-    const [publicKey, ip] = enode.split('@');
-    const [address, port] = ip.split(':');
-
-    return {
-      publicKey: publicKey.replace('enode://', ''),
-      address,
-      port: Number(port),
-    };
-  }
-
   public get ip() {
-    throw new Error('Not implemented');
+    //    throw new Error('Not implemented');
+    return 'localhost';
   }
 
   public get port() {
-    throw new Error('Not implemented');
+    return 3000;
+    //    throw new Error('Not implemented');
   }
 }
