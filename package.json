@@ -12,7 +12,7 @@
     "unit": "npm run build && jest",
     "int": "npm run build && jest -c jest.config.int.js",
     "lint": "npx eslint ./ --fix",
-    "postinstall": "tsc"
+    "install": "npm run build"
   },
   "author": "",
   "license": "ISC",
