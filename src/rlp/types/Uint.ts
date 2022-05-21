@@ -6,6 +6,7 @@ export class Uint {
     private options: {
       input: BigNumber;
       n: number;
+      type?: string;
     }
   ) {}
 
@@ -13,6 +14,13 @@ export class Uint {
     return this.getByteArray({
       ...this.options,
     });
+  }
+
+  public get type() {
+    if (!this.options.type) {
+      throw new Error('Type not set');
+    }
+    return this.options.type;
   }
 
   private getByteArray({
