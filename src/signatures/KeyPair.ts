@@ -174,19 +174,36 @@ export class KeyPair {
     );
   }
 
-  public getCompressedKey({ publicKey }: { publicKey: Buffer }) {
+  public getCompressedKey({ publicKey }: { publicKey: Buffer }): Buffer {
     const rawKey = this.parsePublicKey({ input: publicKey });
     if (rawKey.length !== 65) {
       throw new Error(`Wrong key length expected 65, but got ${rawKey.length}`);
     }
 
-    return secp256k1.publicKeyConvert(rawKey, true).slice(1);
+    return Buffer.from(secp256k1.publicKeyConvert(rawKey, true).slice(1));
+  }
+
+  public getDecompressedKey({ publicKey }: { publicKey: Buffer }): Buffer {
+    const rawKey =
+      publicKey[0] !== 4
+        ? Buffer.concat([Buffer.from([3]), publicKey])
+        : publicKey;
+
+    if (rawKey.length !== 33) {
+      throw new Error(`Wrong key length expected 32, but got ${rawKey.length}`);
+    }
+
+    return Buffer.from(secp256k1.publicKeyConvert(rawKey, false).slice(1));
   }
 
   public parsePublicKey({ input }: { input: string | Buffer }): Buffer {
     if (typeof input === 'string') {
       return addMissingPublicKeyByte({
         buffer: Buffer.from(input, 'hex'),
+      });
+    } else if (Buffer.isBuffer(input)) {
+      return addMissingPublicKeyByte({
+        buffer: input,
       });
     }
     return input;

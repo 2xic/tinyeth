@@ -1,19 +1,18 @@
-const tinyeth = require('../dist/tinyeth');
-//import tinyeth from '../dist/tinyeth';
+import { Peer, enocdes, MessageType, parseEncode } from '../dist';
 
 (async () => {
   await Promise.all(
-    tinyeth.enocdes.map(async (item: string) => {
-      const node = new tinyeth.Peer();
+    enocdes.map(async (item: string) => {
+      const node = new Peer();
 
-      await node.connect(tinyeth.parseEncode(item));
+      await node.connect(parseEncode(item));
 
       /*  await node.sendMessage({
-      type: tinyeth.MessageType.AUTH,
+      type: MessageType.AUTH,
     });
   */
       await node.sendMessage({
-        type: tinyeth.MessageType.AUTH,
+        type: MessageType.AUTH,
       });
     })
   );

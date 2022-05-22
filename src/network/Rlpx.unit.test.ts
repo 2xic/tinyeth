@@ -229,10 +229,10 @@ describe('Rlpx', () => {
       )
     );
 
-    const decrypttedMessage = await responderRlpx.decryptMessage({
+    const decryptedMessage = await responderRlpx.decryptMessage({
       encryptedMessage: message,
     });
-    expect(decrypttedMessage).toBeTruthy();
+    expect(decryptedMessage).toBeTruthy();
   });
 
   it('should correctly create an encrypted auth message', async () => {
@@ -266,33 +266,58 @@ describe('Rlpx', () => {
       ),
       getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
     );
-    const decrypttedMessage = await responderRlpx.decryptMessage({
+    const decryptedMessage = await responderRlpx.decryptMessage({
       encryptedMessage: authMessage,
     });
-    expect(decrypttedMessage[decrypttedMessage.length - 1]).toBe(0);
-    expect(decrypttedMessage.length).toBe(195);
+    expect(decryptedMessage[decryptedMessage.length - 1]).toBe(0);
+    expect(decryptedMessage.length).toBe(195);
 
-    const signature = decrypttedMessage.slice(0, 64);
-    const recoveryId = decrypttedMessage[64];
-    const hash = decrypttedMessage.slice(65, 97);
-    const remotePublicKey = decrypttedMessage.slice(97, 162);
-    const nonce = decrypttedMessage.slice(162, 194);
-
-    const echdx = responderRlpx.keyPair.getEcdh({
-      publicKey: remotePublicKey.toString('hex'),
+    await responderRlpx.validateAuthenticationPacket({
+      decryptedMessage,
     });
-    expect(remotePublicKey.length).toBe(65);
-    expect(nonce.length).toBe(32);
-    expect(hash.length).toBe(32);
+  });
 
-    const remoteEphermalPublicKey = await new KeyPair().verifyMessage({
-      signature,
-      r: recoveryId,
-      message: xor(echdx, nonce),
+  it('should correctly parse an auth message', async () => {
+    // Packet from running local geth and running addNode to the tinyeth node server
+    // first two bytes are the length of the packet (I don't think we use that in our logic currently)
+    // stripped it away for now, buit it's (01a6 ) -> 01a604d40676e6d0dcf188ae788b71a7ee548479df0dd1785bf9e6cc7cdafa4e7eb0f89a09d8d257e9840be2867a750cfbedea3328c6313162ccc32fe45ffad8a72e58b4d7cfed451d6fc3725c67b80edbf767abc4fdc963ed8066c6ea9db61fd4313c8b2ff37acc0c4a470d75f2dc252acd8205f0789acef1b400aa10caf94a7e60c7257f3133cafcfa91bbe9a07e6065e697ea915d72e41cb7816c8ab0a0ce63bfbdb13381f2eef479491e830dfb8acfc0ea4c0408e0f29e326de2381a4dd6cd2e4a128b24025944454b9d14ce6fbd82aa30f79751a8eb0058fd0dc7002f2440ff7c9862147e830dd9b427edfee0bbcbdaf5832c6704282fa5f86cca192a4fb9ecf1695201c0d5e1608be47c5cd0c5d1a62ddabe28a2de44cfed792719094fbc80f28da55517bb0ada68651baaa936336cc9009a2a10a88effa0672b552ccb9650430d2e4f74b4216ca28f1b116d273fb354bf2c6ef22f74cbbf81fc2a7056f765b5b4c9850ee09c5179e785df3a8215802b941eab023a19df922015224d46fadc1d37f31d0c3da50585b3911be5f6ceaa5c83aa8154ff901d569b404235f2e8e08d822842184b
+    const authMessage =
+      '046c87392fbc2ff11471f0d8ae43caed64a2bcfa84543eb5c337304c9dc86c1b1a1429d23638d1ac1f95e43621a13ab0305bca57c7eb85ef86d60a3ca8e7b09275ae359bbe3af7f70587efdd72b32e105afe39399339d17d017fa8b82b9f096f1a833edcb67485a1e06558fc04755ab2186e6138ec647ffcf1323598bb0655e1054d48569ffad715bab2fefbb9699c3966e1d816703399202aaacbff6bd46fe7c24bd34435cf16360a4da00fd6fe5ee247703054f596f15fd720093bd0c0dfadb4396a4875df3835817c537256902d97723850dab96eec30b1fbb64496adc07d7a773ca4d88104030b2ef0d6c68695a6b946f93e3adba8c65669b519dd52689898be6e0bd2882d9e6b3366029555a081abdff609579880a3d378cd4cdeb07f0eb41705eb9e0f6cbd711e33ddfc3d05dff4cb2e20c66118473251626711d2b131510b49ff6401f9b7080a914c55ce422434063d381b010c8e0796acb67714776288dd569d7cac6711618bfaca203e414491f283d8888b8d464b3d79d7ff993b68487f0283c3295675b6d92cccea3073db7e068a7be6a05730321e87ee72f2e4db772723c1f4147292f45a73f1e0919998fbf6ce1113b05d55e368235ea5e3670ea4bd614306cfdb3765751bc475a5c923fb4bef4db9c363d3c5fab8d704eae255';
+    const responderRlpx = new Rlpx(
+      new KeyPair(
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
+      ),
+      getBufferFromHex(
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
+      )
+    );
+    expect(responderRlpx.keyPair.getPublicKey()).toBe(
+      'a80998471ccf87b92fb937b633cadb39d021548ffb22a1e1e618961713ea84c03e1af31191ee38b32bea0d68a238ba6fba18161d9013f8c40ced0322a32241cc'
+    );
+    // geth enode - "enode://565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e@localhost:30303"
+    // our node need's to create the same echd key so that we are actually able to comunicate.
+    const sharedKey = responderRlpx.keyPair.getEcdh({
+      publicKey:
+        '565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e',
+      privateKey:
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
+    });
+    expect(sharedKey.toString('hex')).toBe(
+      responderRlpx.keyPair
+        .getCompressedKey({
+          publicKey: getBufferFromHex(authMessage).slice(0, 65),
+        })
+        .toString('hex')
+    );
+
+    /*
+    const decryptedMessage = await responderRlpx.decryptMessage({
+      encryptedMessage: Buffer.from(authMessage, 'hex'),
     });
 
-    expect(
-      keccak256(Buffer.from(remoteEphermalPublicKey, 'hex')).toString('hex')
-    ).toBe(hash.toString('hex'));
+    await responderRlpx.validateAuthenticationPacket({
+      decryptedMessage: Buffer.from(authMessage, 'hex'),
+    });
+    */
   });
 });

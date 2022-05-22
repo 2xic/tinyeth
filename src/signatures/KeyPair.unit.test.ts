@@ -93,4 +93,18 @@ describe('KeyPair', () => {
       '7e37b1ddf372c531f5b8f13f5f530a040ee32ad8f87d95f49a047d3c4db5d05b'
     );
   });
+
+  it('should correctly compress and decompress public key', () => {
+    const keypair = new KeyPair();
+    const publicKey = Buffer.from(keypair.getPublicKey(), 'hex');
+    const compressedPublicKey = keypair.getCompressedKey({
+      publicKey,
+    });
+    const decompressedPublicKey = keypair.getDecompressedKey({
+      publicKey: compressedPublicKey,
+    });
+    expect(decompressedPublicKey.toString('hex')).toBe(
+      publicKey.toString('hex')
+    );
+  });
 });

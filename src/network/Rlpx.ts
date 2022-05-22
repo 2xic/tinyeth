@@ -3,7 +3,6 @@ import { KeyPair } from '../signatures/KeyPair';
 import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
-//import { encrypt } from 'eciesjs';
 import { getBufferFromHex } from './getBufferFromHex';
 import { addMissingPublicKeyByte } from '../signatures/addMissingPublicKyeByte';
 import { encrypt, decrypt, sign } from 'ecies-geth';
@@ -80,7 +79,6 @@ export class Rlpx {
     const ecdhKey = Buffer.from(
       this.keyPair.getEcdh({
         publicKey: ethNodePublicKey,
-        //   privateKey: this.keyPair.privatekey,
       })
     );
     const tokenXorNonce = xor(ecdhKey, nonce);
@@ -144,10 +142,12 @@ export class Rlpx {
   }: {
     encryptedMessage: Buffer;
   }): Promise<Buffer> {
+    const privateKey = Buffer.from(this.keyPair.privatekey, 'hex');
+
     return new Promise<Buffer>((resolve, reject) => {
-      decrypt(Buffer.from(this.keyPair.privatekey, 'hex'), encryptedMessage)
-        .then((e) => resolve(e))
-        .catch((err) => reject(err));
+      decrypt(privateKey, encryptedMessage)
+        .then((results) => resolve(results))
+        .catch((error) => reject(error));
     });
   }
 
@@ -165,96 +165,58 @@ export class Rlpx {
     return authMessage;
   }
 
-  /*
-    Added for testing only, based off vaporyjs-devp2p2, will be removed soon.
-  */
-  public async getEncryptedAuthMessageEip8({
-    ethNodePublicKey,
+  public async validateAuthenticationPacket({
+    decryptedMessage,
   }: {
-    ethNodePublicKey: string;
+    decryptedMessage: Buffer;
   }) {
-    const authMessage = this.createAuthMessageEip8({
-      ethNodePublicKey,
+    const signature = decryptedMessage.slice(0, 64);
+    const recoveryId = decryptedMessage[64];
+    const hash = decryptedMessage.slice(65, 97);
+    const remotePublicKey = decryptedMessage.slice(97, 162);
+    const nonce = decryptedMessage.slice(162, 194);
+
+    this._assert({
+      input: remotePublicKey,
+      expectedLength: 65,
+      field: 'publickey',
     });
-    const dataRLP = new RlpEncoder().encode({ input: authMessage });
-    const pad = crypto.randomBytes(100 + Math.floor(Math.random() * 151)); // Random padding between 100, 250
-    const authMsg = Buffer.concat([getBufferFromHex(dataRLP), pad]);
-    const overheadLength = 113;
+    this._assert({
+      input: nonce,
+      expectedLength: 32,
+      field: 'nonce',
+    });
+    this._assert({
+      input: hash,
+      expectedLength: 32,
+      field: 'hash',
+    });
 
-    const lengthHex = (authMsg.length + overheadLength).toString(16);
-    const sharedMacData = Buffer.from(
-      lengthHex.length % 2 == 1 ? '0' + lengthHex : lengthHex,
-      'hex'
-    );
+    const echdx = this.keyPair.getEcdh({
+      publicKey: remotePublicKey.toString('hex'),
+    });
 
-    const _encryptMessage = (data: Buffer, sharedMacData: Buffer) => {
-      /*
-       */
-      function ecdhX(publicKey: Buffer, privateKey: Buffer) {
-        // return (publicKey * privateKey).x
-        return secp256k1
-          .ecdh(
-            Buffer.concat([Buffer.from('04', 'hex'), publicKey]),
-            privateKey
-          )
-          .slice(1);
-      }
+    const remoteEphermalPublicKey = await new KeyPair().verifyMessage({
+      signature,
+      r: recoveryId,
+      message: xor(echdx, nonce),
+    });
 
-      function concatKDF(keyMaterial: Uint8Array, keyLength: number) {
-        const SHA256BlockSize = 64;
-        const reps = ((keyLength + 7) * 8) / (SHA256BlockSize * 8);
+    const generatedHash = keccak256(
+      Buffer.from(remoteEphermalPublicKey, 'hex')
+    ).toString('hex');
 
-        const buffers = [];
-        for (let counter = 0, tmp = Buffer.allocUnsafe(4); counter <= reps; ) {
-          counter += 1;
-          tmp.writeUInt32BE(counter);
-          buffers.push(
-            crypto.createHash('sha256').update(tmp).update(keyMaterial).digest()
-          );
-        }
+    if (generatedHash !== hash.toString('hex')) {
+      throw new Error('Invalid hash');
+    }
 
-        return Buffer.concat(buffers).slice(0, keyLength);
-      }
-
-      const privateKey = crypto.randomBytes(32);
-      const x = ecdhX(Buffer.from(ethNodePublicKey, 'hex'), privateKey);
-      const key = concatKDF(x, 32);
-      const ekey = key.slice(0, 16); // encryption key
-      /*
-      const key = new KeyPair().getEcdh({
-        publicKey: ethNodePublicKey,
-        privateKey: privateKey.toString('hex'),
-      });
-      const ekey = key.slice(0, 16);
-      */
-      const mkey = crypto
-        .createHash('sha256')
-        .update(key.slice(16, 32))
-        .digest(); // MAC key
-
-      // encrypt
-      const IV = crypto.randomBytes(16);
-      const cipher = crypto.createCipheriv('aes-128-ctr', ekey, IV);
-      const encryptedData = cipher.update(data);
-      const dataIV = Buffer.concat([IV, encryptedData]);
-
-      // create tag
-      if (!sharedMacData) {
-        sharedMacData = Buffer.from([]);
-      }
-      const tag = crypto
-        .createHmac('sha256', mkey)
-        .update(Buffer.concat([dataIV, sharedMacData]))
-        .digest();
-
-      const publicKey = new KeyPair(privateKey.toString('hex')).getPublicKey(); // secp256k1.publicKeyCreate(privateKey, false);
-      return Buffer.concat([Buffer.from(publicKey, 'hex'), dataIV, tag]);
+    return {
+      signature,
+      recoveryId,
+      hash,
+      remotePublicKey,
+      nonce,
     };
-
-    return Buffer.concat([
-      sharedMacData,
-      _encryptMessage(authMsg, sharedMacData),
-    ]);
   }
 
   public decryptPacket({ message }: { message: string }): {
@@ -262,5 +224,21 @@ export class Rlpx {
     body: unknown;
   } {
     throw new Error('Not implemented');
+  }
+
+  public _assert({
+    input,
+    expectedLength,
+    field,
+  }: {
+    input: Buffer;
+    expectedLength: number;
+    field: string;
+  }) {
+    if (input.length !== expectedLength) {
+      throw new Error(
+        `${field} has invalid length (${input.length}), expected ${expectedLength}`
+      );
+    }
   }
 }

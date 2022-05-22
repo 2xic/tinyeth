@@ -85,14 +85,9 @@ export class Peer {
         this.keyPair,
         Buffer.from(this.ephemeralKeyPair.privatekey, 'hex')
       );
-      const authMessage =
-        message.type === MessageType.AUTH
-          ? await rlpx.getEncryptedAuthMessagePreEip8({
-              ethNodePublicKey: this.nodePublicKey,
-            })
-          : await rlpx.getEncryptedAuthMessageEip8({
-              ethNodePublicKey: this.nodePublicKey,
-            });
+      const authMessage = await rlpx.getEncryptedAuthMessagePreEip8({
+        ethNodePublicKey: this.nodePublicKey,
+      });
 
       console.log(
         `Trying to send auth message of length ${authMessage.length} to ${this._host}`

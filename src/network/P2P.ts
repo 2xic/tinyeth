@@ -11,6 +11,10 @@ export class P2P {
     return `enode://${publicKey}@${this.ip}:${this.port}`;
   }
 
+  public get privateKey() {
+    return this.keypair.privatekey;
+  }
+
   public get ip() {
     //    throw new Error('Not implemented');
     return 'localhost';

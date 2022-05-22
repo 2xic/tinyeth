@@ -1,8 +1,8 @@
-const tinyeth = require('../dist/tinyeth');
-//import tinyeth from '../dist/tinyeth';
+import { NodeServer } from '../dist/';
 
 (async () => {
-  const server = new tinyeth.Server();
+  console.log('Starting node server now..');
+  const server = new NodeServer();
   server.start();
 
   // eslint-disable-next-line no-constant-condition
