@@ -10,3 +10,15 @@ Challenge now is that i'm not able to decrypt the message. Looks the like logic 
 Will investigate this further tomorrow.
 
 
+### Day x + 1
+Added test to verify echd works based on two KeyPair() objects. 
+
+Looked at https://crypto.stackexchange.com/a/57727 , maybe it's just an implementation difference.
+
+Okay, I took a new look at the test vectors and I think when I originally looked at them I forgot to remove the two first bytes. Therefore the test always failed, but now I know better. Since i'm here given the keys I should be able to decrypt the message, but I keep getting the "Incorrect MAC" error.
+I also tried the ecies-parity, and eth-ecies. None of them helped.
+
+I assume the problem is somewhere inside ecies, so I guess I should look at how other libraries have solved it tomorrow, and look at how ecies work in more detail..
+
+
+

@@ -1,3 +1,4 @@
+import { Key } from '@mui/icons-material';
 import { KeyPair } from './KeyPair';
 describe('KeyPair', () => {
   it('should be able to create public key from private key', () => {
@@ -105,6 +106,21 @@ describe('KeyPair', () => {
     });
     expect(decompressedPublicKey.toString('hex')).toBe(
       publicKey.toString('hex')
+    );
+  });
+
+  it('should correctly create an echd public key', () => {
+    const alice = new KeyPair();
+    const bob = new KeyPair();
+
+    const aliceSharedKeyBob = alice.getEcdh({
+      publicKey: bob.getPublicKey(),
+    });
+    const bobSharedKeyAlice = bob.getEcdh({
+      publicKey: alice.getPublicKey(),
+    });
+    expect(aliceSharedKeyBob.toString('hex')).toBe(
+      bobSharedKeyAlice.toString('hex')
     );
   });
 });

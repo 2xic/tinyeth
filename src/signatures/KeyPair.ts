@@ -2,6 +2,7 @@ import secp256k1 from 'secp256k1';
 import crypto from 'crypto';
 import { keccak256 } from '../network/keccak256';
 import { addMissingPublicKeyByte } from './addMissingPublicKyeByte';
+import { derive } from 'ecies-geth';
 
 export class KeyPair {
   constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
@@ -31,17 +32,16 @@ export class KeyPair {
       );
     }
     const privateKeyBuffer = Buffer.from(privateKey, 'hex');
-    const publicKeyUINT8Array = secp256k1
-      .publicKeyCreate(privateKeyBuffer, false)
-      .slice(1);
+    const publicKey = Buffer.from(
+      secp256k1.publicKeyCreate(privateKeyBuffer, false).slice(1)
+    );
 
-    if (publicKeyUINT8Array.length !== 64) {
+    if (publicKey.length !== 64) {
       throw new Error(
-        `Invalid public key, expected length 64 and got ${publicKeyUINT8Array.length}`
+        `Invalid public key, expected length 64 and got ${publicKey.length}`
       );
     }
 
-    const publicKey = Buffer.from(publicKeyUINT8Array);
     return publicKey.toString('hex').toLowerCase();
   }
 
@@ -172,6 +172,31 @@ export class KeyPair {
         )
         .slice(1)
     );
+  }
+
+  public async getEcdhGeth({
+    publicKey: inputPublicKey,
+    privateKey: inputPrivateKey,
+  }: {
+    publicKey: string;
+    privateKey?: string;
+  }): Promise<Buffer> {
+    const privateKey = Buffer.from(inputPrivateKey || this.privatekey, 'hex');
+    const publicKey = this.parsePublicKey({
+      input: inputPublicKey,
+    });
+
+    if (privateKey.length !== 32) {
+      throw new Error(`Wrong private key length ${privateKey.length}`);
+    } else if (publicKey.length !== 65) {
+      throw new Error(`Wrong public key length ${publicKey.length}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      derive(privateKey, publicKey)
+        .then((value) => resolve(value))
+        .catch((err) => reject(err));
+    });
   }
 
   public getCompressedKey({ publicKey }: { publicKey: Buffer }): Buffer {

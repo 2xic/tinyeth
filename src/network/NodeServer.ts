@@ -5,7 +5,10 @@ import { P2P } from './P2P';
 export class NodeServer {
   private _server?: net.Server;
 
-  private p2p = new P2P(new KeyPair());
+  private p2p: P2P;
+  constructor(private nodePrivateKey: string) {
+    this.p2p = new P2P(new KeyPair(this.nodePrivateKey));
+  }
 
   private PORT_NUMBER = 3000;
 
@@ -15,10 +18,11 @@ export class NodeServer {
       console.log('yeah ?=');
     });
 
-    this._server.once('listening', () => {
-      console.log('Lisenting');
+    this._server.on('listening', () => {
+      console.log('Listening');
     });
-    this._server.once('connection', (socket) => {
+
+    this._server.on('connection', (socket) => {
       console.log('Connection :)');
       socket.on('data', (data) => {
         console.log(data);
