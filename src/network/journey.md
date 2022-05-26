@@ -20,5 +20,19 @@ I also tried the ecies-parity, and eth-ecies. None of them helped.
 
 I assume the problem is somewhere inside ecies, so I guess I should look at how other libraries have solved it tomorrow, and look at how ecies work in more detail..
 
+#### Day x + 2
+Did not work on this the last few days, but back at it today.
+
+So what we know is that something is wrong when we try to decrypt the message. The message is supposed to be encrypted based on the recipient public key ( ref . https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8.md )
+
+So I tried to get the test vectors to work, and also read through the geth code for this ( https://github.com/ethereum/go-ethereum/blob/7194c847b6e7f545f2aad57d8eae0a046e08d7a4/crypto/ecies/ecies.go#L214 )
+
+I also tested some with pyecies, but it has the same problem as here. Not sure why. 
+
+Tested with vaporyjs-devp2p, and they do not accept the packet either. Looks like they are doing some modifications. So I guess my plan for tomorrow is to dissemble how they do it to understand what is wrong. I think it's just a problem with how the shared secret is constructed.
+
+
+
+
 
 
