@@ -20,8 +20,10 @@ export class KeyPair {
     return '0x' + address.toLowerCase();
   }
 
-  public getPublicKey(options?: { privateKey: string }) {
-    const inputPrivateKey = options ? options.privateKey : this.privatekey;
+  public getPublicKey(options?: { privateKey?: string; skipSlice?: boolean }) {
+    const inputPrivateKey = options?.privateKey
+      ? options.privateKey
+      : this.privatekey;
 
     const privateKey = inputPrivateKey.startsWith('0x')
       ? inputPrivateKey.slice(2)
@@ -32,11 +34,14 @@ export class KeyPair {
       );
     }
     const privateKeyBuffer = Buffer.from(privateKey, 'hex');
-    const publicKey = Buffer.from(
-      secp256k1.publicKeyCreate(privateKeyBuffer, false).slice(1)
-    );
+    const diff = options?.skipSlice ? 0 : 1;
+    const expectedSlice = 65 - diff;
 
-    if (publicKey.length !== 64) {
+    const publicKey = Buffer.from(
+      secp256k1.publicKeyCreate(privateKeyBuffer, false)
+    ).slice(diff);
+
+    if (publicKey.length !== expectedSlice) {
       throw new Error(
         `Invalid public key, expected length 64 and got ${publicKey.length}`
       );
@@ -194,7 +199,7 @@ export class KeyPair {
 
     return new Promise((resolve, reject) => {
       derive(privateKey, publicKey)
-        .then((value) => resolve(value))
+        .then((value) => resolve(this.getDecompressedKey({ publicKey: value })))
         .catch((err) => reject(err));
     });
   }

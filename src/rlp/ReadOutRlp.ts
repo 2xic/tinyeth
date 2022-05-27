@@ -1,6 +1,4 @@
-import { arrayContainsArray } from 'ethereumjs-util';
-import { isTemplateSpan } from 'typescript';
-import { SimpleTypes } from '../rlp/types/TypeEncoderDecoder';
+import { SimpleTypes } from './types/TypeEncoderDecoder';
 
 export class ReadOutRlp {
   constructor(private rlp: SimpleTypes | undefined) {}
@@ -12,15 +10,21 @@ export class ReadOutRlp {
     skip,
     isNumeric,
     valueFetcher,
+    isFlat,
   }: {
     skip?: number;
     length: number;
     isNumeric?: boolean;
+    isFlat?: boolean;
     valueFetcher?: (item: SimpleTypes) => T[];
   }): Array<T> {
     if (Array.isArray(this.rlp)) {
       if (skip) {
         this.index += skip;
+      }
+
+      if (isFlat) {
+        return this.rlp.slice(this.index) as unknown as T[];
       }
 
       const item = this.rlp[this.index++];
@@ -38,6 +42,7 @@ export class ReadOutRlp {
         }
         return item;
       };
+
       if (length === 1 && !Array.isArray(item)) {
         return [valueConverter(item as unknown as T)];
       } else if (Array.isArray(item)) {

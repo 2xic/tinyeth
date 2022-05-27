@@ -31,7 +31,10 @@ I also tested some with pyecies, but it has the same problem as here. Not sure w
 
 Tested with vaporyjs-devp2p, and they do not accept the packet either. Looks like they are doing some modifications. So I guess my plan for tomorrow is to dissemble how they do it to understand what is wrong. I think it's just a problem with how the shared secret is constructed.
 
+#### Day x + 3
+Was able to replicate the test with vaporjs-devpp2p, looks like the problem is the construction of the echdX key.
 
+Been able to implement the test vectors, progress is looking good now.
 
 
 

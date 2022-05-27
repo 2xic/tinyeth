@@ -1,6 +1,6 @@
 import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
 import { parseHexIp } from '../parseHexIp';
-import { ReadOutRlp } from '../ReadOutRlp';
+import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 
 export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {

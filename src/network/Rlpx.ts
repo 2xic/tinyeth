@@ -1,17 +1,19 @@
 import { RlpEncoder } from '../rlp/RlpEncoder';
 import { KeyPair } from '../signatures/KeyPair';
-import crypto from 'crypto';
 import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
 import { getBufferFromHex } from './getBufferFromHex';
 import { addMissingPublicKeyByte } from '../signatures/addMissingPublicKyeByte';
-import { encrypt, decrypt, sign } from 'ecies-geth';
-import secp256k1 from 'secp256k1';
+import { encrypt } from 'ecies-geth';
+import { RlpxEcies } from './RlpxEcies';
+import { assertEqual } from '../utils/enforce';
+import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
+import { EncodeAuthPreEip8 } from './auth/EncodeAuthPreEip8';
 
 export class Rlpx {
   constructor(
     public keyPair: KeyPair,
-    private ephemeralPrivateKey: Buffer,
+    public ephemeralPrivateKey: Buffer,
     private rlpEncoder = new RlpEncoder()
   ) {}
 
@@ -21,51 +23,11 @@ export class Rlpx {
   }: {
     ethNodePublicKey: string;
     nonce?: Buffer;
-  }): Buffer {
-    const nonce = inputNonce || crypto.randomBytes(32);
-    const ecdhKey = Buffer.from(
-      this.keyPair.getEcdh({
-        publicKey: ethNodePublicKey,
-        privateKey: this.keyPair.privatekey,
-      })
-    );
-    const tokenXorNonce = xor(ecdhKey, nonce);
-    if (tokenXorNonce.length !== 32) {
-      throw new Error('Something is wrong with the xor token function');
-    }
-    const { fullSignature } = new KeyPair().signMessage({
-      privateKey: this.ephemeralPrivateKey.toString('hex'), // this.keyPair.privatekey,
-      message: tokenXorNonce,
+  }) {
+    return new EncodeAuthEip8(this).createAuthMessageEip8({
+      ethNodePublicKey,
+      nonce: inputNonce,
     });
-    const bufferSignature = Buffer.from(fullSignature, 'hex');
-    if (bufferSignature.length !== 65) {
-      throw new Error(
-        `Something is wrong with the signature function, expected length 65, but received ${bufferSignature.length}`
-      );
-    }
-    const hashPublicKey = keccak256(
-      Buffer.from(
-        this.keyPair.getPublicKey({
-          privateKey: this.ephemeralPrivateKey.toString('hex'),
-        }),
-        'hex'
-      )
-    );
-    const rawPublicKey = Buffer.from(this.keyPair.getPublicKey(), 'hex');
-
-    if (rawPublicKey.length !== 64) {
-      throw new Error(
-        `Wrong raw key length, expected 64, but got ${rawPublicKey.length}`
-      );
-    }
-
-    return Buffer.concat([
-      bufferSignature,
-      hashPublicKey,
-      rawPublicKey,
-      nonce,
-      Buffer.from([0x4]),
-    ]);
   }
 
   public createAuthMessagePreEip8({
@@ -75,66 +37,28 @@ export class Rlpx {
     ethNodePublicKey: string;
     nonce?: Buffer;
   }): Buffer {
-    const nonce = inputNonce || crypto.randomBytes(32);
-    const ecdhKey = Buffer.from(
-      this.keyPair.getEcdh({
-        publicKey: ethNodePublicKey,
-      })
-    );
-    const tokenXorNonce = xor(ecdhKey, nonce);
-    if (tokenXorNonce.length !== 32) {
-      throw new Error('Something is wrong with the xor token function');
-    }
-    const { signature, recovery } = new KeyPair().signMessage({
-      privateKey: this.ephemeralPrivateKey.toString('hex'),
-      message: tokenXorNonce,
+    return new EncodeAuthPreEip8(this).createAuthMessagePreEip8({
+      ethNodePublicKey,
+      nonce: inputNonce,
     });
-
-    const bufferSignature = Buffer.concat([signature, Buffer.from([recovery])]);
-    const hashPublicKey = keccak256(
-      Buffer.from(
-        this.keyPair.getPublicKey({
-          privateKey: this.ephemeralPrivateKey.toString('hex'),
-        }),
-        'hex'
-      )
-    );
-    const rawPublicKey = Buffer.concat([
-      Buffer.from([4]),
-      Buffer.from(this.keyPair.getPublicKey(), 'hex'),
-    ]);
-
-    return Buffer.concat([
-      bufferSignature,
-      hashPublicKey,
-      rawPublicKey,
-      nonce,
-      Buffer.from([0x0]),
-    ]);
   }
 
-  // Maybe just using https://github.com/ecies/js is better
-  // https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/crypto.py#L115
   public async encryptedMessage({
     message,
     responderPublicKey: inputResponderPublicKey,
-    iv,
   }: {
     message: Buffer;
     responderPublicKey: Buffer | string;
-    iv?: Buffer;
   }): Promise<Buffer> {
     const responderPublicKey = addMissingPublicKeyByte({
       buffer: getBufferFromHex(inputResponderPublicKey),
     });
-    return new Promise<Buffer>((resolve, reject) => {
-      encrypt(responderPublicKey, message, {
-        ephemPrivateKey: this.ephemeralPrivateKey,
-        iv,
-      })
-        .then((e) => resolve(e))
-        .catch((err) => reject(err));
+
+    const encryptedMessage = new RlpxEcies(this.keyPair).encryptMessage({
+      message,
+      remotePublicKey: responderPublicKey,
     });
+    return encryptedMessage;
   }
 
   public async decryptMessage({
@@ -142,13 +66,26 @@ export class Rlpx {
   }: {
     encryptedMessage: Buffer;
   }): Promise<Buffer> {
-    const privateKey = Buffer.from(this.keyPair.privatekey, 'hex');
+    const isSimpleMessage = encryptedMessage[0] === 4;
+    const lengthBuffer = isSimpleMessage
+      ? Buffer.from([])
+      : encryptedMessage.slice(0, 2);
+    const message = isSimpleMessage
+      ? encryptedMessage
+      : encryptedMessage.slice(2);
+    const length = isSimpleMessage
+      ? message.length
+      : lengthBuffer.readUInt16BE();
 
-    return new Promise<Buffer>((resolve, reject) => {
-      decrypt(privateKey, encryptedMessage)
-        .then((results) => resolve(results))
-        .catch((error) => reject(error));
+    assertEqual(length, message.length);
+
+    const decryptedMessage = new RlpxEcies(this.keyPair).decryptMessage({
+      // skip first two bytes because they just say the length
+      // might have to reconsider this when the node is connected to the network to prevent ddos etc.
+      message,
+      mac: lengthBuffer,
     });
+    return decryptedMessage;
   }
 
   public async getEncryptedAuthMessagePreEip8({
@@ -176,21 +113,9 @@ export class Rlpx {
     const remotePublicKey = decryptedMessage.slice(97, 162);
     const nonce = decryptedMessage.slice(162, 194);
 
-    this._assert({
-      input: remotePublicKey,
-      expectedLength: 65,
-      field: 'publickey',
-    });
-    this._assert({
-      input: nonce,
-      expectedLength: 32,
-      field: 'nonce',
-    });
-    this._assert({
-      input: hash,
-      expectedLength: 32,
-      field: 'hash',
-    });
+    assertEqual(remotePublicKey.length, 65);
+    assertEqual(nonce.length, 65);
+    assertEqual(hash.length, 65);
 
     const echdx = this.keyPair.getEcdh({
       publicKey: remotePublicKey.toString('hex'),
@@ -217,28 +142,5 @@ export class Rlpx {
       remotePublicKey,
       nonce,
     };
-  }
-
-  public decryptPacket({ message }: { message: string }): {
-    header: unknown;
-    body: unknown;
-  } {
-    throw new Error('Not implemented');
-  }
-
-  public _assert({
-    input,
-    expectedLength,
-    field,
-  }: {
-    input: Buffer;
-    expectedLength: number;
-    field: string;
-  }) {
-    if (input.length !== expectedLength) {
-      throw new Error(
-        `${field} has invalid length (${input.length}), expected ${expectedLength}`
-      );
-    }
   }
 }

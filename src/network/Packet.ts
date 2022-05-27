@@ -18,7 +18,7 @@ import {
   PongPacket,
   PongPacketEncodeDecode,
 } from './packet-types/PongPacketEncodeDecode';
-import { ReadOutRlp } from './ReadOutRlp';
+import { ReadOutRlp } from '../rlp/ReadOutRlp';
 import ip6addr from 'ip6addr';
 import { convertNumberToPadHex } from './convertNumberToPadHex';
 
