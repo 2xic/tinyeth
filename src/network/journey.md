@@ -36,6 +36,15 @@ Was able to replicate the test with vaporjs-devpp2p, looks like the problem is t
 
 Been able to implement the test vectors, progress is looking good now.
 
+--- Continued
 
+Now it's time to preforme the rest of the handshake
+-  https://github.com/ethereum/devp2p/blob/master/rlpx.md#initial-handshake
+    - We send a auth message
+    - We get an ack message
+    - We get an hello message   
+        - We need to implement framing https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing
+
+Goal for tomorrow, implement framing :)
 
 

@@ -13,7 +13,7 @@ export class EncodeAuthEip8 {
   }: {
     ethNodePublicKey: string;
     nonce?: Buffer;
-  }): Buffer {
+  }) {
     const nonce = inputNonce || crypto.randomBytes(32);
     const ecdhKey = Buffer.from(
       this.rlpx.keyPair.getEcdh({
@@ -51,12 +51,12 @@ export class EncodeAuthEip8 {
       );
     }
 
-    return Buffer.concat([
+    return [
       bufferSignature,
-      hashPublicKey,
+      //      hashPublicKey,
       rawPublicKey,
       nonce,
       Buffer.from([0x4]),
-    ]);
+    ];
   }
 }

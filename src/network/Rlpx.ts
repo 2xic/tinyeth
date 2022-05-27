@@ -9,6 +9,8 @@ import { RlpxEcies } from './RlpxEcies';
 import { assertEqual } from '../utils/enforce';
 import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
 import { EncodeAuthPreEip8 } from './auth/EncodeAuthPreEip8';
+import crypto from 'crypto';
+import { Auth8Eip } from './AuthEip8';
 
 export class Rlpx {
   constructor(
@@ -17,17 +19,58 @@ export class Rlpx {
     private rlpEncoder = new RlpEncoder()
   ) {}
 
-  public createAuthMessageEip8({
+  public decryptEip8AuthMessage({
+    encryptedMessage,
+  }: {
+    encryptedMessage: Buffer;
+  }) {
+    return new Auth8Eip(this).decodeAuthEip8({
+      input: encryptedMessage,
+    });
+  }
+
+  public async createEncryptedAuthMessageEip8({
     ethNodePublicKey,
     nonce: inputNonce,
   }: {
     ethNodePublicKey: string;
     nonce?: Buffer;
   }) {
-    return new EncodeAuthEip8(this).createAuthMessageEip8({
+    const metadata = new EncodeAuthEip8(this).createAuthMessageEip8({
       ethNodePublicKey,
       nonce: inputNonce,
     });
+    const rlp = this.rlpEncoder.encode({ input: metadata });
+    const padding = crypto.randomBytes(100);
+    const encodedRlp = getBufferFromHex(rlp);
+    const message = Buffer.concat([encodedRlp, padding]);
+    const overhead = 113;
+    const totalLength = overhead + message.length;
+    const mac = Buffer.from(totalLength.toString(16).padStart(4, '0'), 'hex');
+
+    return Buffer.concat([
+      mac,
+      await this.encryptedMessage({
+        message,
+        responderPublicKey: ethNodePublicKey,
+        mac,
+      }),
+    ]);
+  }
+
+  public createAuthMessageEip8({
+    ethNodePublicKey,
+    nonce: inputNonce,
+  }: {
+    ethNodePublicKey: string;
+    nonce?: Buffer;
+  }): Buffer {
+    return Buffer.concat(
+      new EncodeAuthEip8(this).createAuthMessageEip8({
+        ethNodePublicKey,
+        nonce: inputNonce,
+      })
+    );
   }
 
   public createAuthMessagePreEip8({
@@ -46,9 +89,11 @@ export class Rlpx {
   public async encryptedMessage({
     message,
     responderPublicKey: inputResponderPublicKey,
+    mac,
   }: {
     message: Buffer;
     responderPublicKey: Buffer | string;
+    mac?: Buffer;
   }): Promise<Buffer> {
     const responderPublicKey = addMissingPublicKeyByte({
       buffer: getBufferFromHex(inputResponderPublicKey),
@@ -57,6 +102,7 @@ export class Rlpx {
     const encryptedMessage = new RlpxEcies(this.keyPair).encryptMessage({
       message,
       remotePublicKey: responderPublicKey,
+      mac,
     });
     return encryptedMessage;
   }
@@ -78,6 +124,8 @@ export class Rlpx {
       : lengthBuffer.readUInt16BE();
 
     assertEqual(length, message.length);
+
+    console.log(lengthBuffer);
 
     const decryptedMessage = new RlpxEcies(this.keyPair).decryptMessage({
       // skip first two bytes because they just say the length

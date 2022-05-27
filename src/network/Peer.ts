@@ -54,6 +54,7 @@ export class Peer {
     socket.on('data', (data) => {
       console.log('Got data');
       console.log(data);
+      console.log(data.toString('hex'));
     });
     await new Promise<void>((resolve) => {
       socket.connect(nodeOptions.port, nodeOptions.address, () => {
@@ -85,7 +86,7 @@ export class Peer {
         this.keyPair,
         Buffer.from(this.ephemeralKeyPair.privatekey, 'hex')
       );
-      const authMessage = await rlpx.getEncryptedAuthMessagePreEip8({
+      const authMessage = await rlpx.createEncryptedAuthMessageEip8({
         ethNodePublicKey: this.nodePublicKey,
       });
 
