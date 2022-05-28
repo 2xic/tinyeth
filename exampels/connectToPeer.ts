@@ -12,7 +12,7 @@ import { Peer, enocdes, MessageType, parseEncode } from '../dist';
     });
   */
       await node.sendMessage({
-        type: MessageType.AUTH,
+        type: MessageType.AUTH_EIP_8,
       });
     })
   );

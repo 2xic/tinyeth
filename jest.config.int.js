@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-undef
 module.exports = {
-  testRegex: ['.*.int.test.js'],
+  testRegex: [".*.int.test.ts"],
   transform: {
-    '\\.(js|ts|jsx|tsx)$': 'babel-jest',
+    "\\.(js|ts|jsx|tsx)$": "babel-jest",
   },
- // verbose: true,
+  // verbose: true,
 };

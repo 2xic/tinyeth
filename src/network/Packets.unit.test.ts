@@ -2,15 +2,14 @@ import { cleanString } from '../utils';
 import { getBufferFromHex } from './getBufferFromHex';
 import { Packet, PacketTypes } from './Packet';
 import ip6addr from 'ip6addr';
+import { decode } from '@ethereumjs/devp2p';
+import { HelpOutline } from '@mui/icons-material';
 
 describe('Packets', () => {
   // from https://github.com/ethereum/go-ethereum/pull/2091/files#diff-a2488b7a37555bfb5c64327072acdbbf703ab127176956f6b6558067950f8f73R455
 
   it('should correctly decode hello packet', () => {
     // from https://eips.ethereum.org/EIPS/eip-8
-    const nodeKey = getBufferFromHex(
-      'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
-    );
     const helloPacket = getBufferFromHex(
       cleanString(`
     f87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840
@@ -20,7 +19,33 @@ describe('Packets', () => {
     );
 
     const decodedPacket = new Packet().decodeHello({ input: helloPacket });
-    expect(decodedPacket.version).toBe(22);
+    //expect(decodedPacket.version).toBe(22);
+    expect(decodedPacket.nodeId).toBe(
+      '0xfda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877'
+    );
+  });
+
+  it('should correctly decode hello packet from geth', () => {
+    const helloPacket = getBufferFromHex(
+      cleanString(`
+      80f88305b0476574682f76312e31302e31372d737461626c652d32356339623439662f6c696e75782d616d6436342f676f312e3138cdc58365746842c684736e61700180b840565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e     `)
+    );
+
+    const decodedPacket = new Packet().decodeHello({ input: helloPacket });
+    expect(decodedPacket.userAgent).toBe(
+      'Geth/v1.10.17-stable-25c9b49f/linux-amd64/go1.18'
+    );
+    expect(decodedPacket.protocolVersion).toBe(5);
+    expect(decodedPacket.capabilities.toString()).toBe(
+      [
+        ['eth', 66],
+        ['snap', 1],
+      ].toString()
+    );
+    expect(decodedPacket.listenPort).toBe(0);
+    expect(decodedPacket.nodeId).toBe(
+      '0x565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e'
+    );
   });
 
   it('should correctly decode a ping packet', () => {
@@ -50,7 +75,7 @@ describe('Packets', () => {
     expect(decodedPacket.toTcpPort).toBe(3333);
   });
 
-  it.only('should correctly encode a ping packet', () => {
+  it('should correctly encode a ping packet', () => {
     // https://github.com/ethereum/devp2p/blob/master/discv4.md#ping-packet-0x01
     const packet = new Packet().encodePing({
       version: 4,
@@ -165,5 +190,17 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
     expect(decodedPacket.packetType).toBe(PacketTypes.NEIGHBORS);
     expect(decodedPacket.nodes.length).toBe(4);
     expect(decodedPacket.nodes[0].ip).toBeTruthy();
+  });
+
+  it('should correctly create an hello packet', () => {
+    const helloPacket = getBufferFromHex(
+      cleanString(`
+      80f88305b0476574682f76312e31302e31372d737461626c652d32356339623439662f6c696e75782d616d6436342f676f312e3138cdc58365746842c684736e61700180b840565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e     `)
+    );
+
+    const decodedPacket = new Packet().decodeHello({ input: helloPacket });
+
+    const packet = new Packet().encodeHello({ packet: decodedPacket });
+    expect(packet.toString('hex')).toBe(helloPacket.toString('hex'));
   });
 });

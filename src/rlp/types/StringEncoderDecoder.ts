@@ -39,7 +39,7 @@ export class StringEncoderDecoder
 
       return {
         encoding: `${firstLength}${bytes}${encodedString}`,
-        length: length + 3,
+        length: length + 2,
       };
     }
 

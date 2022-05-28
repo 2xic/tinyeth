@@ -3,11 +3,8 @@ import { MacInteractor } from './MacInteractor';
 
 export class EncodeFraming {
   private aes: crypto.Decipher;
-  constructor(
-    private key: Buffer,
-    private iv: Buffer,
-    private macInteractor: MacInteractor
-  ) {
+
+  constructor(key: Buffer, iv: Buffer, private macInteractor: MacInteractor) {
     this.aes = crypto.createDecipheriv('aes-256-ctr', key, iv);
   }
 

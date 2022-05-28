@@ -1,10 +1,15 @@
+import { encode } from '@ethereumjs/devp2p';
 import { ThirtyFpsSharp } from '@mui/icons-material';
 import net from 'net';
+import { RlpEncoder } from '../rlp/RlpEncoder';
 import { KeyPair } from '../signatures/KeyPair';
 import { FrameCommunication } from './auth/FrameCommunication';
 import { Auth8Eip } from './AuthEip8';
 import { getBufferFromHex } from './getBufferFromHex';
 import { getRandomPeer } from './getRandomPeer';
+import { CryptoNonceGenerator } from './nonce-generator/CryptoNonceGenerator';
+import { NonceGenerator } from './nonce-generator/NonceGenerator';
+import { Packet, PacketTypes } from './Packet';
 import { Rlpx } from './Rlpx';
 import { AbstractSocket } from './socket/AbstractSocket';
 
@@ -30,11 +35,14 @@ export class Peer {
   constructor(
     private keyPair = new KeyPair(),
     private ephemeralKeyPair = new KeyPair(),
-    private socket: AbstractSocket = new net.Socket() as AbstractSocket
+    private socket: AbstractSocket = new net.Socket() as AbstractSocket,
+    private randomNumberGenerator: NonceGenerator = new CryptoNonceGenerator()
   ) {
     this.rlpx = new Rlpx(
       this.keyPair,
-      Buffer.from(this.ephemeralKeyPair.privatekey, 'hex')
+      Buffer.from(this.ephemeralKeyPair.privatekey, 'hex'),
+      new RlpEncoder(),
+      this.randomNumberGenerator
     );
     this.auth8Eip = new Auth8Eip(this.rlpx);
   }
@@ -102,13 +110,9 @@ export class Peer {
   }
 
   public async sendMessage(message: MessageOptions) {
-    if ([MessageType.AUTH, MessageType.AUTH_EIP_8].includes(message.type)) {
-      const rlpx = new Rlpx(
-        this.keyPair,
-        Buffer.from(this.ephemeralKeyPair.privatekey, 'hex')
-      );
+    if (MessageType.AUTH_EIP_8 === message.type) {
       const { results: authMessage, header } =
-        await rlpx.createEncryptedAuthMessageEip8({
+        await this.rlpx.createEncryptedAuthMessageEip8({
           ethNodePublicKey: this.nodePublicKey,
         });
 
@@ -121,6 +125,9 @@ export class Peer {
       );
 
       await this.connectionWrite(authMessage);
+    } else if (MessageType.HELLO === message.type) {
+      console.log('hello ser');
+      throw new Error('nono, please go in order ser');
     } else {
       throw new Error(`Unknown message type${message.type}`);
     }
@@ -145,26 +152,42 @@ export class Peer {
         this._senderNonce,
         getBufferFromHex(nonce)
       ).setup({
-        secret: this._secret,
-
-        remoteNonce: getBufferFromHex(nonce),
         remotePacket: message,
-
         initiatorPacket: this.sentPacket,
-        initiatorNonce: this._senderNonce,
       });
-      console.log(':)');
     } else {
-      console.log('hello ? what is this ser?');
-      console.log(
-        this.frameCommunication?.parse({
-          message,
-        })
-      );
+      if (!this.frameCommunication) {
+        throw new Error('Missing frame communicator');
+      }
+      const body = this.frameCommunication.parse({
+        message,
+      });
+      const packetParser = new Packet();
+      const hello = packetParser.parse({
+        packet: body,
+      });
+      /** Todo run some validation here maybe ? */
+      console.log('Trying to say hello');
+      /*await this.sendMessage({
+        type: MessageType.HELLO,
+      });
+      */
+      const heloMessage = new Packet().encodeHello({
+        packet: {
+          ...hello,
+          nodeId: `0x${this.keyPair.getPublicKey()}`,
+        },
+      });
+      const encodedMessage = this.frameCommunication.encode({
+        message: heloMessage,
+      });
+      await this.connectionWrite(encodedMessage);
     }
   }
 
   private async connectionWrite(message: Buffer) {
+    console.log(`writing on the wire SER, ${message.length}`);
+    console.log(` ${message.toString('hex')}`);
     await new Promise<void>((resolve, reject) => {
       this.connection.write(message, (error) => {
         if (error) {
@@ -195,7 +218,7 @@ type MessageOptions = BaseMessage;
 
 export enum MessageType {
   AUTH_EIP_8,
-  AUTH,
+  HELLO,
 }
 interface BaseMessage {
   type: MessageType;

@@ -9,12 +9,12 @@ export class EncodeAuthEip8 {
 
   public createAuthMessageEip8({
     ethNodePublicKey,
-    nonce: inputNonce,
   }: {
     ethNodePublicKey: string;
-    nonce?: Buffer;
   }) {
-    const nonce = inputNonce || crypto.randomBytes(32);
+    const nonce = this.rlpx.randomNumberGenerator.generate({
+      length: 32,
+    });
     const ecdhKey = Buffer.from(
       this.rlpx.keyPair.getEcdh({
         publicKey: ethNodePublicKey,

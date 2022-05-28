@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { encrypt } from 'ecies-geth';
 import { getBufferFromHex } from '../network/getBufferFromHex';
 import { sha3_256 } from '../network/sha3_256';
 import { RlpEncoder } from './RlpEncoder';
@@ -292,6 +293,34 @@ describe('RlpEncoder', () => {
     });
     expect(encoded).toBe(
       '0xda820001d6c5833203043280808080808080808080808080808031'
+    );
+  });
+
+  it('should correctly encode a user agent', () => {
+    const encoding = new RlpEncoder().encode({
+      input: ['Geth/v1.10.17-stable-25c9b49f/linux-amd64/go1.18'],
+    });
+    expect(encoding.slice(2)).toBe(
+      'f1b0476574682f76312e31302e31372d737461626c652d32356339623439662f6c696e75782d616d6436342f676f312e3138'
+    );
+  });
+
+  it('should encode a 2d array', () => {
+    const encoding = new RlpEncoder().encode({
+      input: [
+        ['eth', 66],
+        ['snap', 1],
+      ],
+    });
+    expect(encoding.slice(2)).toBe('cdc58365746842c684736e617001');
+  });
+
+  it('should encode a large array', () => {
+    const encoding2 = new RlpEncoder().encode({
+      input: ['a'.repeat(128)],
+    });
+    expect(encoding2.slice(2)).toBe(
+      'f882b8806161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161'
     );
   });
 });

@@ -1,4 +1,4 @@
-import { Peer, KeyPair, parseEncode, MessageType } from '../dist';
+import { Peer, KeyPair, parseEncode, MessageType, NodeServer } from '../dist';
 
 (async () => {
   const node = new Peer(
@@ -8,6 +8,9 @@ import { Peer, KeyPair, parseEncode, MessageType } from '../dist';
     new KeyPair(
       '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
     )
+  );
+  const server = new NodeServer(
+    '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
   );
   await node.connect(
     parseEncode(

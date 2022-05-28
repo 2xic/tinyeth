@@ -24,7 +24,10 @@ export class ReadOutRlp {
       }
 
       if (isFlat) {
-        return this.rlp.slice(this.index) as unknown as T[];
+        if (Array.isArray(this.rlp[this.index])) {
+          return this.rlp[this.index++] as unknown as T[];
+        }
+        return this.rlp.slice(this.index++) as unknown as T[];
       }
 
       const item = this.rlp[this.index++];

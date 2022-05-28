@@ -3,10 +3,17 @@ import { getBufferFromHex } from './getBufferFromHex';
 import { parseEncode } from './parseEnode';
 import { MessageType, Peer } from './Peer';
 import { MockSocket } from './socket/MockSocket';
+import { MockNonceGenerator } from './nonce-generator/MockNonceGenerator';
 
 describe('Peer', () => {
   it('should be able to do an handshake', async () => {
     const socket = new MockSocket();
+    const mockNonce = new MockNonceGenerator([
+      Buffer.from(
+        'c98e21c6b772bcb272fc207cbad36320d65b458ee76112813fc0d362b65379f3',
+        'hex'
+      ),
+    ]);
     const node = new Peer(
       new KeyPair(
         '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
@@ -14,7 +21,8 @@ describe('Peer', () => {
       new KeyPair(
         '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
       ),
-      socket
+      socket,
+      mockNonce
     );
     await node.connect(
       parseEncode(
@@ -27,13 +35,13 @@ describe('Peer', () => {
     await socket.emit(
       'data',
       getBufferFromHex(
-        '013e0482038930f72c7ce6f8e20b51541503c11be0524fbde8f47fff35d2383bad440d4dc32bb18a31b96d240df6024c297b263ec6fd6dd6bf3215bc7aeaea96fe35d3e3fd785e29f86a35bc630c12a5356667289218a91a90ea95e1fd987122693603d50e9c03eb906356a986fdc97633877042c0963cd378c2f1ec58f871147bc61cdb8727a9ff3573f8f6888a562db2be7de5899216b9e5d2df1ab585ef7c2604a51a9e9b46da71feb2efc76ede342569ed0e4a9a620a5319ba610782e3e670e91e30b1e904812444f8f765cfc68616eee221bd01f67cca691928fd37c5fa3b7c00255ce2444badb3106dcc8921d1770f1b3a525aeababffed87f330237c14355b80a9c2b6de09ce1c7c2175602e1fc10e61a256dda0c052662cd8ff762822b4a734548d1dab7a4271761c9aba6a32339b9bf836eaeaec249c49ed969c473'
+        '0158048144a797628de4a135fcb89a65ce58a566f9de5ba76be7ebd507b86ccaba006a11b3669e5a9faa60bb3f55d7e8703c4101a1756e62c04f7fcb7b5fa63e0b4f02629a6a31e3057979cf6e6abc0a90d1545f4565fffde164a80cf0f03e51a0127bf8a0a1d40c56ee237f2ab601316124362503629134d10d04e21b0b30caa811879978d6dc40ac7fca2c9eaad0808af284bfac1de8541eb9ab9d9247a2f7b94a016fa6f6a8bfad983b26ca0664701c1cc980c76c298b28a606a65702c5a783b4447e27c1fc566a4dac4533767c493a97d170fa50ee2f75d74d3462955480974bb00be28c7dadb21b31b4a5d8fb33850976b7d8cf1b2f58d3e0adb9b5928a0ef09917354c60b4ea441c2ad8caefb3a271df4ef35da483d355b8647cd1408398cf7b837936f96255a133f23cdfc0369d5c2f1454e559f48d04c72e903b5afc435cb9dd810fe386bccd3cd8a3be32a6e0768b917fdbfc2ff327'
       )
     );
     await socket.emit(
       'data',
       getBufferFromHex(
-        '87c089a8142856a3db8274629e18bbbc403649d95c9cd8109f8b8220dba47b0dde5069b3b893153b76255f86b0a6f7eed6a37208220ef6e0b50298a5ed652aac3534566875c1ea95fdbc755671a75f4a7e57ee8170f660c7ae6f93542c3b287b0a2372ca504672cd8ecbcb9da5cfdf7106ede74d67978b5454db6d3bd2267750a452e2330af80dfadd45f1370b193a6a32229c60c3559cb7524df5e35e0fa81ea4c70753829c513b3b9c9728ce085417dc06e2d87442b384a5ddc874dfd9e7c8'
+        '2802decd078d1c658c65f9469c5877cac14c6f26a894b35bfecc4ce349c52d879fee2fa9a4c546580ceb0e0df14a6f9869eeefa375dd2ad2db1d74dc6ff5977b8523f499c650310ea67dab2b5c55f1929ac12735f5b6895f9641c9aafac51e77157f863a7f499399d2a966f1957dcc43d43aece4a6a9d7692da7d6c7d88d3d70745c7c5a2b64b5a67bfadeb93a8a5c90780f35db090d4b25e17ddcb0a72842304877a5c64bad6f1f7d8978a5cc9ad20a658f893b658961862bc383744e9e6384'
       )
     );
   });

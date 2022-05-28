@@ -59,3 +59,16 @@ So to be able to replay packets, and investigate further I have written a MockSo
 What I also could do is make some of the components more testable like the frame construction.
 
 There is actually quite good test case here https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/tests/test_go_handshake.py which I could reuse. 
+
+Okay, so I setup the random nonce generator to be replayable now.
+
+- I guess the logical thing is to make sure all logic 
+
+Okay, I actually found the bug, and fixed it. We now are almost able to complete the handshake (yay). 
+
+Test it a bit, and need to implement the ping / pong part, and the handling of the other packets. Before that however, I think we should implement a container setup to make testing easier, and the logic of the app.
+
+----
+Setting up container + cleaning up the code
+- All encoder / decoders should be split into own code files
+- KeyPair should be globally set in the container ? 

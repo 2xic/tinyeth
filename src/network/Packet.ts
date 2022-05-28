@@ -21,8 +21,21 @@ import {
 import { ReadOutRlp } from '../rlp/ReadOutRlp';
 import ip6addr from 'ip6addr';
 import { convertNumberToPadHex } from './convertNumberToPadHex';
+import { getBufferFromHex } from './getBufferFromHex';
+import BigNumber from 'bignumber.js';
 
 export class Packet {
+  public parse({ packet }: { packet: Buffer }) {
+    const packetId = packet[0];
+    // falsy values are parsed as 0x80 in RLP
+    const parsedPacketId = packetId === 0x80 ? 0 : packetId;
+    if (parsedPacketId === PacketTypes.HELLO) {
+      return this.decodeHello({ input: packet });
+    } else {
+      throw new Error(`Unknown packet (${parsedPacketId})`);
+    }
+  }
+
   public encodePing(_input: PingPacket): string {
     /*
       packet-data = [4, from, to, expiration, enr-seq ...]
@@ -50,31 +63,56 @@ export class Packet {
     });
   }
 
+  // TODO Moves this into an encoder / decoder class
   public decodeHello({ input }: { input: Buffer }): ParsedHelloPacket {
     const data = new RlpDecoder().decode({ input: input.toString('hex') });
     const rlpReader = new ReadOutRlp(data);
 
+    console.log(`HELLO PACKET ${input.toString('hex')}`);
+
+    console.log(data);
+
+    // protocol version
+    const [protocolVersion] = rlpReader.readArray<number>({
+      length: 1,
+      isFlat: true,
+    });
     const [client] = rlpReader.readArray<string>({
-      skip: 1,
+      length: 1,
+      isFlat: true,
+    });
+    const capabilities = rlpReader.readArray<string[]>({
+      length: 1,
+      isFlat: true,
+    });
+    const [listenPort] = rlpReader.readArray<number | boolean>({
+      length: 1,
+      isFlat: true,
+    });
+    const [nodeId] = rlpReader.readArray<string>({
       length: 1,
     });
-
-    const [version] = rlpReader.readArray<number>({
-      length: 2,
-      isNumeric: true,
-      valueFetcher: (item) => {
-        if (Array.isArray(item) && Array.isArray(item[1])) {
-          return [item[1][1] as number];
-        } else {
-          throw new Error('Missing data');
-        }
-      },
-    });
-
     return {
+      protocolVersion,
+      capabilities,
+      listenPort: typeof listenPort === 'boolean' ? 0 : listenPort,
       userAgent: client,
-      version,
+      nodeId,
+      //   version: capabilities[0][0] as unknown as number,
     };
+  }
+
+  public encodeHello({ packet }: { packet: ParsedHelloPacket }) {
+    const helloPacket = new RlpEncoder().encode({
+      input: [
+        packet.protocolVersion,
+        packet.userAgent,
+        packet.capabilities,
+        packet.listenPort,
+        getBufferFromHex(packet.nodeId),
+      ],
+    });
+    return Buffer.concat([Buffer.from([0x80]), getBufferFromHex(helloPacket)]);
   }
 
   public decodePing({
@@ -137,6 +175,7 @@ export class Packet {
 }
 
 export enum PacketTypes {
+  HELLO = 0x0,
   PING = 1,
   PONG = 2,
   FIND_NODE = 3,
@@ -145,8 +184,11 @@ export enum PacketTypes {
 }
 
 interface ParsedHelloPacket {
-  version: number;
   userAgent: string | number;
+  capabilities: string[][];
+  protocolVersion: number;
+  listenPort: number;
+  nodeId: string;
 }
 
 interface ParsedPacket {

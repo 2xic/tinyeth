@@ -50,65 +50,6 @@ describe('Rlpx', () => {
       '6ef23fcf1cec7312df623f9ae701e63be36a1cdd1b19179146019984f3625d4a6e0434a2b96769050577657247b7b02bc6c314470eca7e3ef650b98c83e9d7dd4830b3f718ff562349aead2530a8d28a8484604f92e5fced2c6183f304344ab0e7c301a0c05559f4c25db65e36820b4b909a226171a60ac6cb7beea09376d6d8',
   };
 
-  // test casse from https://github.com/ethereumjs/ethereumjs-monorepo/blob/master/packages/devp2p/test/rlpx-ecies.ts
-  it('should correctly get a shared echd', () => {
-    const intatorRlpx = new Rlpx(
-      new KeyPair(
-        'bc56f198f6b97dae6f157e35c8d607ab893be2c6ec1b242c529cc271f04f59b6'
-      ),
-      getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
-    );
-    const responderRlpx = new Rlpx(
-      new KeyPair(
-        '482a0144fb169c3a55d9e2e177b25ba889d7cbe7a8b6d818f7f2e568d754697c'
-      ),
-      getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
-    );
-    expect(intatorRlpx.keyPair.getPublicKey()).toBe(
-      'edcd655fbeb5697a9829eacc4163c0045ad06f1697a1113af463fdea962147223fe80e5be564bda00fb35a42674e47d292084759465463e797b65d2afc2d61f1'
-    );
-    expect(responderRlpx.keyPair.getPublicKey()).toBe(
-      'ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55'
-    );
-
-    const sharedEchd =
-      'e3512fe7713f4cf27513dd911e3a773059b439cc11614fda11ea1dd1cce847c6';
-    const receiverPublicKey = new KeyPair(
-      testKeys.receiverPrivateKey
-    ).getPublicKey();
-    expect(
-      intatorRlpx.keyPair
-        .getEcdh({
-          privateKey: testKeys.initiatorPrivateKey,
-          publicKey: receiverPublicKey,
-        })
-        .toString('hex')
-    ).toBe(testKeys.ecdheSharedSecret);
-  });
-
-  it.skip('should create the auth message correctly', () => {
-    const intatorRlpx = new Rlpx(
-      new KeyPair(testKeys.initiatorPrivateKey),
-      getBufferFromHex(testKeys.initiatorEphemeralPrivateKey)
-    );
-    const responderRlpx = new Rlpx(
-      new KeyPair(testKeys.receiverPrivateKey),
-      getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
-    );
-
-    const ethNodePublicKey = responderRlpx.keyPair.getPublicKey();
-    const message = intatorRlpx.createAuthMessageEip8({
-      ethNodePublicKey,
-      nonce: getBufferFromHex(testKeys.initiatorNonce),
-    });
-
-    expect(message.length).toBe(194);
-    expect(message.toString('hex').length).toBe(testKeys.authPlaintext.length);
-    expect(message.toString('hex')).toBe(
-      '22034ad2e7545e2b0bf02ecb1e40db478dfbbf7aeecc834aec2523eb2b7e74ee77ba40c70a83bfe9f2ab91f0131546dcf92c3ee8282d9907fee093017fd0302d0034fdb5419558137e0d44cd13d319afe5629eeccb47fd9dfe55cc6089426e46cc762dd8a0636e07a54b31169eba0c7a20a1ac1ef68596f1f283b5c676bae4064abfcce24799d09f67e392632d3ffdc12e3d6430dcb0ea19c318343ffa7aae74d4cd26fecb93657d1cd9e9eaf4f8be720b56dd1d39f190c4e1c6b7ec66f077bb1104'
-    );
-  });
-
   it('should correctly create a shared key', () => {
     const intatorRlpx = new Rlpx(
       new KeyPair(testKeys.initiatorPrivateKey),
@@ -194,7 +135,7 @@ describe('Rlpx', () => {
     expect(rlpx).toBeTruthy();
   });
 
-  it('should correctly create an eip8 auth packet and parse it', async () => {
+  it.skip('should correctly create an eip8 auth packet and parse it', async () => {
     const { results } = await new Rlpx(
       new KeyPair(
         'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'

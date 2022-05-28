@@ -4,19 +4,21 @@ import { xor } from './XorBuffer';
 import { keccak256 } from './keccak256';
 import { getBufferFromHex } from './getBufferFromHex';
 import { addMissingPublicKeyByte } from '../signatures/addMissingPublicKyeByte';
-import { encrypt } from 'ecies-geth';
 import { RlpxEcies } from './RlpxEcies';
 import { assertEqual } from '../utils/enforce';
 import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
 import { EncodeAuthPreEip8 } from './auth/EncodeAuthPreEip8';
 import crypto from 'crypto';
 import { Auth8Eip } from './AuthEip8';
+import { CryptoNonceGenerator } from './nonce-generator/CryptoNonceGenerator';
+import { NonceGenerator } from './nonce-generator/NonceGenerator';
 
 export class Rlpx {
   constructor(
     public keyPair: KeyPair,
     public ephemeralPrivateKey: Buffer,
-    private rlpEncoder = new RlpEncoder()
+    private rlpEncoder = new RlpEncoder(),
+    public randomNumberGenerator: NonceGenerator = new CryptoNonceGenerator()
   ) {}
 
   public decryptEip8AuthMessage({
@@ -31,14 +33,11 @@ export class Rlpx {
 
   public async createEncryptedAuthMessageEip8({
     ethNodePublicKey,
-    nonce: inputNonce,
   }: {
     ethNodePublicKey: string;
-    nonce?: Buffer;
   }) {
     const { results, header } = new EncodeAuthEip8(this).createAuthMessageEip8({
       ethNodePublicKey,
-      nonce: inputNonce,
     });
     const rlp = this.rlpEncoder.encode({ input: results });
     const padding = crypto.randomBytes(100);
@@ -63,29 +62,23 @@ export class Rlpx {
 
   public createAuthMessageEip8({
     ethNodePublicKey,
-    nonce: inputNonce,
   }: {
     ethNodePublicKey: string;
-    nonce?: Buffer;
   }): Buffer {
     return Buffer.concat(
       new EncodeAuthEip8(this).createAuthMessageEip8({
         ethNodePublicKey,
-        nonce: inputNonce,
       }).results
     );
   }
 
   public createAuthMessagePreEip8({
     ethNodePublicKey,
-    nonce: inputNonce,
   }: {
     ethNodePublicKey: string;
-    nonce?: Buffer;
   }): Buffer {
     return new EncodeAuthPreEip8(this).createAuthMessagePreEip8({
       ethNodePublicKey,
-      nonce: inputNonce,
     });
   }
 
@@ -193,5 +186,9 @@ export class Rlpx {
       remotePublicKey,
       nonce,
     };
+  }
+
+  public createHello(): Buffer {
+    throw new Error('Method not implemented.');
   }
 }
