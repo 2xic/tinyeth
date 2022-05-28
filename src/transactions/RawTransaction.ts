@@ -3,16 +3,35 @@ import { RlpEncoder } from '../rlp/RlpEncoder';
 import { KeyPair } from '../signatures/KeyPair';
 import { SignedTransaction } from './SignedTransaction';
 import { keccak256 } from '../network/keccak256';
+import { injectable } from 'inversify';
 
+@injectable()
 export class RawTransaction {
-  constructor(
-    private nonce: number,
-    private gasprice: BigNumber,
-    private startgas: number,
-    private to: BigNumber,
-    private value: BigNumber,
-    private data: string
-  ) {}
+  constructor(private keyPair: KeyPair) {}
+
+  private nonce?: number;
+  private gasprice?: BigNumber;
+  private startgas?: number;
+  private to?: BigNumber;
+  private value?: BigNumber;
+  private data?: string;
+
+  public construct(
+    nonce: number,
+    gasprice: BigNumber,
+    startgas: number,
+    to: BigNumber,
+    value: BigNumber,
+    data: string
+  ) {
+    this.nonce = nonce;
+    this.gasprice = gasprice;
+    this.startgas = startgas;
+    this.to = to;
+    this.value = value;
+    this.data = data;
+    return this;
+  }
 
   public encode(): string {
     return new RlpEncoder().encode({
@@ -30,7 +49,7 @@ export class RawTransaction {
     const rawTransaction = this.encode();
     const message = keccak256(Buffer.from(rawTransaction.slice(2), 'hex'));
 
-    const { r, s, v } = new KeyPair().signTransaction({
+    const { r, s, v } = this.keyPair.signTransaction({
       privateKey,
       message,
       chainId,
@@ -43,7 +62,7 @@ export class RawTransaction {
     );
   }
 
-  private get params() {
+  private get params(): any[] {
     return [
       this.nonce,
       this.gasprice,

@@ -3,9 +3,16 @@ import { KeyPair } from '../../signatures/KeyPair';
 import crypto from 'crypto';
 import { xor } from './../XorBuffer';
 import { keccak256 } from './../keccak256';
+import { inject, injectable } from 'inversify';
+import { NonceGenerator } from '../nonce-generator/NonceGenerator';
 
+@injectable()
 export class EncodeAuthPreEip8 {
-  constructor(private rlpx: Rlpx) {}
+  constructor(
+    private keyPair: KeyPair,
+    @inject('EMPHERMAL_PRIVATE_KEY')
+    private ephemeralPrivateKey: string
+  ) {}
 
   public createAuthMessagePreEip8({
     ethNodePublicKey,
@@ -14,7 +21,7 @@ export class EncodeAuthPreEip8 {
   }): Buffer {
     const nonce = crypto.randomBytes(32);
     const ecdhKey = Buffer.from(
-      this.rlpx.keyPair.getEcdh({
+      this.keyPair.getEcdh({
         publicKey: ethNodePublicKey,
       })
     );
@@ -22,23 +29,23 @@ export class EncodeAuthPreEip8 {
     if (tokenXorNonce.length !== 32) {
       throw new Error('Something is wrong with the xor token function');
     }
-    const { signature, recovery } = new KeyPair().signMessage({
-      privateKey: this.rlpx.ephemeralPrivateKey.toString('hex'),
+    const { signature, recovery } = this.keyPair.signMessage({
+      privateKey: this.ephemeralPrivateKey,
       message: tokenXorNonce,
     });
 
     const bufferSignature = Buffer.concat([signature, Buffer.from([recovery])]);
     const hashPublicKey = keccak256(
       Buffer.from(
-        this.rlpx.keyPair.getPublicKey({
-          privateKey: this.rlpx.ephemeralPrivateKey.toString('hex'),
+        this.keyPair.getPublicKey({
+          privateKey: this.ephemeralPrivateKey,
         }),
         'hex'
       )
     );
     const rawPublicKey = Buffer.concat([
       Buffer.from([4]),
-      Buffer.from(this.rlpx.keyPair.getPublicKey(), 'hex'),
+      Buffer.from(this.keyPair.getPublicKey(), 'hex'),
     ]);
 
     return Buffer.concat([

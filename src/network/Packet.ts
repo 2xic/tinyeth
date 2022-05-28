@@ -67,11 +67,6 @@ export class Packet {
   public decodeHello({ input }: { input: Buffer }): ParsedHelloPacket {
     const data = new RlpDecoder().decode({ input: input.toString('hex') });
     const rlpReader = new ReadOutRlp(data);
-
-    console.log(`HELLO PACKET ${input.toString('hex')}`);
-
-    console.log(data);
-
     // protocol version
     const [protocolVersion] = rlpReader.readArray<number>({
       length: 1,

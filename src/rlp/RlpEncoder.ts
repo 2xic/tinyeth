@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
 import { ArrayEncoderDecoder } from './types/ArrayEncoderDecoder';
 import { BooleanEncoderDecoder } from './types/BooleanEncoderDecoder';
 import { NumberEncoderDecoder } from './types/NumberEncoderDecoder';
@@ -7,7 +8,7 @@ import {
   EncodingResults,
   TypeEncoderDecoder,
 } from './types/TypeEncoderDecoder';
-
+@injectable()
 export class RlpEncoder {
   public encode({ input }: { input: InputTypes }) {
     const hexPrefix = '0x';

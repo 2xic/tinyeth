@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { KeyPair } from '../signatures/KeyPair';
-
+import crypto from 'crypto';
 export class Contract {
   private _address: string;
 
@@ -11,7 +11,7 @@ export class Contract {
   constructor(
     private bytes: Buffer,
     private _value: BigNumber,
-    private keyPair = new KeyPair()
+    private keyPair = new KeyPair(crypto.randomBytes(32).toString('hex'))
   ) {
     this._address = keyPair.getAddress({
       publicKey: this.keyPair.getPublicKey(),

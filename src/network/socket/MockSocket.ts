@@ -1,6 +1,8 @@
+import { injectable } from 'inversify';
 import { resolveModuleName } from 'typescript';
 import { AbstractSocket } from './AbstractSocket';
 
+@injectable()
 export class MockSocket implements AbstractSocket {
   private registeredCallback: Record<
     string,

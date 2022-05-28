@@ -4,9 +4,11 @@ import { keccak256 } from '../network/keccak256';
 import { addMissingPublicKeyByte } from './addMissingPublicKyeByte';
 import { derive } from 'ecies-geth';
 import { getBufferFromHex } from '../network/getBufferFromHex';
+import { injectable, inject } from 'inversify';
 
+@injectable()
 export class KeyPair {
-  constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
+  constructor(@inject<string>('PRIVATE_KEY') public privatekey: string) {}
 
   public getAddress({ publicKey }: { publicKey: string }) {
     const publicKeyHash = keccak256(Buffer.from(publicKey, 'hex')).toString(

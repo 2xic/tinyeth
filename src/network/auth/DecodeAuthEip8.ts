@@ -1,9 +1,12 @@
 import { RlpDecoder } from '../../rlp/RlpDecoder';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { Rlpx } from '../Rlpx';
+import { injectable } from 'inversify';
+import { RlpxDecrpyt } from '../RlpxDecrypt';
 
+@injectable()
 export class DecodeAuthEip8 {
-  constructor(private rlpx: Rlpx) {}
+  constructor(private rlpx: RlpxDecrpyt) {}
 
   public async decodeAuthEip8({ input }: { input: Buffer }) {
     const decryptedMessage = await this.rlpx.decryptMessage({

@@ -5,10 +5,7 @@ import { P2P } from './P2P';
 export class NodeServer {
   private _server?: net.Server;
 
-  private p2p: P2P;
-  constructor(private nodePrivateKey: string) {
-    this.p2p = new P2P(new KeyPair(this.nodePrivateKey));
-  }
+  constructor(private p2p: P2P) {}
 
   private PORT_NUMBER = 3000;
 

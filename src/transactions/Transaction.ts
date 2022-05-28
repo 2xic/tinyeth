@@ -1,7 +1,11 @@
 import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
 import { RawTransaction } from './RawTransaction';
 
+@injectable()
 export class Transactions {
+  constructor(private rawTransaction: RawTransaction) {}
+
   public construct({
     nonce,
     gasprice,
@@ -17,6 +21,13 @@ export class Transactions {
     value: BigNumber;
     data: string;
   }): RawTransaction {
-    return new RawTransaction(nonce, gasprice, startgas, to, value, data);
+    return this.rawTransaction.construct(
+      nonce,
+      gasprice,
+      startgas,
+      to,
+      value,
+      data
+    );
   }
 }

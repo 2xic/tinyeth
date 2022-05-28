@@ -3,13 +3,17 @@
     "target": "es5",
     "module": "commonjs",
     "outDir": "./dist",
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "reflect-metadata"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
     "declaration": true,
+    "experimentalDecorators": true,
+    "lib": ["es6"],
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src/"

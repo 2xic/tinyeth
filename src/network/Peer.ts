@@ -12,17 +12,18 @@ import { NonceGenerator } from './nonce-generator/NonceGenerator';
 import { Packet, PacketTypes } from './Packet';
 import { Rlpx } from './Rlpx';
 import { AbstractSocket } from './socket/AbstractSocket';
-
+import { injectable, inject } from 'inversify';
+@injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
 
   private _nodePublicKey?: string;
 
-  private rlpx: Rlpx;
+  //private rlpx: Rlpx;
 
   private frameCommunication?: FrameCommunication;
 
-  private auth8Eip: Auth8Eip;
+  //  private auth8Eip: Auth8Eip;
 
   private _host?: string;
 
@@ -33,19 +34,12 @@ export class Peer {
   private sentPacket?: Buffer;
 
   constructor(
-    private keyPair = new KeyPair(),
-    private ephemeralKeyPair = new KeyPair(),
-    private socket: AbstractSocket = new net.Socket() as AbstractSocket,
-    private randomNumberGenerator: NonceGenerator = new CryptoNonceGenerator()
-  ) {
-    this.rlpx = new Rlpx(
-      this.keyPair,
-      Buffer.from(this.ephemeralKeyPair.privatekey, 'hex'),
-      new RlpEncoder(),
-      this.randomNumberGenerator
-    );
-    this.auth8Eip = new Auth8Eip(this.rlpx);
-  }
+    private rlpx: Rlpx,
+    private keyPair: KeyPair,
+    private socket: AbstractSocket,
+    private auth8Eip: Auth8Eip,
+    private ephemeralKeyPair: KeyPair
+  ) {}
 
   public async connect(options?: {
     publicKey: string;
@@ -126,7 +120,6 @@ export class Peer {
 
       await this.connectionWrite(authMessage);
     } else if (MessageType.HELLO === message.type) {
-      console.log('hello ser');
       throw new Error('nono, please go in order ser');
     } else {
       throw new Error(`Unknown message type${message.type}`);
@@ -134,8 +127,6 @@ export class Peer {
   }
 
   private async parseMessage(message: Buffer) {
-    console.log(`Got the following response buffer ${message.length}`);
-    console.log(message.toString('hex'));
     if (220 < message.length) {
       if (!this._secret || !this._senderNonce || !this.sentPacket) {
         throw new Error('Something is wrong');

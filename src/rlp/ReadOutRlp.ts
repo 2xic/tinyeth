@@ -41,7 +41,6 @@ export class ReadOutRlp {
           if ((item as any).toString().startsWith('0x')) {
             return parseInt(item as unknown as string, 16) as unknown as T;
           }
-          console.log([item, isNumeric]);
         }
         return item;
       };

@@ -4,26 +4,36 @@ import { parseEncode } from './parseEnode';
 import { MessageType, Peer } from './Peer';
 import { MockSocket } from './socket/MockSocket';
 import { MockNonceGenerator } from './nonce-generator/MockNonceGenerator';
+import { UnitTestContainer } from '../container/UnitTestContainer';
+import { NonceGenerator } from './nonce-generator/NonceGenerator';
+import { Container } from 'inversify';
+import { AbstractSocket } from './socket/AbstractSocket';
 
 describe('Peer', () => {
+  let peer: Peer;
+  let container: Container;
+  beforeEach(() => {
+    container = new UnitTestContainer().create({
+      privateKey:
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
+      ephemeralPrivateKey:
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
+    });
+    peer = container.get(Peer);
+  });
   it('should be able to do an handshake', async () => {
-    const socket = new MockSocket();
-    const mockNonce = new MockNonceGenerator([
+    const interactor = container.get(
+      NonceGenerator
+    ) as any as MockNonceGenerator;
+    interactor.setNonces([
       Buffer.from(
         'c98e21c6b772bcb272fc207cbad36320d65b458ee76112813fc0d362b65379f3',
         'hex'
       ),
     ]);
-    const node = new Peer(
-      new KeyPair(
-        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
-      ),
-      new KeyPair(
-        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
-      ),
-      socket,
-      mockNonce
-    );
+    const socket = container.get(AbstractSocket) as MockSocket;
+
+    const node = peer;
     await node.connect(
       parseEncode(
         'enode://565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e@localhost:30303'

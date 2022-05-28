@@ -1,7 +1,8 @@
 module.exports = {
-  testRegex: [".*.unit.test.js"],
+  setupFiles: ['<rootDir>/jest.setup.js'],
+  testRegex: ['.*.unit.test.js'],
   transform: {
-    '\\.(js|ts|jsx|tsx)$': 'babel-jest',
+    "\\.(js|ts|jsx|tsx)$": "babel-jest",
   },
   // verbose: true,
 };

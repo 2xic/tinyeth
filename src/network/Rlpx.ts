@@ -12,13 +12,18 @@ import crypto from 'crypto';
 import { Auth8Eip } from './AuthEip8';
 import { CryptoNonceGenerator } from './nonce-generator/CryptoNonceGenerator';
 import { NonceGenerator } from './nonce-generator/NonceGenerator';
-
+import { injectable } from 'inversify';
+import { RlpxDecrpyt } from './RlpxDecrypt';
+@injectable()
 export class Rlpx {
   constructor(
     public keyPair: KeyPair,
-    public ephemeralPrivateKey: Buffer,
-    private rlpEncoder = new RlpEncoder(),
-    public randomNumberGenerator: NonceGenerator = new CryptoNonceGenerator()
+    private rlpEncoder: RlpEncoder,
+    public randomNumberGenerator: NonceGenerator,
+    private encodeAuthEip8: EncodeAuthEip8,
+    private encodeAuthPreEip8: EncodeAuthPreEip8,
+    private auth8Eip: Auth8Eip,
+    private rlpxDecrpyt: RlpxDecrpyt
   ) {}
 
   public decryptEip8AuthMessage({
@@ -26,7 +31,7 @@ export class Rlpx {
   }: {
     encryptedMessage: Buffer;
   }) {
-    return new Auth8Eip(this).decodeAuthEip8({
+    return this.auth8Eip.decodeAuthEip8({
       input: encryptedMessage,
     });
   }
@@ -36,7 +41,7 @@ export class Rlpx {
   }: {
     ethNodePublicKey: string;
   }) {
-    const { results, header } = new EncodeAuthEip8(this).createAuthMessageEip8({
+    const { results, header } = this.encodeAuthEip8.createAuthMessageEip8({
       ethNodePublicKey,
     });
     const rlp = this.rlpEncoder.encode({ input: results });
@@ -66,7 +71,7 @@ export class Rlpx {
     ethNodePublicKey: string;
   }): Buffer {
     return Buffer.concat(
-      new EncodeAuthEip8(this).createAuthMessageEip8({
+      this.encodeAuthEip8.createAuthMessageEip8({
         ethNodePublicKey,
       }).results
     );
@@ -77,7 +82,7 @@ export class Rlpx {
   }: {
     ethNodePublicKey: string;
   }): Buffer {
-    return new EncodeAuthPreEip8(this).createAuthMessagePreEip8({
+    return this.encodeAuthPreEip8.createAuthMessagePreEip8({
       ethNodePublicKey,
     });
   }
@@ -101,35 +106,6 @@ export class Rlpx {
       mac,
     });
     return encryptedMessage;
-  }
-
-  public async decryptMessage({
-    encryptedMessage,
-  }: {
-    encryptedMessage: Buffer;
-  }): Promise<Buffer> {
-    const isSimpleMessage = encryptedMessage[0] === 4;
-    const lengthBuffer = isSimpleMessage
-      ? Buffer.from([])
-      : encryptedMessage.slice(0, 2);
-    const message = isSimpleMessage
-      ? encryptedMessage
-      : encryptedMessage.slice(2);
-    const length = isSimpleMessage
-      ? message.length
-      : lengthBuffer.readUInt16BE();
-
-    assertEqual(length, message.length);
-
-    console.log(lengthBuffer);
-
-    const decryptedMessage = new RlpxEcies(this.keyPair).decryptMessage({
-      // skip first two bytes because they just say the length
-      // might have to reconsider this when the node is connected to the network to prevent ddos etc.
-      message,
-      mac: lengthBuffer,
-    });
-    return decryptedMessage;
   }
 
   public async getEncryptedAuthMessagePreEip8({
@@ -165,7 +141,7 @@ export class Rlpx {
       publicKey: remotePublicKey.toString('hex'),
     });
 
-    const remoteEphermalPublicKey = await new KeyPair().verifyMessage({
+    const remoteEphermalPublicKey = await this.keyPair.verifyMessage({
       signature,
       r: recoveryId,
       message: xor(echdx, nonce),

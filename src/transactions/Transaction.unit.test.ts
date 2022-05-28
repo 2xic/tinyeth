@@ -1,11 +1,18 @@
 import BigNumber from 'bignumber.js';
+import { UnitTestContainer } from '../container/UnitTestContainer';
 import { SignedTransaction } from './SignedTransaction';
 import { Transactions } from './Transaction';
 
 describe('Transaction', () => {
+  let interactor: Transactions;
+  beforeEach(() => {
+    const container = new UnitTestContainer().create();
+    interactor = container.get(Transactions);
+  });
+
   it('should be able to construct a raw transaction', () => {
     // example from https://ethereum.stackexchange.com/a/87309
-    const transaction = new Transactions()
+    const transaction = interactor
       .construct({
         nonce: 0x1e7,
         gasprice: new BigNumber('0x2e90edd000'),
@@ -23,7 +30,7 @@ describe('Transaction', () => {
 
   it('should correctly sign an transaction', () => {
     // example from https://medium.com/portis/part-three-creating-and-signing-ethereum-transactions-e9cca44d7e2d
-    const transaction = new Transactions()
+    const transaction = interactor
       .construct({
         nonce: 0x1e7,
         gasprice: new BigNumber('0x2e90edd000'),
