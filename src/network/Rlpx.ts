@@ -36,11 +36,11 @@ export class Rlpx {
     ethNodePublicKey: string;
     nonce?: Buffer;
   }) {
-    const metadata = new EncodeAuthEip8(this).createAuthMessageEip8({
+    const { results, header } = new EncodeAuthEip8(this).createAuthMessageEip8({
       ethNodePublicKey,
       nonce: inputNonce,
     });
-    const rlp = this.rlpEncoder.encode({ input: metadata });
+    const rlp = this.rlpEncoder.encode({ input: results });
     const padding = crypto.randomBytes(100);
     const encodedRlp = getBufferFromHex(rlp);
     const message = Buffer.concat([encodedRlp, padding]);
@@ -48,14 +48,17 @@ export class Rlpx {
     const totalLength = overhead + message.length;
     const mac = Buffer.from(totalLength.toString(16).padStart(4, '0'), 'hex');
 
-    return Buffer.concat([
-      mac,
-      await this.encryptedMessage({
-        message,
-        responderPublicKey: ethNodePublicKey,
+    return {
+      results: Buffer.concat([
         mac,
-      }),
-    ]);
+        await this.encryptedMessage({
+          message,
+          responderPublicKey: ethNodePublicKey,
+          mac,
+        }),
+      ]),
+      header,
+    };
   }
 
   public createAuthMessageEip8({
@@ -69,7 +72,7 @@ export class Rlpx {
       new EncodeAuthEip8(this).createAuthMessageEip8({
         ethNodePublicKey,
         nonce: inputNonce,
-      })
+      }).results
     );
   }
 

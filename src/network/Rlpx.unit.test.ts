@@ -73,16 +73,17 @@ describe('Rlpx', () => {
 
     const sharedEchd =
       'e3512fe7713f4cf27513dd911e3a773059b439cc11614fda11ea1dd1cce847c6';
+    const receiverPublicKey = new KeyPair(
+      testKeys.receiverPrivateKey
+    ).getPublicKey();
     expect(
       intatorRlpx.keyPair
         .getEcdh({
-          privateKey:
-            'c050056ba8b27cc2191305832f3f6837f5df839872f04d84416d78a1cd005f92',
-          publicKey:
-            '04ca8c11dd4742cf1434ed2bf07c4381f6baecf98ee2e44f67bac987b47f8865bfde5436e71453a7829f076ddc353d86927acabc783c871ea90962c7f0c6926e55',
+          privateKey: testKeys.initiatorPrivateKey,
+          publicKey: receiverPublicKey,
         })
         .toString('hex')
-    ).toBe(sharedEchd);
+    ).toBe(testKeys.ecdheSharedSecret);
   });
 
   it.skip('should create the auth message correctly', () => {
@@ -194,7 +195,7 @@ describe('Rlpx', () => {
   });
 
   it('should correctly create an eip8 auth packet and parse it', async () => {
-    const rlpx = await new Rlpx(
+    const { results } = await new Rlpx(
       new KeyPair(
         'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
       ),
@@ -207,14 +208,14 @@ describe('Rlpx', () => {
     });
 
     // 482a0144fb169c3a55d9e2e177b25ba889d7cbe7a8b6d818f7f2e568d754697c
-    expect(rlpx).toBeTruthy();
+    expect(results).toBeTruthy();
     const responderRlpx = await new Rlpx(
       new KeyPair(
         '482a0144fb169c3a55d9e2e177b25ba889d7cbe7a8b6d818f7f2e568d754697c'
       ),
       getBufferFromHex(testKeys.receiverEphemeralPrivateKey)
     ).decryptEip8AuthMessage({
-      encryptedMessage: rlpx,
+      encryptedMessage: results,
     });
     expect(responderRlpx.version).toBe(4);
   });

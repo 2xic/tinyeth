@@ -91,4 +91,23 @@ describe('AuthEip8', () => {
     });
     expect(packet.version).toBe(4);
   });
+
+  it('shold correctly parse a second packet from geth', async () => {
+    const input = getBufferFromHex(
+      '0173040a20053a57c302bc0751889c7717f4e58b3bde808dd98c02567c54c663834fe034f28c2bab712f46db5cb757b69024ec980c341d8b565c3b0b5bb45ac14874c0452bfdab2db357ae1f22bb29dce03633986eab735464b1ab760574b6dce540ea89a44f9a8f252578206fb7bda89d0c7e9f8ed72a4d468c8e9082278f5dcd3e0d6cfbca122884046f4097f18bef83f746ac6ad11b4f12a7966688045a312496be8d160e64482e80640a54f7dbd1c1024c358e10fc37638b3b6fa421f965b16b59a5d0b0c046a2c3e937384f7dcf1bfe5ab8ed7fa3332f004d9b5ff5ae9113fc074449cbe9495b09be7ccab122353201fe8df806ca96f24cae40df4eb2722f06e4a8ea791eda5cfca2cabd2a2c2fe73c933138cfdb0b14403b883e204dadb0b3026172916048e69b7f61b3a38084f9aaa6193b7e82aa99748f3c266bf9e0a485adf82483bb46a7d4c188dcd1d83104a4518d1a91afd2b10d71e155cea2e07f89af39bbba3889edd143d83dccd1f1a071c9f2bf'
+    );
+    const packet = await new Auth8Eip(
+      new Rlpx(
+        new KeyPair(
+          '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
+        ),
+        getBufferFromHex(
+          '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a'
+        )
+      )
+    ).decodeAckEip8({
+      input,
+    });
+    expect(packet.version).toBe(4);
+  });
 });

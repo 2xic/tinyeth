@@ -48,3 +48,14 @@ Now it's time to preforme the rest of the handshake
 Goal for tomorrow, implement framing :)
 
 
+#### Day x + 4
+Working on framing today, and it is a bit more straight forward, or maybe it's me becoming better at reading the docs and navigating.
+
+Okay, so I thought I had been able to implement the core idea, but having some problems with the validation of the header.
+I have written some tests for the MAC part, so I think this should be good.
+
+So to be able to replay packets, and investigate further I have written a MockSocket that replays the packets. I should also create a mock nonce fetcher to make it easier to test for the nonces. 
+
+What I also could do is make some of the components more testable like the frame construction.
+
+There is actually quite good test case here https://github.com/ethereum/pydevp2p/blob/b09b8a06a152f34cd7dc7950b14b04e3f01511af/devp2p/tests/test_go_handshake.py which I could reuse. 

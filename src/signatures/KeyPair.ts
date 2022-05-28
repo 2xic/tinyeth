@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { keccak256 } from '../network/keccak256';
 import { addMissingPublicKeyByte } from './addMissingPublicKyeByte';
 import { derive } from 'ecies-geth';
+import { getBufferFromHex } from '../network/getBufferFromHex';
 
 export class KeyPair {
   constructor(public privatekey = crypto.randomBytes(32).toString('hex')) {}
@@ -229,7 +230,7 @@ export class KeyPair {
   public parsePublicKey({ input }: { input: string | Buffer }): Buffer {
     if (typeof input === 'string') {
       return addMissingPublicKeyByte({
-        buffer: Buffer.from(input, 'hex'),
+        buffer: getBufferFromHex(input),
       });
     } else if (Buffer.isBuffer(input)) {
       return addMissingPublicKeyByte({

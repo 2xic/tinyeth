@@ -51,12 +51,18 @@ export class EncodeAuthEip8 {
       );
     }
 
-    return [
-      bufferSignature,
-      //      hashPublicKey,
-      rawPublicKey,
-      nonce,
-      Buffer.from([0x4]),
-    ];
+    return {
+      results: [
+        bufferSignature,
+        //      hashPublicKey,
+        rawPublicKey,
+        nonce,
+        Buffer.from([0x4]),
+      ],
+      header: {
+        secret: ecdhKey,
+        nonce,
+      },
+    };
   }
 }
