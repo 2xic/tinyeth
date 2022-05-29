@@ -6,7 +6,7 @@ import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
 import crypto from 'crypto';
 import { Auth8Eip } from './AuthEip8';
 import { injectable } from 'inversify';
-import { Logger } from '../utils/Logger';
+
 @injectable()
 export class Rlpx {
   constructor(
