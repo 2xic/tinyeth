@@ -1,4 +1,3 @@
-import { bufArrToArr } from 'ethereumjs-util';
 import { FrameCommunication } from './FrameCommunication';
 describe('FrameCommunication', () => {
   it('should construct a frame correctly', () => {

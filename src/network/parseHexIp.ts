@@ -1,5 +1,3 @@
-import { InputOutlined } from '@mui/icons-material';
-
 export function parseHexIp(input: Buffer) {
   if (input.length == 4) {
     return `${input[0]}.${input[1]}.${input[2]}.${input[3]}`;

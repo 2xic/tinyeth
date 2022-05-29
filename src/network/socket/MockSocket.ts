@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable } from 'inversify';
-import { resolveModuleName } from 'typescript';
 import { AbstractSocket } from './AbstractSocket';
 
 @injectable()

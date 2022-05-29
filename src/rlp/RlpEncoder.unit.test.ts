@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { encrypt } from 'ecies-geth';
 import { getBufferFromHex } from '../network/getBufferFromHex';
 import { sha3_256 } from '../network/sha3_256';
 import { RlpEncoder } from './RlpEncoder';

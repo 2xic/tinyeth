@@ -1,11 +1,4 @@
-import {
-  Peer,
-  KeyPair,
-  ProductionContainer,
-  parseEncode,
-  MessageType,
-  NodeServer,
-} from '../dist';
+import { Peer, ProductionContainer, parseEncode, MessageType } from '../dist';
 
 (async () => {
   const node = new ProductionContainer()

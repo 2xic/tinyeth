@@ -22,7 +22,6 @@ import { ReadOutRlp } from '../rlp/ReadOutRlp';
 import ip6addr from 'ip6addr';
 import { convertNumberToPadHex } from './convertNumberToPadHex';
 import { getBufferFromHex } from './getBufferFromHex';
-import BigNumber from 'bignumber.js';
 
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {

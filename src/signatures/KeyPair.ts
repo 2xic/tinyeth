@@ -1,5 +1,4 @@
 import secp256k1 from 'secp256k1';
-import crypto from 'crypto';
 import { keccak256 } from '../network/keccak256';
 import { addMissingPublicKeyByte } from './addMissingPublicKyeByte';
 import { derive } from 'ecies-geth';

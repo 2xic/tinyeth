@@ -1,5 +1,3 @@
-import { Key } from '@mui/icons-material';
-import { bufArrToArr } from 'ethereumjs-util';
 import { KeyPair } from '../signatures/KeyPair';
 import { getBufferFromHex } from './getBufferFromHex';
 import { RlpxEcies } from './RlpxEcies';

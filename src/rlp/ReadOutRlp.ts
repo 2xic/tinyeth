@@ -38,6 +38,7 @@ export class ReadOutRlp {
 
       const valueConverter = (item: T): T => {
         if (isNumeric) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if ((item as any).toString().startsWith('0x')) {
             return parseInt(item as unknown as string, 16) as unknown as T;
           }

@@ -1,29 +1,19 @@
-import { encode } from '@ethereumjs/devp2p';
-import { ThirtyFpsSharp } from '@mui/icons-material';
-import net from 'net';
-import { RlpEncoder } from '../rlp/RlpEncoder';
 import { KeyPair } from '../signatures/KeyPair';
 import { FrameCommunication } from './auth/FrameCommunication';
 import { Auth8Eip } from './AuthEip8';
 import { getBufferFromHex } from './getBufferFromHex';
 import { getRandomPeer } from './getRandomPeer';
-import { CryptoNonceGenerator } from './nonce-generator/CryptoNonceGenerator';
-import { NonceGenerator } from './nonce-generator/NonceGenerator';
-import { Packet, PacketTypes } from './Packet';
+import { Packet } from './Packet';
 import { Rlpx } from './Rlpx';
 import { AbstractSocket } from './socket/AbstractSocket';
-import { injectable, inject } from 'inversify';
+import { injectable } from 'inversify';
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
 
   private _nodePublicKey?: string;
 
-  //private rlpx: Rlpx;
-
   private frameCommunication?: FrameCommunication;
-
-  //  private auth8Eip: Auth8Eip;
 
   private _host?: string;
 

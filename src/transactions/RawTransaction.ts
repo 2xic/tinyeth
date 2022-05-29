@@ -62,6 +62,7 @@ export class RawTransaction {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private get params(): any[] {
     return [
       this.nonce,

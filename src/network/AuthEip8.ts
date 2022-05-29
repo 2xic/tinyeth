@@ -1,4 +1,3 @@
-import { Rlpx } from './Rlpx';
 import { DecodeAuthEip8 } from './auth/DecodeAuthEip8';
 import { injectable } from 'inversify';
 

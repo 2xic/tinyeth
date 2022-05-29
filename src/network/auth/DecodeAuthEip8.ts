@@ -1,6 +1,5 @@
 import { RlpDecoder } from '../../rlp/RlpDecoder';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
-import { Rlpx } from '../Rlpx';
 import { injectable } from 'inversify';
 import { RlpxDecrpyt } from '../RlpxDecrypt';
 

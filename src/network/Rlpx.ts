@@ -10,7 +10,6 @@ import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
 import { EncodeAuthPreEip8 } from './auth/EncodeAuthPreEip8';
 import crypto from 'crypto';
 import { Auth8Eip } from './AuthEip8';
-import { CryptoNonceGenerator } from './nonce-generator/CryptoNonceGenerator';
 import { NonceGenerator } from './nonce-generator/NonceGenerator';
 import { injectable } from 'inversify';
 import { RlpxDecrpyt } from './RlpxDecrypt';

@@ -1,10 +1,7 @@
 import { MacInteractor } from './MacInteractor';
 import crypto from 'crypto';
 import { keccak256 } from '../keccak256';
-import { buffer2int } from '@ethereumjs/devp2p';
-import { MessageTwoTone } from '@mui/icons-material';
 import { assertEqual } from '../../utils/enforce';
-import { bufferToInt } from 'ethereumjs-util';
 import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { getBufferFromHex } from '../getBufferFromHex';
 
@@ -27,17 +24,12 @@ export class FrameCommunication {
     const nonceEmpheral = keccak256(
       Buffer.concat([empheralSharedSecret, nonce])
     );
-    console.log(empheralSharedSecret);
-    console.log(nonce);
-    console.log(nonceEmpheral);
 
     const aesKey = keccak256(
       Buffer.concat([empheralSharedSecret, nonceEmpheral])
     );
 
     this.macKey = keccak256(Buffer.concat([empheralSharedSecret, aesKey]));
-
-    console.log(this.macKey);
 
     this.ingresAes = createDeciper({
       key: aesKey,

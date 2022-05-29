@@ -1,5 +1,3 @@
-import { KeyPair } from '../signatures/KeyPair';
-import { P2P } from './P2P';
 import { parseEncode } from './parseEnode';
 
 describe('P2P', () => {

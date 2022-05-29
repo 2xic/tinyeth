@@ -1,5 +1,4 @@
 import net from 'net';
-import { KeyPair } from '../signatures/KeyPair';
 import { P2P } from './P2P';
 
 export class NodeServer {

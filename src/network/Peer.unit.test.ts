@@ -1,4 +1,3 @@
-import { KeyPair } from '../signatures/KeyPair';
 import { getBufferFromHex } from './getBufferFromHex';
 import { parseEncode } from './parseEnode';
 import { MessageType, Peer } from './Peer';
@@ -22,9 +21,7 @@ describe('Peer', () => {
     peer = container.get(Peer);
   });
   it('should be able to do an handshake', async () => {
-    const interactor = container.get(
-      NonceGenerator
-    ) as any as MockNonceGenerator;
+    const interactor = container.get(NonceGenerator) as MockNonceGenerator;
     interactor.setNonces([
       Buffer.from(
         'c98e21c6b772bcb272fc207cbad36320d65b458ee76112813fc0d362b65379f3',

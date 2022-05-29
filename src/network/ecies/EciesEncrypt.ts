@@ -1,5 +1,4 @@
 import { KeyPair } from '../../signatures/KeyPair';
-import { assertBufferFirstItemValue, assertEqual } from '../../utils/enforce';
 import { kdf } from 'ecies-geth';
 import crypto from 'crypto';
 

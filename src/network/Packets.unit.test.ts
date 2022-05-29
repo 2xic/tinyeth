@@ -1,9 +1,6 @@
 import { cleanString } from '../utils';
 import { getBufferFromHex } from './getBufferFromHex';
 import { Packet, PacketTypes } from './Packet';
-import ip6addr from 'ip6addr';
-import { decode } from '@ethereumjs/devp2p';
-import { HelpOutline } from '@mui/icons-material';
 
 describe('Packets', () => {
   // from https://github.com/ethereum/go-ethereum/pull/2091/files#diff-a2488b7a37555bfb5c64327072acdbbf703ab127176956f6b6558067950f8f73R455

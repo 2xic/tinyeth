@@ -1,8 +1,5 @@
-import 'reflect-metadata';
-
 import { MockNonceGenerator } from '../network/nonce-generator/MockNonceGenerator';
 import { NonceGenerator } from '../network/nonce-generator/NonceGenerator';
-import { Rlpx } from '../network/Rlpx';
 import { AbstractSocket } from '../network/socket/AbstractSocket';
 import { MockSocket } from '../network/socket/MockSocket';
 import { ContainerOptions, CoreContainer } from './CoreContainer';

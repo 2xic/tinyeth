@@ -1,7 +1,6 @@
 import { createKeccak256 } from '../keccak256';
 import { xor } from '../XorBuffer';
 import crypto from 'crypto';
-import { encrypt } from 'ecies-geth';
 
 export class MacInteractor {
   private hash = createKeccak256();
@@ -27,6 +26,7 @@ export class MacInteractor {
   }
 
   public get slicedHash(): Buffer {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.hash as any)._clone().digest().slice(0, 16);
   }
 }

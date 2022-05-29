@@ -1,10 +1,8 @@
-import { Rlpx } from '../Rlpx';
 import { KeyPair } from '../../signatures/KeyPair';
 import crypto from 'crypto';
 import { xor } from './../XorBuffer';
 import { keccak256 } from './../keccak256';
 import { inject, injectable } from 'inversify';
-import { NonceGenerator } from '../nonce-generator/NonceGenerator';
 
 @injectable()
 export class EncodeAuthPreEip8 {
