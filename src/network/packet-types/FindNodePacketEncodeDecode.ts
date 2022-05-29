@@ -4,6 +4,10 @@ import { PacketEncodeDecode } from './PacketEncodeDecode';
 export class FindNodePacketEncodeDecode
   implements PacketEncodeDecode<FindNodePacket>
 {
+  public encode(): SimpleTypes {
+    throw new Error('Method not implemented.');
+  }
+
   public decode(options: { input: SimpleTypes[] }): FindNodePacket {
     const [target] = options.input;
     if (typeof target !== 'string') {

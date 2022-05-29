@@ -1,4 +1,4 @@
-import { getBufferFromHex } from '../network/getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 
 export function addMissingPublicKeyByte({ buffer }: { buffer: Buffer }) {
   if (buffer.length === 64) {

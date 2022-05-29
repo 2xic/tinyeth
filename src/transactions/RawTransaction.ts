@@ -1,13 +1,13 @@
 import BigNumber from 'bignumber.js';
 import { RlpEncoder } from '../rlp/RlpEncoder';
-import { KeyPair } from '../signatures/KeyPair';
+import { Signatures } from '../signatures/Signatures';
 import { SignedTransaction } from './SignedTransaction';
-import { keccak256 } from '../network/keccak256';
+import { keccak256 } from '../utils/keccak256';
 import { injectable } from 'inversify';
 
 @injectable()
 export class RawTransaction {
-  constructor(private keyPair: KeyPair) {}
+  constructor(private signatures: Signatures) {}
 
   private nonce?: number;
   private gasprice?: BigNumber;
@@ -49,7 +49,7 @@ export class RawTransaction {
     const rawTransaction = this.encode();
     const message = keccak256(Buffer.from(rawTransaction.slice(2), 'hex'));
 
-    const { r, s, v } = this.keyPair.signTransaction({
+    const { r, s, v } = this.signatures.signTransaction({
       privateKey,
       message,
       chainId,

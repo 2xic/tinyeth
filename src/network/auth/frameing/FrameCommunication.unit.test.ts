@@ -1,24 +1,11 @@
 import { FrameCommunication } from './FrameCommunication';
-describe('FrameCommunication', () => {
-  it('should construct a frame correctly', () => {
-    const interactor = new FrameCommunication(
-      Buffer.from('22'.repeat(32), 'hex'),
-      Buffer.from('41'.repeat(32), 'hex'),
-      Buffer.from('42'.repeat(32), 'hex')
-    ).setup({
-      remotePacket: Buffer.from('deadbeef', 'hex'),
-      initiatorPacket: Buffer.from('beefbeef', 'hex'),
-    });
-    const ingresMac = interactor.ingressMac.slicedHash.toString('hex');
-    expect(ingresMac).toBe('c9aa8c5be6808ba15923c0f452a28963');
-  });
 
+describe('FrameCommunication', () => {
   it('should construct a frame message correctly', () => {
-    const interactor = new FrameCommunication(
-      Buffer.from('22'.repeat(32), 'hex'),
-      Buffer.from('41'.repeat(32), 'hex'),
-      Buffer.from('42'.repeat(32), 'hex')
-    ).setup({
+    const interactor = new FrameCommunication().setup({
+      ephemeralSharedSecret: Buffer.from('22'.repeat(32), 'hex'),
+      initiatorNonce: Buffer.from('41'.repeat(32), 'hex'),
+      receiverNonce: Buffer.from('42'.repeat(32), 'hex'),
       remotePacket: Buffer.from('deadbeef', 'hex'),
       initiatorPacket: Buffer.from('beefbeef', 'hex'),
     });

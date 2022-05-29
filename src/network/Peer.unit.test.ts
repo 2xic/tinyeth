@@ -1,4 +1,4 @@
-import { getBufferFromHex } from './getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { parseEncode } from './parseEnode';
 import { MessageType, Peer } from './Peer';
 import { MockSocket } from './socket/MockSocket';

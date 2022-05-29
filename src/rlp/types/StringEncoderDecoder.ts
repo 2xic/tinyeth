@@ -5,6 +5,10 @@ import {
   TypeEncoderDecoder,
 } from './TypeEncoderDecoder';
 
+/*
+  TODO: 
+    - The encode and decode function here is a bit to large.
+*/
 export class StringEncoderDecoder
   implements TypeEncoderDecoder<string | Uint8Array>
 {

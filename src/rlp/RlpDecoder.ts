@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ArrayEncoderDecoder } from './types/ArrayEncoderDecoder';
 import { BooleanEncoderDecoder } from './types/BooleanEncoderDecoder';
 import { IsNonValueEncoderDecoder } from './types/IsNonValueEncoderDecoder';
@@ -10,6 +11,7 @@ import {
   TypeEncoderDecoder,
 } from './types/TypeEncoderDecoder';
 
+@injectable()
 export class RlpDecoder {
   public decode({
     input,

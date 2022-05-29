@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { getBufferFromHex } from './getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { UnitTestContainer } from '../container/UnitTestContainer';
 import { RlpxDecrpyt } from './RlpxDecrypt';
 

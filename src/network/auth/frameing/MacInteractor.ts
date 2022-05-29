@@ -1,5 +1,5 @@
-import { createKeccak256 } from '../keccak256';
-import { xor } from '../XorBuffer';
+import { createKeccak256 } from '../../../utils/keccak256';
+import { xor } from '../../../utils/XorBuffer';
 import crypto from 'crypto';
 
 export class MacInteractor {

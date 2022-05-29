@@ -1,4 +1,4 @@
-import { keccak256 } from '../../network/keccak256';
+import { keccak256 } from '../../utils/keccak256';
 import { Uint } from '../../rlp/types/Uint';
 import { AbiStruct } from './AbiStruct';
 

@@ -1,4 +1,4 @@
-import { getBufferFromHex } from '../../network/getBufferFromHex';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { MerklePatriciaTrie } from './MerklePatriciaTrie';
 

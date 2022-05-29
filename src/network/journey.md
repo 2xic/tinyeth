@@ -72,3 +72,13 @@ Test it a bit, and need to implement the ping / pong part, and the handling of t
 Setting up container + cleaning up the code
 - All encoder / decoders should be split into own code files
 - KeyPair should be globally set in the container ? 
+
+### Day x + 5
+Today most of the day has been spent cleaning up a lot of the code, and moving to use containers more.
+
+The nice thing with containers is that it allows better testing, and cleans up the general interface of the code.
+
+
+
+
+

@@ -4,6 +4,10 @@ import { PacketEncodeDecode } from './PacketEncodeDecode';
 export class NeighborsPacketEncodeDecode
   implements PacketEncodeDecode<NeighborsPacket>
 {
+  public encode(): SimpleTypes {
+    throw new Error('Method not implemented.');
+  }
+
   public decode(options: { input: SimpleTypes[] }): NeighborsPacket {
     const [nodes] = options.input;
     if (!Array.isArray(nodes)) {

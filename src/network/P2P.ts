@@ -16,12 +16,10 @@ export class P2P {
   }
 
   public get ip() {
-    //    throw new Error('Not implemented');
     return 'localhost';
   }
 
   public get port() {
     return 3000;
-    //    throw new Error('Not implemented');
   }
 }

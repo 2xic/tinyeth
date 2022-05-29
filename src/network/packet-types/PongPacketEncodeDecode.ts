@@ -2,6 +2,10 @@ import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 
 export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
+  public encode(): SimpleTypes {
+    throw new Error('Method not implemented.');
+  }
+
   public decode(options: { input: SimpleTypes[] }): PongPacket {
     const [to] = options.input;
     if (!Array.isArray(to)) {

@@ -1,5 +1,5 @@
 import { KeyPair } from '../signatures/KeyPair';
-import { getBufferFromHex } from './getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { RlpxEcies } from './RlpxEcies';
 
 describe('RlpxEcies', () => {

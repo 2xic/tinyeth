@@ -1,6 +1,5 @@
 import { RlpDecoder } from '../rlp/RlpDecoder';
-import { InputTypes, RlpEncoder } from '../rlp/RlpEncoder';
-import { keccak256 } from './keccak256';
+import { keccak256 } from '../utils/keccak256';
 import {
   FindNodePacket,
   FindNodePacketEncodeDecode,
@@ -18,10 +17,10 @@ import {
   PongPacket,
   PongPacketEncodeDecode,
 } from './packet-types/PongPacketEncodeDecode';
-import { ReadOutRlp } from '../rlp/ReadOutRlp';
-import ip6addr from 'ip6addr';
-import { convertNumberToPadHex } from './convertNumberToPadHex';
-import { getBufferFromHex } from './getBufferFromHex';
+import {
+  HelloPacketEncoderDecoder,
+  ParsedHelloPacket,
+} from './packet-types/HelloPacketEncoderDecoer';
 
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {
@@ -36,77 +35,15 @@ export class Packet {
   }
 
   public encodePing(_input: PingPacket): string {
-    /*
-      packet-data = [4, from, to, expiration, enr-seq ...]
-      from = [sender-ip, sender-udp-port, sender-tcp-port]
-      to = [recipient-ip, recipient-udp-port, 0]
-    */
-    const input: InputTypes = [
-      0x4,
-      [
-        Buffer.from(ip6addr.parse(_input.fromIp).toBuffer().slice(-4)),
-        Buffer.from(convertNumberToPadHex(_input.fromUdpPort), 'hex'),
-        Buffer.from(convertNumberToPadHex(_input.fromTcpPort), 'hex'),
-      ],
-      [
-        Buffer.from(ip6addr.parse(_input.toIp).toBuffer()),
-        Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex'),
-        Buffer.from(convertNumberToPadHex(_input.toTcpPort), 'hex'),
-      ],
-      Buffer.from(convertNumberToPadHex(_input.expiration), 'hex'),
-      ...(_input.sequence ? _input.sequence : []),
-    ];
-
-    return new RlpEncoder().encode({
-      input,
-    });
+    return new PingPacketEncodeDecode().encode({ input: _input });
   }
 
-  // TODO Moves this into an encoder / decoder class
   public decodeHello({ input }: { input: Buffer }): ParsedHelloPacket {
-    const data = new RlpDecoder().decode({ input: input.toString('hex') });
-    const rlpReader = new ReadOutRlp(data);
-    // protocol version
-    const [protocolVersion] = rlpReader.readArray<number>({
-      length: 1,
-      isFlat: true,
-    });
-    const [client] = rlpReader.readArray<string>({
-      length: 1,
-      isFlat: true,
-    });
-    const capabilities = rlpReader.readArray<string[]>({
-      length: 1,
-      isFlat: true,
-    });
-    const [listenPort] = rlpReader.readArray<number | boolean>({
-      length: 1,
-      isFlat: true,
-    });
-    const [nodeId] = rlpReader.readArray<string>({
-      length: 1,
-    });
-    return {
-      protocolVersion,
-      capabilities,
-      listenPort: typeof listenPort === 'boolean' ? 0 : listenPort,
-      userAgent: client,
-      nodeId,
-      //   version: capabilities[0][0] as unknown as number,
-    };
+    return new HelloPacketEncoderDecoder().decode({ input });
   }
 
   public encodeHello({ packet }: { packet: ParsedHelloPacket }) {
-    const helloPacket = new RlpEncoder().encode({
-      input: [
-        packet.protocolVersion,
-        packet.userAgent,
-        packet.capabilities,
-        packet.listenPort,
-        getBufferFromHex(packet.nodeId),
-      ],
-    });
-    return Buffer.concat([Buffer.from([0x80]), getBufferFromHex(helloPacket)]);
+    return new HelloPacketEncoderDecoder().encode({ input: packet });
   }
 
   public decodePing({
@@ -154,6 +91,7 @@ export class Packet {
 
   private getPacketType(typeNumber: number): PacketTypes {
     const types = [
+      PacketTypes.HELLO,
       PacketTypes.PING,
       PacketTypes.PONG,
       PacketTypes.FIND_NODE,
@@ -175,14 +113,6 @@ export enum PacketTypes {
   FIND_NODE = 3,
   NEIGHBORS = 4,
   UNKNOWN,
-}
-
-interface ParsedHelloPacket {
-  userAgent: string | number;
-  capabilities: string[][];
-  protocolVersion: number;
-  listenPort: number;
-  nodeId: string;
 }
 
 interface ParsedPacket {

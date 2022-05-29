@@ -1,5 +1,5 @@
 import { cleanString } from '../utils';
-import { getBufferFromHex } from './getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { Packet, PacketTypes } from './Packet';
 
 describe('Packets', () => {

@@ -1,5 +1,5 @@
-import { getBufferFromHex } from '../../../network/getBufferFromHex';
-import { sha3_256 } from '../../../network/sha3_256';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
+import { sha3_256 } from '../../../utils/sha3_256';
 import { RlpEncoder } from '../../../rlp/RlpEncoder';
 import { MerklePatriciaTrieHelper } from '../MerklePatriciaTrieHelper';
 import { TrieNodeRawKeyValue } from './TrieNodeRawKeyValue';

@@ -5,7 +5,7 @@ import { RlpxDecrpyt } from '../RlpxDecrypt';
 
 @injectable()
 export class DecodeAuthEip8 {
-  constructor(private rlpx: RlpxDecrpyt) {}
+  constructor(private rlpx: RlpxDecrpyt, private rlpDecoder: RlpDecoder) {}
 
   public async decodeAuthEip8({ input }: { input: Buffer }) {
     const decryptedMessage = await this.rlpx.decryptMessage({
@@ -35,7 +35,7 @@ export class DecodeAuthEip8 {
     const decryptedMessage = await this.rlpx.decryptMessage({
       encryptedMessage: input,
     });
-    const decodedPacket = new RlpDecoder().decode({
+    const decodedPacket = this.rlpDecoder.decode({
       input: decryptedMessage.toString('hex'),
       returnOnError: true,
     });

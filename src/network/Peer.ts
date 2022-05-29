@@ -1,12 +1,13 @@
 import { KeyPair } from '../signatures/KeyPair';
-import { FrameCommunication } from './auth/FrameCommunication';
+import { FrameCommunication } from './auth/frameing/FrameCommunication';
 import { Auth8Eip } from './AuthEip8';
-import { getBufferFromHex } from './getBufferFromHex';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { getRandomPeer } from './getRandomPeer';
 import { Packet } from './Packet';
 import { Rlpx } from './Rlpx';
 import { AbstractSocket } from './socket/AbstractSocket';
 import { injectable } from 'inversify';
+import { Logger } from '../utils/Logger';
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
@@ -28,7 +29,8 @@ export class Peer {
     private keyPair: KeyPair,
     private socket: AbstractSocket,
     private auth8Eip: Auth8Eip,
-    private ephemeralKeyPair: KeyPair
+    private ephemeralKeyPair: KeyPair,
+    private logger: Logger
   ) {}
 
   public async connect(options?: {
@@ -37,36 +39,36 @@ export class Peer {
     port: number;
   }) {
     const nodeOptions = options ? options : getRandomPeer();
-    console.log(nodeOptions);
+    this.logger.log(nodeOptions);
     this.socket.on('close', () => {
-      console.log('Connection closed');
+      this.logger.log('Connection closed');
       this.socket.destroy();
       // throw new Error('Disconnected');
     });
     this.socket.on('ready', () => {
-      console.log('Ready');
+      this.logger.log('Ready');
     });
     this.socket.on('error', (err) => {
-      console.log('Error');
-      console.log(err);
+      this.logger.log('Error');
+      this.logger.log(err);
     });
     this.socket.on('connect', () => {
-      console.log('Connected');
+      this.logger.log('Connected');
     });
     this.socket.on('drain', () => {
-      console.log('drain');
+      this.logger.log('drain');
     });
     this.socket.on('lookup', () => {
-      console.log('lookup');
+      this.logger.log('lookup');
     });
     this.socket.on('timeout', () => {
-      console.log('timeout');
+      this.logger.log('timeout');
     });
     this.socket.on('end', () => {
-      console.log('end');
+      this.logger.log('end');
     });
     this.socket.on('data', async (data) => {
-      console.log('Got data');
+      this.logger.log('Got data');
       await this.parseMessage(data);
     });
     await new Promise<void>((resolve) => {
@@ -104,7 +106,7 @@ export class Peer {
       this._secret = header.secret;
       this.sentPacket = authMessage;
 
-      console.log(
+      this.logger.log(
         `Trying to send auth message of length ${authMessage.length} to ${this._host}`
       );
 
@@ -117,6 +119,7 @@ export class Peer {
   }
 
   private async parseMessage(message: Buffer) {
+    this.logger.log(` new data: ${message.toString('hex')}`);
     if (220 < message.length) {
       if (!this._secret || !this._senderNonce || !this.sentPacket) {
         throw new Error('Something is wrong');
@@ -128,11 +131,10 @@ export class Peer {
       const ephemeralSharedSecret = this.ephemeralKeyPair.getEcdh({
         publicKey,
       });
-      this.frameCommunication = new FrameCommunication(
-        ephemeralSharedSecret,
-        this._senderNonce,
-        getBufferFromHex(nonce)
-      ).setup({
+      this.frameCommunication = new FrameCommunication().setup({
+        ephemeralSharedSecret: ephemeralSharedSecret,
+        initiatorNonce: this._senderNonce,
+        receiverNonce: getBufferFromHex(nonce),
         remotePacket: message,
         initiatorPacket: this.sentPacket,
       });
@@ -148,11 +150,11 @@ export class Peer {
         packet: body,
       });
       /** Todo run some validation here maybe ? */
-      console.log('Trying to say hello');
+      this.logger.log('Trying to say hello');
       /*await this.sendMessage({
         type: MessageType.HELLO,
-      });
-      */
+      });*/
+
       const heloMessage = new Packet().encodeHello({
         packet: {
           ...hello,
@@ -167,8 +169,8 @@ export class Peer {
   }
 
   private async connectionWrite(message: Buffer) {
-    console.log(`writing on the wire SER, ${message.length}`);
-    console.log(` ${message.toString('hex')}`);
+    this.logger.log(`writing on the wire SER, ${message.length}`);
+    this.logger.log(` ${message.toString('hex')}`);
     await new Promise<void>((resolve, reject) => {
       this.connection.write(message, (error) => {
         if (error) {

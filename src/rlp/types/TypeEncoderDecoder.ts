@@ -49,4 +49,5 @@ export type SimpleTypes =
   | number
   | BigNumber
   | boolean
-  | Array<SimpleTypes>;
+  | Array<SimpleTypes>
+  | Buffer;
