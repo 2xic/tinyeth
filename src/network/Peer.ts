@@ -3,11 +3,14 @@ import { FrameCommunication } from './auth/frameing/FrameCommunication';
 import { Auth8Eip } from './AuthEip8';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { getRandomPeer } from './getRandomPeer';
-import { Packet } from './Packet';
+import { Packet, RlpxPacketTypes } from './Packet';
 import { Rlpx } from './Rlpx';
 import { AbstractSocket } from './socket/AbstractSocket';
 import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
+import { RlpEncoder } from '../rlp/RlpEncoder';
+import { MessageQueue } from './MessageQueue';
+import { GetRlpxPingPacketEncoded } from './packet-types/RlpxPingPacketEncoder';
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
@@ -24,13 +27,18 @@ export class Peer {
 
   private sentPacket?: Buffer;
 
+  private nextState?: MessageState;
+
+  private isConnected = false;
+
   constructor(
     private rlpx: Rlpx,
     private keyPair: KeyPair,
     private socket: AbstractSocket,
     private auth8Eip: Auth8Eip,
     private ephemeralKeyPair: KeyPair,
-    private logger: Logger
+    private logger: Logger,
+    private messageQueue: MessageQueue
   ) {}
 
   public async connect(options?: {
@@ -42,8 +50,8 @@ export class Peer {
     this.logger.log(nodeOptions);
     this.socket.on('close', () => {
       this.logger.log('Connection closed');
+      this.isConnected = false;
       this.socket.destroy();
-      // throw new Error('Disconnected');
     });
     this.socket.on('ready', () => {
       this.logger.log('Ready');
@@ -54,6 +62,7 @@ export class Peer {
     });
     this.socket.on('connect', () => {
       this.logger.log('Connected');
+      this.isConnected = true;
     });
     this.socket.on('drain', () => {
       this.logger.log('drain');
@@ -68,9 +77,11 @@ export class Peer {
       this.logger.log('end');
     });
     this.socket.on('data', async (data) => {
-      this.logger.log('Got data');
+      this.logger.log(`Got data of length ${data.length}`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.parseMessage(data);
     });
+
     await new Promise<void>((resolve) => {
       this.socket.connect(nodeOptions.port, nodeOptions.address, () => {
         resolve();
@@ -110,6 +121,7 @@ export class Peer {
         `Trying to send auth message of length ${authMessage.length} to ${this._host}`
       );
 
+      this.nextState = MessageState.ACK;
       await this.connectionWrite(authMessage);
     } else if (MessageType.HELLO === message.type) {
       throw new Error('nono, please go in order ser');
@@ -120,7 +132,7 @@ export class Peer {
 
   private async parseMessage(message: Buffer) {
     this.logger.log(` new data: ${message.toString('hex')}`);
-    if (220 < message.length) {
+    if (this.nextState == MessageState.ACK) {
       if (!this._secret || !this._senderNonce || !this.sentPacket) {
         throw new Error('Something is wrong');
       }
@@ -138,33 +150,57 @@ export class Peer {
         remotePacket: message,
         initiatorPacket: this.sentPacket,
       });
-    } else {
+      this.logger.log('Setup frame communication');
+      this.nextState = MessageState.PACKETS;
+    } else if (this.nextState === MessageState.PACKETS) {
       if (!this.frameCommunication) {
         throw new Error('Missing frame communicator');
       }
-      const body = this.frameCommunication.parse({
-        message,
-      });
-      const packetParser = new Packet();
-      const hello = packetParser.parse({
-        packet: body,
-      });
-      /** Todo run some validation here maybe ? */
-      this.logger.log('Trying to say hello');
-      /*await this.sendMessage({
-        type: MessageType.HELLO,
-      });*/
-
-      const heloMessage = new Packet().encodeHello({
-        packet: {
-          ...hello,
-          nodeId: `0x${this.keyPair.getPublicKey()}`,
-        },
-      });
-      const encodedMessage = this.frameCommunication.encode({
-        message: heloMessage,
-      });
-      await this.connectionWrite(encodedMessage);
+      try {
+        const body = this.frameCommunication.decode({
+          message,
+        });
+        const packetParser = new Packet();
+        const hello = packetParser.parse({
+          packet: body,
+        });
+        if (typeof hello === 'object') {
+          this.logger.log('Got a hello ? ');
+          const helloMessage = new Packet().encodeHello({
+            packet: {
+              ...hello,
+              nodeId: `0x${this.keyPair.getPublicKey()}`,
+            },
+          });
+          const encodedMessage = this.frameCommunication.encode({
+            message: helloMessage,
+          });
+          await this.connectionWrite(encodedMessage);
+        } else if (hello == RlpxPacketTypes.PING) {
+          this.logger.log('Got a ping, reply with pong');
+          const encodedMessage = this.frameCommunication.encode({
+            message: Buffer.concat([
+              getBufferFromHex(
+                new RlpEncoder().encode({ input: RlpxPacketTypes.PONG })
+              ),
+              getBufferFromHex(new RlpEncoder().encode({ input: [] })),
+            ]),
+          });
+          await this.connectionWrite(encodedMessage);
+        } else if (hello == RlpxPacketTypes.PONG) {
+          this.logger.log('Got a pong, reply with ping');
+          /*
+          const encodedMessage = this.frameCommunication.encode({
+            message: GetRlpxPingPacketEncoded(),
+          });
+          await this.connectionWrite(encodedMessage);
+          */
+        } else {
+          this.logger.log('Unknown state ... ');
+        }
+      } catch (err) {
+        console.log(err);
+      }
     }
   }
 
@@ -205,4 +241,10 @@ export enum MessageType {
 }
 interface BaseMessage {
   type: MessageType;
+}
+
+enum MessageState {
+  AUTH,
+  ACK,
+  PACKETS,
 }

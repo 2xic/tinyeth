@@ -21,14 +21,25 @@ import {
   HelloPacketEncoderDecoder,
   ParsedHelloPacket,
 } from './packet-types/HelloPacketEncoderDecoer';
+import { parsePath } from 'history';
 
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {
     const packetId = packet[0];
     // falsy values are parsed as 0x80 in RLP
-    const parsedPacketId = packetId === 0x80 ? 0 : packetId;
-    if (parsedPacketId === PacketTypes.HELLO) {
+    let parsedPacketId = packetId === 0x80 ? 0 : packetId;
+    parsedPacketId =
+      parsedPacketId === 16 ? RlpxPacketTypes.PING : parsedPacketId;
+
+    if (parsedPacketId === RlpxPacketTypes.HELLO) {
       return this.decodeHello({ input: packet });
+    } else if (parsedPacketId === RlpxPacketTypes.DISCONNECT) {
+      console.log(new RlpDecoder().decode({ input: packet.toString('hex') }));
+      throw new Error('Disconnect ?');
+    } else if (parsedPacketId === RlpxPacketTypes.PING) {
+      return RlpxPacketTypes.PONG;
+    } else if (parsedPacketId === RlpxPacketTypes.PONG) {
+      return RlpxPacketTypes.PING;
     } else {
       throw new Error(`Unknown packet (${parsedPacketId})`);
     }
@@ -91,7 +102,6 @@ export class Packet {
 
   private getPacketType(typeNumber: number): PacketTypes {
     const types = [
-      PacketTypes.HELLO,
       PacketTypes.PING,
       PacketTypes.PONG,
       PacketTypes.FIND_NODE,
@@ -106,8 +116,15 @@ export class Packet {
   }
 }
 
-export enum PacketTypes {
+export enum RlpxPacketTypes {
   HELLO = 0x0,
+  DISCONNECT = 0x1,
+  PING = 0x2,
+  PONG = 0x3,
+}
+
+// https://github.com/ethereum/devp2p/blob/master/discv4.md#ping-packet-0x01
+export enum PacketTypes {
   PING = 1,
   PONG = 2,
   FIND_NODE = 3,

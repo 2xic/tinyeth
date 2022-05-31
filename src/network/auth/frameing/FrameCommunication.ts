@@ -1,11 +1,14 @@
 import { keccak256 } from '../../../utils/keccak256';
 import { EncodeFrame } from './EncodeFrame';
 import { DecodeFrame } from './DecodeFrame';
+import { LoggerFactoryOptions } from 'typescript-logging';
+import { Logger } from '../../../utils/Logger';
 
 export class FrameCommunication {
   constructor(
     private encodeFrame: EncodeFrame = new EncodeFrame(),
-    private decodeFrame: DecodeFrame = new DecodeFrame()
+    private decodeFrame: DecodeFrame = new DecodeFrame(),
+    private logger = new Logger()
   ) {}
 
   public setup({
@@ -14,17 +17,20 @@ export class FrameCommunication {
     receiverNonce,
     initiatorNonce,
     ephemeralSharedSecret,
+    switchNonce = false,
   }: {
     remotePacket: Buffer;
     initiatorPacket: Buffer;
     receiverNonce: Buffer;
     initiatorNonce: Buffer;
     ephemeralSharedSecret: Buffer;
+    switchNonce?: boolean;
   }) {
     const { aesKey, macKey } = this.constructKeys({
       receiverNonce,
       initiatorNonce,
       ephemeralSharedSecret,
+      switchNonce,
     });
     this.decodeFrame.setup({
       aesKey: aesKey,
@@ -54,12 +60,17 @@ export class FrameCommunication {
     return Buffer.concat([header, body]);
   }
 
-  public parse({ message }: { message: Buffer }) {
+  public decode({ message }: { message: Buffer }) {
     const header = this.decodeFrame.parseHeader({ message });
+    const size = (header[0] << 16) + (header[1] << 8) + header[2];
+    this.logger.log(`Got header with ${size} length`);
+
     const body = this.decodeFrame.parseBody({
       message,
-      size: (header[0] << 16) + (header[1] << 8) + header[2],
+      size,
     });
+
+    this.logger.log(`Decoded stream ${body.toString('hex')}`);
 
     return body;
   }
@@ -68,12 +79,16 @@ export class FrameCommunication {
     receiverNonce,
     initiatorNonce,
     ephemeralSharedSecret,
+    switchNonce,
   }: {
     receiverNonce: Buffer;
     initiatorNonce: Buffer;
     ephemeralSharedSecret: Buffer;
+    switchNonce: boolean;
   }) {
-    const nonce = keccak256(Buffer.concat([receiverNonce, initiatorNonce]));
+    const nonce = switchNonce
+      ? keccak256(Buffer.concat([initiatorNonce, receiverNonce]))
+      : keccak256(Buffer.concat([receiverNonce, initiatorNonce]));
 
     const nonceEphemeral = keccak256(
       Buffer.concat([ephemeralSharedSecret, nonce])

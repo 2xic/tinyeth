@@ -43,7 +43,10 @@ export class EncodeFrame {
   }
 
   public encodeBody({ message }: { message: Buffer }) {
-    const padding = Buffer.alloc(16 - (message.length % 16));
+    const padding =
+      message.length % 16 === 0
+        ? Buffer.alloc(0)
+        : Buffer.alloc(16 - (message.length % 16));
 
     const body = Buffer.concat([message, padding]);
     const encrypted = this.egressAes.update(body);

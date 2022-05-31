@@ -24,10 +24,12 @@ export class DecodeFrame {
     this.ingressMac.body({
       packet: body,
     });
+
     assertEqual(
       mac.toString('hex'),
       this.ingressMac.slicedHash.toString('hex')
     );
+
     const decryptedBody = this.ingresAes.update(body).slice(0, size);
 
     return decryptedBody;

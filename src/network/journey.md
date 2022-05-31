@@ -79,6 +79,25 @@ Today most of the day has been spent cleaning up a lot of the code, and moving t
 The nice thing with containers is that it allows better testing, and cleans up the general interface of the code.
 
 
+### Day x + 6
+Did not code on this last few days.
+
+Back again today. Found out I had confused part of the message codes between https://github.com/ethereum/devp2p/blob/master/discv4.md#ping-packet-0x01  and https://github.com/ethereum/devp2p/blob/master/rlpx.md . Fun !
+
+Anyways, continued work on trying to get message communication to work.
+
+Having some problems with the decoding after sending the hello message. I send a ping packet, and after that the frame communication stops working.
+
+After a bit of testing I think the problem is the order the message appeared in, can easily test this by switching up the way the peer handles new messages. So I will try to make it into a message queue. 
+
+
+
+
+
+
+
+
+
 
 
 

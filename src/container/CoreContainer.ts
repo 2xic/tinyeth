@@ -16,6 +16,7 @@ import { ConstructAuthMessage } from '../network/auth/ConstructAuthMessage';
 import { RlpDecoder } from '../rlp/RlpDecoder';
 import { Signatures } from '../signatures/Signatures';
 import { Logger } from '../utils/Logger';
+import { MessageQueue } from '../network/MessageQueue';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -51,6 +52,8 @@ export class CoreContainer {
     container.bind(RlpxDecrpyt).toSelf();
     container.bind(RlpxEcies).toSelf();
     container.bind(ConstructAuthMessage).toSelf();
+
+    container.bind(MessageQueue).toSelf();
 
     container.bind(Logger).toSelf();
 
