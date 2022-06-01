@@ -1,8 +1,13 @@
 import { KeyPair } from '../../signatures/KeyPair';
 import { kdf } from 'ecies-geth';
 import crypto from 'crypto';
+import { GetRandomBytesInteractor } from '../nonce-generator/GetRandomBytesInteractor';
+import { injectable } from 'inversify';
 
+@injectable()
 export class EciesEncrypt {
+  constructor(private getRandomBytesInteractor: GetRandomBytesInteractor) {}
+
   public async encryptMessage(options: {
     message: Buffer;
     keyPair: KeyPair;
@@ -39,7 +44,7 @@ export class EciesEncrypt {
       .update(secret.slice(16, 32))
       .digest();
 
-    const ivKey = crypto.randomBytes(16);
+    const ivKey = this.getRandomBytesInteractor.getRandomBytess({ length: 16 });
 
     return {
       encryptionKey,

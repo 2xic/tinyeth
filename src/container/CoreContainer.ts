@@ -17,6 +17,8 @@ import { RlpDecoder } from '../rlp/RlpDecoder';
 import { Signatures } from '../signatures/Signatures';
 import { Logger } from '../utils/Logger';
 import { MessageQueue } from '../network/MessageQueue';
+import { GetRandomBytesInteractor } from '../network/nonce-generator/GetRandomBytesInteractor';
+import { EciesEncrypt } from '../network/ecies/EciesEncrypt';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -32,6 +34,14 @@ export class CoreContainer {
       .bind('EMPHERMAL_PRIVATE_KEY')
       .toConstantValue(
         options?.privateKey || crypto.randomBytes(32).toString('hex')
+      );
+
+    container
+      .bind('SHOULD_RANDOMNESS_BE_DETERMINISTIC')
+      .toConstantValue(
+        typeof options?.deterministicRandomness === 'boolean'
+          ? options?.deterministicRandomness
+          : false
       );
 
     container.bind(KeyPair).toSelf();
@@ -52,8 +62,10 @@ export class CoreContainer {
     container.bind(RlpxDecrpyt).toSelf();
     container.bind(RlpxEcies).toSelf();
     container.bind(ConstructAuthMessage).toSelf();
+    container.bind(EciesEncrypt).toSelf();
 
     container.bind(MessageQueue).toSelf();
+    container.bind(GetRandomBytesInteractor).toSelf();
 
     container.bind(Logger).toSelf();
 
@@ -64,4 +76,5 @@ export class CoreContainer {
 export interface ContainerOptions {
   privateKey?: string;
   ephemeralPrivateKey?: string;
+  deterministicRandomness?: boolean;
 }

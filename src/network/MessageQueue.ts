@@ -4,12 +4,22 @@ import { injectable } from 'inversify';
 export class MessageQueue {
   private list: Buffer[] = [];
 
+  private eventHandler?: (buffer: Buffer) => Promise<void>;
+
   public push(message: Buffer) {
     this.list.push(message);
   }
 
-  public pop(): Buffer {
+  public setEventHandler(eventHandler: (buffer: Buffer) => Promise<void>) {
+    this.eventHandler = eventHandler;
+  }
+
+  public async process(): Promise<void> {
     const results = this.list.shift() || Buffer.from([]);
-    return results;
+    if (this.eventHandler) {
+      if (results.length) {
+        await this.eventHandler(results);
+      }
+    }
   }
 }

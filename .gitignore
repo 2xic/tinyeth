@@ -3,3 +3,4 @@ node_modules
 dist/*
 private-geth.txt
 run-geth-dev-node.sh
+metadata.txt

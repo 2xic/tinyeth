@@ -33,7 +33,10 @@ export class EncodeFrame {
     );
 
     const header = Buffer.concat([buf, headerData]);
-    const padding = Buffer.alloc(16 - (header.length % 16));
+    const padding =
+      header.length % 16 === 0
+        ? Buffer.alloc(0)
+        : Buffer.alloc(16 - (header.length % 16));
 
     const headerPadding = Buffer.concat([header, padding]);
 

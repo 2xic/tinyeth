@@ -15,8 +15,6 @@ import { GetRlpxPingPacketEncoded } from './packet-types/RlpxPingPacketEncoder';
 export class Peer {
   private _activeConnection?: AbstractSocket;
 
-  private _nodePublicKey?: string;
-
   private frameCommunication?: FrameCommunication;
 
   private _host?: string;
@@ -38,7 +36,7 @@ export class Peer {
     private auth8Eip: Auth8Eip,
     private ephemeralKeyPair: KeyPair,
     private logger: Logger,
-    private messageQueue: MessageQueue
+    public messageQueue: MessageQueue
   ) {}
 
   public async connect(options?: {
@@ -76,10 +74,13 @@ export class Peer {
     this.socket.on('end', () => {
       this.logger.log('end');
     });
+    this.messageQueue.setEventHandler(this.parseMessage.bind(this));
+
     this.socket.on('data', async (data) => {
       this.logger.log(`Got data of length ${data.length}`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      await this.parseMessage(data);
+      //  await new Promise((resolve) => setTimeout(resolve, 1000));
+      //  await this.parseMessage(data);
+      this.messageQueue.push(data);
     });
 
     await new Promise<void>((resolve) => {
@@ -88,7 +89,6 @@ export class Peer {
       });
     });
     this._activeConnection = this.socket;
-    this._nodePublicKey = nodeOptions.publicKey;
     this._host = `${nodeOptions.address}:${nodeOptions.port}`;
   }
 
@@ -166,6 +166,7 @@ export class Peer {
         });
         if (typeof hello === 'object') {
           this.logger.log('Got a hello ? ');
+          this.logger.log(hello);
           const helloMessage = new Packet().encodeHello({
             packet: {
               ...hello,
@@ -226,10 +227,7 @@ export class Peer {
   }
 
   public get nodePublicKey() {
-    if (!this._nodePublicKey) {
-      throw new Error('No public key set for the node');
-    }
-    return this._nodePublicKey;
+    return this.keyPair.getPublicKey();
   }
 }
 

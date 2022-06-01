@@ -70,7 +70,7 @@ export class FrameCommunication {
       size,
     });
 
-    this.logger.log(`Decoded stream ${body.toString('hex')}`);
+    this.logger.log(`\t Decoded stream ${body.toString('hex')}`);
 
     return body;
   }

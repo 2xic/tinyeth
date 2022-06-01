@@ -90,14 +90,5 @@ Having some problems with the decoding after sending the hello message. I send a
 
 After a bit of testing I think the problem is the order the message appeared in, can easily test this by switching up the way the peer handles new messages. So I will try to make it into a message queue. 
 
-
-
-
-
-
-
-
-
-
-
-
+### Day x + 7
+Decided that best way to debug the problems is to be able to rerun all the logic deterministically. Adding a custom interactor to generate deterministic random bytes, and will be using that, and rerun the packets and debug to find the bug.

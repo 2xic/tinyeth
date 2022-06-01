@@ -1,15 +1,7 @@
-import {
-  Peer,
-  enocdes,
-  MessageType,
-  parseEncode,
-  ProductionContainer,
-} from '../dist';
+import { Peer, MessageType, ProductionContainer, getRandomPeer } from '../dist';
 
 (async () => {
-  const randomNode = parseEncode(
-    enocdes[Math.floor((enocdes.length - 1) * Math.random())]
-  );
+  const randomNode = getRandomPeer();
   /*  const randomNode = {
     publicKey:
       '865a63255b3bb68023b6bffd5095118fcc13e79dcf014fe4e47e065c350c7cc72af2e53eff895f11ba1bbb6a2b33271c1116ee870f266618eadfc2e78aa7349c',
@@ -37,6 +29,7 @@ import {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await sleep(100);
+    await node.messageQueue.process();
   }
 })();
 

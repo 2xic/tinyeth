@@ -1,7 +1,15 @@
 import { parseEncode } from './parseEnode';
 
+// from https://www.ethernodes.org/nodes
+export const randomEnodes = [
+  'enode://0022a79728874e918165bedacb2af2ffb5afe80d575a10ada68739b3fb5e40ad2987e3e1936e74641dd3a7f3c9b638e2411a13dd5875c4e6db29d29a7c0ac779@35.227.75.9:29888',
+  'enode://009ab88f5b6a322df3f284381b71a1ba817f39c4244b8dc296f85fd263fa7b9b680b37f24145e18cc0b46992f84b23fdbde1bba45e789c4a4bb9faf31ac3b915@115.194.88.166:30303',
+  'enode://01ad04224423cdf29b3226b3f68cc07954b838ea282979f58017266824468d30b58f89ff0618c4a6b875eab2b46cfe1ee1c3eb71ee04536e1e1714bcaf9b0d1f@18.139.208.86:30303',
+  'enode://22a5785c04f8e01670da51aaa8920e91bdba73414548b717817056dc76dae07846f8ae934d3174b19182a2f267843f932a3c5a7047fb1e13be1d3e329a587917@82.11.186.248:30303',
+  'enode://39a2b61f920a35457a3db02da174a56e05497e4c837fc602897176ff4fd4b16c7a7b35845b5475c2ab49e42bff1f121193aba9ca87eb6e0d26328646b79dee41@23.20.92.25:30303',
+];
+
 // from geth https://github.com/ethereum/go-ethereum/blob/master/params/bootnodes.go
-// also from https://www.ethernodes.org/nodes
 export const enocdes = [
   'enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303', // US-Azure geth
   'enode://865a63255b3bb68023b6bffd5095118fcc13e79dcf014fe4e47e065c350c7cc72af2e53eff895f11ba1bbb6a2b33271c1116ee870f266618eadfc2e78aa7349c@52.176.100.77:30303', // US-Azure parity
@@ -11,7 +19,7 @@ export const enocdes = [
   'enode://000070a0abc214c4b89b84f294d32d3ee32a26a8ac56f0ac9d9bb7c34e022faa14e7f9a6f72e09b5f224ed9a18c974ac424e87ffcef98c1e029df4b2908d24fd@3.124.103.13:30303',
   'enode://018e34062bb98af352e08f7312294048a72db5c713a0e41d5543d96073e012954587e95bfb181cce2147d6438779e072f7ae494a0dfdcea7aa2e4d1d3f760d51@90.16.254.32:30303',
   'enode://0213f98ea87eec61ff48988041bf8c25d357d2032397d656186bc33b5cb37cfb8721764d119d8413644366ffbc9f7abede50f39bafa1269df39427eb31f4db41@71.85.212.118:30303',
-];
+].concat(randomEnodes);
 
 export function getRandomPeer() {
   return parseEncode(enocdes[Math.floor(Math.random() * enocdes.length)]);

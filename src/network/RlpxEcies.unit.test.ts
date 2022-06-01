@@ -1,8 +1,32 @@
+import { UnitTestContainer } from '../container/UnitTestContainer';
 import { KeyPair } from '../signatures/KeyPair';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { RlpxEcies } from './RlpxEcies';
 
 describe('RlpxEcies', () => {
+  let rlpxEcies: RlpxEcies;
+
+  let rlpxEciesReciver: RlpxEcies;
+
+  beforeEach(() => {
+    rlpxEcies = new UnitTestContainer()
+      .create({
+        privateKey:
+          'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291',
+        ephemeralPrivateKey:
+          'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291',
+      })
+      .get(RlpxEcies);
+
+    rlpxEciesReciver = new UnitTestContainer()
+      .create({
+        privateKey:
+          '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+        ephemeralPrivateKey:
+          '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+      })
+      .get(RlpxEcies);
+  });
   it('should decrypt a test vectors', async () => {
     const buffer = getBufferFromHex(
       '048ca79ad18e4b0659fab4853fe5bc58eb83992980f4c9cc147d2aa31532efd29a3d3dc6a3d89eaf' +
@@ -15,12 +39,7 @@ describe('RlpxEcies', () => {
         'a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8'
     );
 
-    const rlpEcies = new RlpxEcies(
-      new KeyPair(
-        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
-      )
-    );
-    const results = await rlpEcies.decryptMessage({
+    const results = await rlpxEcies.decryptMessage({
       message: buffer,
     });
     expect(results).toBeTruthy();
@@ -30,11 +49,7 @@ describe('RlpxEcies', () => {
     const remotePublicKey = getBufferFromHex(
       'fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877'
     );
-    const encryptedMessage = await new RlpxEcies(
-      new KeyPair(
-        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
-      )
-    ).encryptMessage({
+    const encryptedMessage = await rlpxEcies.encryptMessage({
       message: Buffer.from('deadbeef', 'hex'),
       remotePublicKey,
     });
@@ -44,7 +59,7 @@ describe('RlpxEcies', () => {
     );
     expect(reciver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
 
-    const results = await new RlpxEcies(reciver).decryptMessage({
+    const results = await rlpxEciesReciver.decryptMessage({
       message: encryptedMessage,
     });
 
@@ -56,11 +71,7 @@ describe('RlpxEcies', () => {
     const remotePublicKey = getBufferFromHex(
       'fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877'
     );
-    const encryptedMessage = await new RlpxEcies(
-      new KeyPair(
-        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
-      )
-    ).encryptMessage({
+    const encryptedMessage = await rlpxEcies.encryptMessage({
       message: Buffer.from('deadbeef', 'hex'),
       remotePublicKey,
       mac,
@@ -71,7 +82,7 @@ describe('RlpxEcies', () => {
     );
     expect(reciver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
 
-    const results = await new RlpxEcies(reciver).decryptMessage({
+    const results = await rlpxEciesReciver.decryptMessage({
       message: encryptedMessage,
       mac,
     });
@@ -97,13 +108,7 @@ describe('RlpxEcies', () => {
     const message = buffer.slice(2);
     expect(message.length).toBe(length);
 
-    const rlpEcies = new RlpxEcies(
-      new KeyPair(
-        'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291'
-      )
-    );
-
-    const results = await rlpEcies.decryptMessage({
+    const results = await rlpxEcies.decryptMessage({
       message,
       mac: buffer.slice(0, 2),
     });
