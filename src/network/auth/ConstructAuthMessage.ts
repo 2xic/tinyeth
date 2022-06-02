@@ -22,9 +22,9 @@ export class ConstructAuthMessage {
     const ecdhKey = Buffer.from(
       this.keyPair.getEcdh({
         publicKey: ethNodePublicKey,
-        privateKey: this.keyPair.privatekey,
       })
     );
+    console.log(ecdhKey.toString('hex'));
     assertEqual(ecdhKey.length, 32);
 
     const tokenXorNonce = xor(ecdhKey, nonce);

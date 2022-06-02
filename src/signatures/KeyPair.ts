@@ -90,7 +90,15 @@ export class KeyPair {
     );
   }
 
-  public getCompressedKey({ publicKey }: { publicKey: Buffer }): Buffer {
+  public getCompressedKey({
+    publicKey: inputPublicKey,
+  }: {
+    publicKey: Buffer | string;
+  }): Buffer {
+    const publicKey =
+      typeof inputPublicKey === 'string'
+        ? getBufferFromHex(inputPublicKey)
+        : inputPublicKey;
     const rawKey = this.parsePublicKey({ input: publicKey });
     if (rawKey.length !== 65) {
       throw new Error(`Wrong key length expected 65, but got ${rawKey.length}`);

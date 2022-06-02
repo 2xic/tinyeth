@@ -6,15 +6,17 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class EciesEncrypt {
-  constructor(private getRandomBytesInteractor: GetRandomBytesInteractor) {}
+  constructor(
+    private getRandomBytesInteractor: GetRandomBytesInteractor,
+    private keyPair: KeyPair
+  ) {}
 
   public async encryptMessage(options: {
     message: Buffer;
-    keyPair: KeyPair;
     remotePublicKey: Buffer;
     mac?: Buffer;
   }) {
-    const shared = options.keyPair.getEcdh({
+    const shared = this.keyPair.getEcdh({
       publicKey: options.remotePublicKey.toString('hex'),
     });
     const secret = await kdf(shared, 32);
@@ -28,7 +30,7 @@ export class EciesEncrypt {
     });
 
     const ourPublicKey = Buffer.from(
-      options.keyPair.getPublicKey({
+      this.keyPair.getPublicKey({
         skipSlice: true,
       }),
       'hex'
@@ -44,7 +46,7 @@ export class EciesEncrypt {
       .update(secret.slice(16, 32))
       .digest();
 
-    const ivKey = this.getRandomBytesInteractor.getRandomBytess({ length: 16 });
+    const ivKey = this.getRandomBytesInteractor.getRandomBytes({ length: 16 });
 
     return {
       encryptionKey,

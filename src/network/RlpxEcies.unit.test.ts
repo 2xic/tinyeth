@@ -6,7 +6,7 @@ import { RlpxEcies } from './RlpxEcies';
 describe('RlpxEcies', () => {
   let rlpxEcies: RlpxEcies;
 
-  let rlpxEciesReciver: RlpxEcies;
+  let rlpxEciesReceiver: RlpxEcies;
 
   beforeEach(() => {
     rlpxEcies = new UnitTestContainer()
@@ -18,7 +18,7 @@ describe('RlpxEcies', () => {
       })
       .get(RlpxEcies);
 
-    rlpxEciesReciver = new UnitTestContainer()
+    rlpxEciesReceiver = new UnitTestContainer()
       .create({
         privateKey:
           '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
@@ -54,12 +54,12 @@ describe('RlpxEcies', () => {
       remotePublicKey,
     });
 
-    const reciver = new KeyPair(
+    const receiver = new KeyPair(
       '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee'
     );
-    expect(reciver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
+    expect(receiver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
 
-    const results = await rlpxEciesReciver.decryptMessage({
+    const results = await rlpxEciesReceiver.decryptMessage({
       message: encryptedMessage,
     });
 
@@ -77,12 +77,12 @@ describe('RlpxEcies', () => {
       mac,
     });
 
-    const reciver = new KeyPair(
+    const receiver = new KeyPair(
       '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee'
     );
-    expect(reciver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
+    expect(receiver.getPublicKey()).toBe(remotePublicKey.toString('hex'));
 
-    const results = await rlpxEciesReciver.decryptMessage({
+    const results = await rlpxEciesReceiver.decryptMessage({
       message: encryptedMessage,
       mac,
     });
@@ -113,5 +113,27 @@ describe('RlpxEcies', () => {
       mac: buffer.slice(0, 2),
     });
     expect(results).toBeTruthy();
+  });
+
+  it('should correctly encrypt a message', async () => {
+    const message = await new UnitTestContainer()
+      .create({
+        privateKey:
+          '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+        ephemeralPrivateKey:
+          '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+        deterministicRandomness: true,
+      })
+      .get(RlpxEcies)
+      .encryptMessage({
+        message: Buffer.from('deadbeef', 'hex'),
+        remotePublicKey: Buffer.from(
+          '04ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f',
+          'hex'
+        ),
+      });
+    expect(message.toString('hex')).toBe(
+      '04fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f184287700000000000000000000000000000000d4f9d296f309bc5a6611c259bbee7828f6a78aa4bb482fc7ccd9b0f29403199541f216da'
+    );
   });
 });

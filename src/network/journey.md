@@ -92,3 +92,15 @@ After a bit of testing I think the problem is the order the message appeared in,
 
 ### Day x + 7
 Decided that best way to debug the problems is to be able to rerun all the logic deterministically. Adding a custom interactor to generate deterministic random bytes, and will be using that, and rerun the packets and debug to find the bug.
+
+### Day x + 8
+So to solve the last few problems, the easiest way is to make the code in a way that it can verify itself.
+
+So the plan is to make the eip8 communication happen in memory between two "peers", and we should then easily see if there are any obvious problems in the communication state. 
+
+
+
+
+
+
+

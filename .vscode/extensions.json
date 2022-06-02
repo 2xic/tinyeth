@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "firsttris.vscode-jest-runner"
+        "firsttris.vscode-jest-runner",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens"
     ]
 }

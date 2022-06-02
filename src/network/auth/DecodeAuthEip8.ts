@@ -11,7 +11,7 @@ export class DecodeAuthEip8 {
     const decryptedMessage = await this.rlpx.decryptMessage({
       encryptedMessage: input,
     });
-    const decodedPacket = new RlpDecoder().decode({
+    const decodedPacket = this.rlpDecoder.decode({
       input: decryptedMessage.toString('hex'),
       returnOnError: true,
     });

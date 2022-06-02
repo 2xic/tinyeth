@@ -5,11 +5,11 @@ import { injectable, inject } from 'inversify';
 export class GetRandomBytesInteractor {
   constructor(
     @inject<boolean>('SHOULD_RANDOMNESS_BE_DETERMINISTIC')
-    public shouldBeRandom: boolean
+    public shouldBeDeterministic: boolean
   ) {}
 
-  public getRandomBytess({ length }: { length: number }) {
-    if (this.shouldBeRandom) {
+  public getRandomBytes({ length }: { length: number }) {
+    if (!this.shouldBeDeterministic) {
       return crypto.randomBytes(length);
     } else {
       return Buffer.alloc(length);

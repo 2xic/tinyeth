@@ -9,6 +9,8 @@ export class MockSocket implements AbstractSocket {
     (argumens: unknown) => Promise<void>
   > = {};
 
+  public writtenData: Buffer[] = [];
+
   public on(event: any, listener: any): this {
     this.registeredCallback[event] = listener;
     return this;
@@ -34,6 +36,7 @@ export class MockSocket implements AbstractSocket {
     throw new Error('Method not implemented.');
   }
   public write(message: Buffer, callback: (error?: Buffer) => void): void {
+    this.writtenData.push(message);
     callback();
     return;
   }

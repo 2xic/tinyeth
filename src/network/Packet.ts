@@ -21,7 +21,6 @@ import {
   HelloPacketEncoderDecoder,
   ParsedHelloPacket,
 } from './packet-types/HelloPacketEncoderDecoer';
-import { parsePath } from 'history';
 
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {

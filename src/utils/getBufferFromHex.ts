@@ -1,4 +1,11 @@
 export function getBufferFromHex(inputHash: string | Buffer): Buffer {
+  if (
+    inputHash ===
+    '\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000'
+  ) {
+    return Buffer.alloc(32);
+  }
+
   if (typeof inputHash === 'string') {
     const hash = inputHash.startsWith('0x')
       ? `${inputHash.slice(2)}`

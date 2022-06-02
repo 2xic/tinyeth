@@ -5,14 +5,17 @@ import { EciesEncrypt } from './ecies/EciesEncrypt';
 
 @injectable()
 export class RlpxEcies {
-  constructor(private keyPair: KeyPair, private eciesEncrypt: EciesEncrypt) {}
+  constructor(
+    private keyPair: KeyPair,
+    private eciesEncrypt: EciesEncrypt,
+    private eciesDecrypt: EciesDecrypt
+  ) {}
 
   public decryptMessage(options: {
     message: Buffer;
     mac?: Buffer;
   }): Promise<Buffer> {
-    return new EciesDecrypt().decryptMessage({
-      keyPair: this.keyPair,
+    return this.eciesDecrypt.decryptMessage({
       message: options.message,
       mac: options.mac,
     });
@@ -24,7 +27,6 @@ export class RlpxEcies {
     mac?: Buffer;
   }): Promise<Buffer> {
     return this.eciesEncrypt.encryptMessage({
-      keyPair: this.keyPair,
       message: options.message,
       remotePublicKey: options.remotePublicKey,
       mac: options.mac,

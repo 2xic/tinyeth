@@ -1,12 +1,10 @@
-import { KeyPair } from '../signatures/KeyPair';
 import { RlpxEcies } from './RlpxEcies';
 import { assertEqual } from '../utils/enforce';
 import { injectable } from 'inversify';
-import { HMobiledata } from '@mui/icons-material';
 
 @injectable()
 export class RlpxDecrpyt {
-  constructor(private keyPair: KeyPair, private rlpxEcies: RlpxEcies) {}
+  constructor(private rlpxEcies: RlpxEcies) {}
 
   public async decryptMessage({
     encryptedMessage,
@@ -17,7 +15,6 @@ export class RlpxDecrpyt {
     const message = encryptedMessage.slice(2);
     const length = lengthBuffer.readUInt16BE();
 
-    // TODO: Figure out why this has failed a few times.
     assertEqual(length, message.length);
 
     const decryptedMessage = this.rlpxEcies.decryptMessage({

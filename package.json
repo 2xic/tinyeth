@@ -38,6 +38,7 @@
     "@types/secp256k1": "^4.0.3",
     "bignumber.js": "^9.0.2",
     "bn.js": "^5.2.0",
+    "core-util-is": "^1.0.3",
     "ecies-geth": "^1.6.4",
     "ecies-parity": "github:sigp/ecies-parity",
     "eciesjs": "^0.3.14",

@@ -2,20 +2,20 @@ import { KeyPair } from '../../signatures/KeyPair';
 import { assertBufferFirstItemValue, assertEqual } from '../../utils/enforce';
 import { kdf } from 'ecies-geth';
 import crypto from 'crypto';
+import { injectable } from 'inversify';
 
+@injectable()
 export class EciesDecrypt {
-  public async decryptMessage(options: {
-    message: Buffer;
-    keyPair: KeyPair;
-    mac?: Buffer;
-  }) {
+  constructor(private keyPair: KeyPair) {}
+
+  public async decryptMessage(options: { message: Buffer; mac?: Buffer }) {
     // Public keys start with 4 in ETH land.
     assertBufferFirstItemValue(options.message, 4);
 
     const publicKey = options.message.slice(0, 65);
     assertEqual(publicKey.length, 65);
 
-    const shared = options.keyPair.getEcdh({
+    const shared = this.keyPair.getEcdh({
       publicKey: publicKey.toString('hex'),
     });
     const secret = await kdf(shared, 32);
@@ -53,8 +53,9 @@ export class EciesDecrypt {
       .createHmac('sha256', macKey)
       .update(Buffer.concat([data, mac]))
       .digest('hex');
+
     const receivedPacketHash = message.slice(-32).toString('hex');
-    assertEqual(computedPacketHash, receivedPacketHash);
+    assertEqual(computedPacketHash, receivedPacketHash, 'wrong hash');
   }
 
   private decrypt({

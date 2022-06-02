@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { UnitTestContainer } from '../container/UnitTestContainer';
 import { RlpxDecrpyt } from './RlpxDecrypt';
+import { Rlpx } from './Rlpx';
+import { MockNonceGenerator } from './nonce-generator/MockNonceGenerator';
+import { NonceGenerator } from './nonce-generator/NonceGenerator';
 
 describe('RlpxDecrpyt', () => {
   it('should correctly parse an rlpx auth', async () => {
@@ -31,5 +34,45 @@ describe('RlpxDecrpyt', () => {
       });
 
     expect(rlpx).toBeTruthy();
+  });
+
+  it('should correctly create an eip 8 auth message', async () => {
+    const continaer = new UnitTestContainer().create({
+      privateKey:
+        '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+      ephemeralPrivateKey:
+        '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+      deterministicRandomness: true,
+    });
+    (continaer.get(NonceGenerator) as MockNonceGenerator).setNonces([
+      Buffer.alloc(32),
+    ]);
+
+    const response = await continaer.get(Rlpx).createEncryptedAuthMessageEip8({
+      ethNodePublicKey:
+        '04ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f',
+    });
+
+    expect(response.results.toString('hex')).toBe(
+      '017e04fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f184287700000000000000000000000000000000f2f3d4382d8bcbaae7ad470f0c7cd6880f3bbe8102d0a76bb5915d5182a89504887d8a872615bacc2913b7510c225531679a4af622504aa9d43f7f80dc40275407934e7f61d3e10f04d7672407bc88d3c6c8be9559771d5bcf665e5ef3daa126cd12d81640fc85ca7d3197859c6ef59655e294f49ee33befff31528572b5943eaa4c9072ab29037c472240ad9d798b1286abed4533852c9df3455558f366a80ce060bcf310e320a9f0a60385d4758306b7ec2f71ade4b4253da5a5ab15acc7ab1e8b52fce3b1462ca57b206f4779128eda193cd372e72dee233d3974b0c33a70bcdc7183d599dc240e160aae64b734c1b271ab4d4b29403fff797ebacdda7fbcc7863034798f3f43f0b781080f849d500103cbd981ab2ba0d7296fe6f744ee689006eb0e1758011958585f6ea5'
+    );
+  });
+
+  it('should correctly create an eip 8 ack message', async () => {
+    const continaer = new UnitTestContainer().create({
+      privateKey:
+        '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+      ephemeralPrivateKey:
+        '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
+      deterministicRandomness: true,
+    });
+
+    const response = await continaer.get(Rlpx).createEncryptedAckMessageEip8({
+      ethNodePublicKey:
+        '04ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f',
+    });
+    expect(response.results.toString('hex')).toBe(
+      '013b04fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f184287700000000000000000000000000000000f230d439a537b8d96deb5616946ba562d142de14c691e96173d5cccdf809e180da470ff841c17c9e9726c50bff12f61dbe61d78b992fb4b9648b3ce6792a5236efec1d70c16ba1f2a5189150ceb012cab3f140a8a22415310102a660241c4b980a532fe5c13405f42f9abb50c13b9c2ab1d6e5f33df3e43a07bb5389a04a453ef6e896832f0174dc472240ad9d798b1286abed4533852c9df3455558f366a80ce060bcf310e320a9f4a60385d4758306b7ec2f71ade4b4253da5a5ab15acc7ab1e8b52fce3b1462ca57b304a5936e057074e5095f0da03d7d07bea5e9539c8ff62b873a1928491316f77'
+    );
   });
 });

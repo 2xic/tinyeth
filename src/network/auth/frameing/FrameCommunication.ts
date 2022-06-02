@@ -1,7 +1,6 @@
 import { keccak256 } from '../../../utils/keccak256';
 import { EncodeFrame } from './EncodeFrame';
 import { DecodeFrame } from './DecodeFrame';
-import { LoggerFactoryOptions } from 'typescript-logging';
 import { Logger } from '../../../utils/Logger';
 
 export class FrameCommunication {

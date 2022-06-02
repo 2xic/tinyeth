@@ -1,4 +1,3 @@
-import { encode } from '@ethereumjs/devp2p';
 import { FrameCommunication } from './FrameCommunication';
 
 describe('FrameCommunication', () => {
