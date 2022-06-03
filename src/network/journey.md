@@ -98,9 +98,7 @@ So to solve the last few problems, the easiest way is to make the code in a way 
 
 So the plan is to make the eip8 communication happen in memory between two "peers", and we should then easily see if there are any obvious problems in the communication state. 
 
+### Day x + 9
+I think RLPX should be mmore or less implemented now.
 
-
-
-
-
-
+Will implement logic for the wire protocol tomorrow, and then I think things should be "nice". 

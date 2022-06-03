@@ -7,16 +7,16 @@ import {
 import {
   NeighborsPacket,
   NeighborsPacketEncodeDecode,
-} from './packet-types/NeighborsPacketEncodeDecode';
-import { PacketEncodeDecode } from './packet-types/PacketEncodeDecode';
+} from './wire/NeighborsPacketEncodeDecode';
+import { PacketEncodeDecode } from './wire/PacketEncodeDecode';
 import {
   PingPacket,
   PingPacketEncodeDecode,
-} from './packet-types/PingPacketEncodeDecode';
+} from './wire/PingPacketEncodeDecode';
 import {
   PongPacket,
   PongPacketEncodeDecode,
-} from './packet-types/PongPacketEncodeDecode';
+} from './wire/PongPacketEncodeDecode';
 import {
   HelloPacketEncoderDecoder,
   ParsedHelloPacket,

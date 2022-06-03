@@ -7,9 +7,9 @@ _Just something so I get a better understanding of the core parts of the protoco
 ### Plan
 
 - [ ] Network support (should be able to fetch a block)
-  - Wire protocol
-    - Discovery protocol
-      - 
+  - (wip) Wire protocol
+    - [Discovery protocol](https://github.com/ethereum/devp2p/blob/master/discv4.md)
+    - [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md)
   - [RLPx](https://github.com/ethereum/devp2p/blob/master/rlpx.md) should now be more or less implemented. The problems remaining I think are mostly because we connect to bootstrap node that don't do normal operation.   
 
 - [x] Implement encoding and decoding of RLP

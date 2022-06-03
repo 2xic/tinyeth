@@ -1,6 +1,6 @@
 import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { PacketEncodeDecode } from './PacketEncodeDecode';
+import { PacketEncodeDecode } from '../wire/PacketEncodeDecode';
 import { RlpDecoder } from '../../rlp/RlpDecoder';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 
