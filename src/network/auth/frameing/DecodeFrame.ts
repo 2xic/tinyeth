@@ -65,4 +65,8 @@ export class DecodeFrame {
     }
     return this._ingressMac;
   }
+
+  public get ingressMacMacHash() {
+    return this.ingressMac.slicedHash.toString('hex');
+  }
 }

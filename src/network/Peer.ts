@@ -58,8 +58,8 @@ export class Peer {
 
     this.socket.on('data', async (data) => {
       this.logger.log(`Got data of length ${data.length}`);
-      //  await new Promise((resolve) => setTimeout(resolve, 1000));
       //  await this.parseMessage(data);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.communicationState.parseMessage(
         data,
         this.connectionWrite.bind(this)
@@ -103,15 +103,17 @@ export class Peer {
   private async connectionWrite(message: Buffer) {
     this.logger.log(`writing on the wire SER, ${message.length}`);
     this.logger.log(` ${message.toString('hex')}`);
-    await new Promise<void>((resolve, reject) => {
-      this.connection.write(message, (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
+    if (message.length) {
+      await new Promise<void>((resolve, reject) => {
+        this.connection.write(message, (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
       });
-    });
+    }
   }
 
   public get connection() {

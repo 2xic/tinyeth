@@ -10,7 +10,7 @@ import { AbstractSocket } from './socket/AbstractSocket';
 import { GetRandomBytesInteractor } from './nonce-generator/GetRandomBytesInteractor';
 import { MessageType } from './rlpx/CommunicationState';
 
-describe('Peer', () => {
+describe.skip('Peer', () => {
   let peer: Peer;
   let container: Container;
   beforeEach(() => {

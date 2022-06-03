@@ -77,7 +77,6 @@ export class CoreContainer {
     container.bind(ConstructAuthMessage).toSelf();
     container.bind(EciesEncrypt).toSelf();
     container.bind(EciesDecrypt).toSelf();
-    container.bind(FrameCommunication).toSelf();
     container.bind(EncodeFrame).toSelf();
     container.bind(DecodeFrame).toSelf();
     container.bind(ReplayHelloPacket).toSelf();

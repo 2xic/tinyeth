@@ -15,18 +15,18 @@ describe('FrameCommunication', () => {
   beforeEach(() => {
     sender = getClassFromTestContainer(FrameCommunication).setup({
       ephemeralSharedSecret,
-      initiatorNonce,
-      receiverNonce,
+      remoteNonce: initiatorNonce,
+      localNonce: receiverNonce,
       remotePacket,
-      initiatorPacket,
+      localPacket: initiatorPacket,
     });
 
     receiver = getClassFromTestContainer(FrameCommunication).setup({
       ephemeralSharedSecret,
-      initiatorNonce: receiverNonce,
-      receiverNonce: initiatorNonce,
+      remoteNonce: receiverNonce,
+      localNonce: initiatorNonce,
       remotePacket: initiatorPacket,
-      initiatorPacket: remotePacket,
+      localPacket: remotePacket,
       switchNonce: true,
     });
   });
@@ -121,22 +121,5 @@ describe('FrameCommunication', () => {
         })
         .toString('hex')
     ).toBe('');
-  });
-
-  it.skip('just me testing', () => {
-    sender.encode({
-      message: Buffer.from('deadbeef', 'hex'),
-    });
-    const encodedMessage = sender.encode({
-      message: Buffer.from('beefbeef', 'hex'),
-    });
-
-    expect(
-      receiver
-        .decode({
-          message: encodedMessage,
-        })
-        .toString('hex')
-    ).toBe('deadbeef');
   });
 });

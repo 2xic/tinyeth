@@ -71,4 +71,8 @@ export class EncodeFrame {
     }
     return this._egressMac;
   }
+
+  public get egressMacHash() {
+    return this.egressMac.slicedHash.toString('hex');
+  }
 }

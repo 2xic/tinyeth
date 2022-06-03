@@ -1,15 +1,24 @@
-export function assertBufferFirstItemValue(buffer: Buffer, value: number) {
-  if (buffer[0] !== value) {
-    throw new Error(`Bad value, ${buffer[0]} != ${value}`);
+export function assertBufferFirstItemValue(
+  expected: Buffer,
+  receivedValue: number
+) {
+  if (expected[0] !== receivedValue) {
+    throw new Error(`Bad value, ${expected[0]} != ${receivedValue}`);
   }
 }
 
-export function assertEqual<T>(buffer: T, value: T, message?: string) {
-  if (buffer !== value) {
+export function assertEqual<T>(
+  expected: T,
+  receivedValue: T,
+  message?: string
+) {
+  if (expected !== receivedValue) {
     if (message) {
-      throw new Error(`${message} -  values : (${buffer} != ${value})`);
+      throw new Error(
+        `${message} -  values : (${expected} != ${receivedValue})`
+      );
     } else {
-      throw new Error(`Bad value, ${buffer} != ${value}`);
+      throw new Error(`Bad value, ${expected} != ${receivedValue}`);
     }
   }
 }

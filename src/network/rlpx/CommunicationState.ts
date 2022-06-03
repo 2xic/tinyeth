@@ -28,7 +28,7 @@ export class CommunicationState {
     private replayHelloPacket: ReplayHelloPacket
   ) {}
 
-  private nextState: MessageState = MessageState.AUTH;
+  public nextState: MessageState = MessageState.AUTH;
 
   /*
     TODO: Move this into a own class
@@ -56,8 +56,6 @@ export class CommunicationState {
   ) {
     if (MessageType.AUTH_EIP_8 === message.type) {
       const { results: authMessage, header } =
-        // Why have I used keypair here ? It should not be used, and is probably one of the reasons for the bugs :)
-        // it's the remote public key that should always be used.
         await this.rlpx.createEncryptedAuthMessageEip8({
           ethNodePublicKey: this.remotePublicKey,
         });
@@ -79,7 +77,8 @@ export class CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer) => Promise<void>
+    callback: (message: Buffer) => Promise<void>,
+    parseOnly = false
   ) {
     this.logger.log(` new data: ${message.toString('hex')}`);
     if (this.nextState === MessageState.AUTH) {
@@ -92,21 +91,22 @@ export class CommunicationState {
       await this.parsePacket({
         message,
         callback,
+        parseOnly,
       });
     }
   }
 
-  private async parseAuth({ message }: { message: Buffer }) {
+  private async parseAuth({ message: remoteMessage }: { message: Buffer }) {
     const decodedAuthMessage = await this.auth8Eip.decodeAuthEip8({
-      input: message,
+      input: remoteMessage,
     });
     const sharedSecret = this.keyPair.getEcdh({
       publicKey: this.remotePublicKey,
     });
 
-    const senderNonce = getBufferFromHex(decodedAuthMessage.nonce);
+    const remoteNonce = getBufferFromHex(decodedAuthMessage.nonce);
     const remotePublicKey = this.signatures.getPublicKeyFromSignature({
-      message: xor(sharedSecret, senderNonce),
+      message: xor(sharedSecret, remoteNonce),
       signature: getBufferFromHex(decodedAuthMessage.signature).slice(0, 64),
       r: getBufferFromHex(decodedAuthMessage.signature)[64],
     });
@@ -115,19 +115,24 @@ export class CommunicationState {
       publicKey: remotePublicKey,
     });
 
-    const { results, header } = await this.rlpx.createEncryptedAckMessageEip8({
-      ethNodePublicKey: remotePublicKey,
-    });
+    const { results: localPacket, header } =
+      await this.rlpx.createEncryptedAckMessageEip8({
+        ethNodePublicKey: remotePublicKey,
+      });
+    const localNonce = header.nonce;
+
     this.frameCommunication.setup({
       ephemeralSharedSecret: ephemeralSharedSecret,
-      initiatorNonce: senderNonce,
-      receiverNonce: header.nonce,
-      remotePacket: message,
-      initiatorPacket: results,
-      switchNonce: true,
-    });
 
-    return results;
+      remoteNonce: remoteNonce,
+      remotePacket: remoteMessage,
+
+      localNonce,
+      localPacket,
+    });
+    this.nextState = MessageState.PACKETS;
+
+    return localPacket;
   }
 
   private async parseAck({ message }: { message: Buffer }) {
@@ -142,18 +147,36 @@ export class CommunicationState {
       publicKey,
     });
 
-    const receiverNonce = getBufferFromHex(nonce);
+    const receivedNonce = getBufferFromHex(nonce);
 
-    assertEqual(receiverNonce.length, 32, 'Received nonce length is wrong');
+    assertEqual(receivedNonce.length, 32, 'Received nonce length is wrong');
     assertEqual(this._senderNonce.length, 32, 'Nonce length is wrong');
 
+    assertEqual(!!message.length, true, 'Element is not defined');
+    assertEqual(!!this._sentPacket, true, 'Element is not defined');
+    /*
     this.frameCommunication = this.frameCommunication.setup({
       ephemeralSharedSecret: ephemeralSharedSecret,
-      initiatorNonce: this._senderNonce,
-      receiverNonce: receiverNonce,
+      remoteNonce: receivedNonce,
       remotePacket: message,
-      initiatorPacket: this._sentPacket,
+
+      localNonce: this._senderNonce,
+      localPacket: this._sentPacket,
+
+      switchNonce: false,
     });
+*/
+    this.frameCommunication = this.frameCommunication.setup({
+      ephemeralSharedSecret: ephemeralSharedSecret,
+      remoteNonce: receivedNonce,
+      remotePacket: message,
+
+      localNonce: this._senderNonce,
+      localPacket: this._sentPacket,
+
+      switchNonce: true,
+    });
+
     this.logger.log('Setup frame communication');
     this.nextState = MessageState.PACKETS;
   }
@@ -161,8 +184,10 @@ export class CommunicationState {
   private async parsePacket({
     message,
     callback,
+    parseOnly,
   }: {
     message: Buffer;
+    parseOnly?: boolean;
     callback: (message: Buffer) => Promise<void>;
   }) {
     try {
@@ -173,22 +198,26 @@ export class CommunicationState {
       const hello = packetParser.parse({
         packet: body,
       });
-      if (typeof hello === 'object') {
-        this.logger.log('Got a hello :)');
-        const encodedMessage = this.replayHelloPacket.replayPacket({
-          hello,
-        });
-        await callback(encodedMessage);
-      } else if (hello == RlpxPacketTypes.PING) {
-        this.logger.log('Got a ping, replying with pong');
-        const encodedMessage = this.encodeMessage(RlpxPacketTypes.PONG);
-        await callback(encodedMessage);
-      } else if (hello == RlpxPacketTypes.PONG) {
-        this.logger.log('Got a pong, should reply with ping');
-        const encodedMessage = this.encodeMessage(RlpxPacketTypes.PING);
-        await callback(encodedMessage);
+      if (!parseOnly) {
+        if (typeof hello === 'object') {
+          this.logger.log('Got a hello :)');
+          const encodedMessage = this.replayHelloPacket.replayPacket({
+            hello,
+          });
+          await callback(encodedMessage);
+        } else if (hello == RlpxPacketTypes.PING) {
+          this.logger.log('Got a ping, replying with pong');
+          const encodedMessage = this.encodeMessage(RlpxPacketTypes.PONG);
+          await callback(encodedMessage);
+        } else if (hello == RlpxPacketTypes.PONG) {
+          this.logger.log('Got a pong, should reply with ping');
+          const encodedMessage = this.encodeMessage(RlpxPacketTypes.PING);
+          await callback(encodedMessage);
+        } else {
+          this.logger.log('Unknown state ... ');
+        }
       } else {
-        this.logger.log('Unknown state ... ');
+        await callback(Buffer.alloc(0));
       }
     } catch (err) {
       console.log(err);
@@ -226,7 +255,7 @@ interface BaseMessage {
   type: MessageType;
 }
 
-enum MessageState {
+export enum MessageState {
   AUTH,
   ACK,
   PACKETS,
