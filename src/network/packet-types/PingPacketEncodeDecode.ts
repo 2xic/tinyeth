@@ -1,5 +1,5 @@
 import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
-import { parseHexIp } from '../parseHexIp';
+import { parseHexIp } from '../utils/parseHexIp';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';

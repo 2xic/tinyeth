@@ -5,7 +5,7 @@ import { injectable, inject } from 'inversify';
 export class GetRandomBytesInteractor {
   constructor(
     @inject<boolean>('SHOULD_RANDOMNESS_BE_DETERMINISTIC')
-    public shouldBeDeterministic: boolean
+    private shouldBeDeterministic: boolean
   ) {}
 
   public getRandomBytes({ length }: { length: number }) {

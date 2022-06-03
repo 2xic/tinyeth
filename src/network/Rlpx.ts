@@ -1,10 +1,9 @@
 import { RlpEncoder } from '../rlp/RlpEncoder';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { addMissingPublicKeyByte } from '../signatures/addMissingPublicKyeByte';
-import { RlpxEcies } from './RlpxEcies';
+import { RlpxEcies } from './rlpx/RlpxEcies';
 import { EncodeAuthEip8 } from './auth/EncodeAuthEip8';
-import crypto from 'crypto';
-import { Auth8Eip } from './AuthEip8';
+import { Auth8Eip } from './auth/AuthEip8';
 import { injectable } from 'inversify';
 import { GetRandomBytesInteractor } from './nonce-generator/GetRandomBytesInteractor';
 import { EncodeAckEip8 } from './auth/EncodeAckEip8';
@@ -38,19 +37,9 @@ export class Rlpx {
     const { results, header } = this.encodeAuthEip8.createAuthMessageEip8({
       ethNodePublicKey,
     });
-    // TODO: Logic here can be shared with ack
-    const rlp = this.rlpEncoder.encode({ input: results });
-    const padding = this.getRandomBytes.getRandomBytes({ length: 100 });
-    const encodedRlp = getBufferFromHex(rlp);
-    const message = Buffer.concat([encodedRlp, padding]);
-    const overhead = 113;
-    const totalLength = overhead + message.length;
-    const mac = Buffer.from(totalLength.toString(16).padStart(4, '0'), 'hex');
-
-    const encryptedMessage = await this.encryptedMessage({
-      message,
-      responderPublicKey: ethNodePublicKey,
-      mac,
+    const { mac, encryptedMessage } = await this.constructBaseMessage({
+      coreMessage: results,
+      ethNodePublicKey,
     });
 
     return {
@@ -64,9 +53,26 @@ export class Rlpx {
   }: {
     ethNodePublicKey: string;
   }) {
-    // TODO: Logic here can be shared with auth
     const { results, header } = this.ack8Eip.createACkMessageEip8();
-    const rlp = this.rlpEncoder.encode({ input: results });
+    const { mac, encryptedMessage } = await this.constructBaseMessage({
+      coreMessage: results,
+      ethNodePublicKey,
+    });
+
+    return {
+      results: Buffer.concat([mac, encryptedMessage]),
+      header,
+    };
+  }
+
+  private async constructBaseMessage({
+    coreMessage,
+    ethNodePublicKey,
+  }: {
+    coreMessage: Buffer[];
+    ethNodePublicKey: string;
+  }) {
+    const rlp = this.rlpEncoder.encode({ input: coreMessage });
     const padding = this.getRandomBytes.getRandomBytes({ length: 100 });
     const encodedRlp = getBufferFromHex(rlp);
     const message = Buffer.concat([encodedRlp, padding]);
@@ -82,21 +88,9 @@ export class Rlpx {
     });
 
     return {
-      results: Buffer.concat([mac, encryptedMessage]),
-      header,
+      encryptedMessage,
+      mac,
     };
-  }
-
-  public createAuthMessageEip8({
-    ethNodePublicKey,
-  }: {
-    ethNodePublicKey: string;
-  }): Buffer {
-    return Buffer.concat(
-      this.encodeAuthEip8.createAuthMessageEip8({
-        ethNodePublicKey,
-      }).results
-    );
   }
 
   private async encryptedMessage({

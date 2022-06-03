@@ -1,24 +1,14 @@
 import { KeyPair } from '../signatures/KeyPair';
-import { FrameCommunication } from './auth/frameing/FrameCommunication';
-import { Auth8Eip } from './AuthEip8';
-import { getBufferFromHex } from '../utils/getBufferFromHex';
-import { getRandomPeer } from './getRandomPeer';
-import { Packet, RlpxPacketTypes } from './Packet';
-import { Rlpx } from './Rlpx';
+import { getRandomPeer } from './utils/getRandomPeer';
 import { AbstractSocket } from './socket/AbstractSocket';
 import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
-import { RlpEncoder } from '../rlp/RlpEncoder';
 import { MessageQueue } from './MessageQueue';
-import { GetRlpxPingPacketEncoded } from './packet-types/RlpxPingPacketEncoder';
-import { CommunicationState, MessageOptions } from './CommunicationState';
+import { CommunicationState, MessageOptions } from './rlpx/CommunicationState';
+import { OperationCanceledException } from 'typescript';
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
-
-  private frameCommunication?: FrameCommunication;
-
-  private _host?: string;
 
   private isConnected = false;
 
@@ -82,7 +72,11 @@ export class Peer {
       });
     });
     this._activeConnection = this.socket;
-    this._host = `${nodeOptions.address}:${nodeOptions.port}`;
+    if (options?.publicKey) {
+      await this.communicationState.setRemotePublicKey({
+        publicKey: options?.publicKey,
+      });
+    }
   }
 
   public async sendMessage(message: MessageOptions) {

@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { getBufferFromHex } from '../utils/getBufferFromHex';
-import { UnitTestContainer } from '../container/UnitTestContainer';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { UnitTestContainer } from '../../container/UnitTestContainer';
 import { RlpxDecrpyt } from './RlpxDecrypt';
-import { Rlpx } from './Rlpx';
-import { MockNonceGenerator } from './nonce-generator/MockNonceGenerator';
-import { NonceGenerator } from './nonce-generator/NonceGenerator';
+import { Rlpx } from '../Rlpx';
+import { MockNonceGenerator } from '../nonce-generator/MockNonceGenerator';
+import { NonceGenerator } from '../nonce-generator/NonceGenerator';
 
 describe('RlpxDecrpyt', () => {
   it('should correctly parse an rlpx auth', async () => {

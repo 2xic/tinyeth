@@ -2,12 +2,14 @@ import { keccak256 } from '../../../utils/keccak256';
 import { EncodeFrame } from './EncodeFrame';
 import { DecodeFrame } from './DecodeFrame';
 import { Logger } from '../../../utils/Logger';
+import { injectable } from 'inversify';
 
+@injectable()
 export class FrameCommunication {
   constructor(
-    private encodeFrame: EncodeFrame = new EncodeFrame(),
-    private decodeFrame: DecodeFrame = new DecodeFrame(),
-    private logger = new Logger()
+    private encodeFrame: EncodeFrame,
+    private decodeFrame: DecodeFrame,
+    private logger: Logger
   ) {}
 
   public setup({

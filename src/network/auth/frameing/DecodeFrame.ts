@@ -2,7 +2,9 @@ import { MacInteractor } from './MacInteractor';
 import crypto from 'crypto';
 import { assertEqual } from '../../../utils/enforce';
 import { createAes256CtrDecipher } from './createAes256CtrDecipher';
+import { injectable } from 'inversify';
 
+@injectable()
 export class DecodeFrame {
   private _ingressMac?: MacInteractor;
   private _ingresAes?: crypto.Decipher;

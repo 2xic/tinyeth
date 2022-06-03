@@ -33,7 +33,6 @@ export class Packet {
     if (parsedPacketId === RlpxPacketTypes.HELLO) {
       return this.decodeHello({ input: packet });
     } else if (parsedPacketId === RlpxPacketTypes.DISCONNECT) {
-      console.log(new RlpDecoder().decode({ input: packet.toString('hex') }));
       throw new Error('Disconnect ?');
     } else if (parsedPacketId === RlpxPacketTypes.PING) {
       return RlpxPacketTypes.PONG;

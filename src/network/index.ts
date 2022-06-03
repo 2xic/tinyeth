@@ -1,4 +1,5 @@
 export * from './Peer';
-export * from './parseEnode';
-export * from './getRandomPeer';
+export * from './utils/parseEnode';
+export * from './utils/getRandomPeer';
 export * from './NodeServer';
+export * from './rlpx';

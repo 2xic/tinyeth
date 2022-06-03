@@ -1,4 +1,4 @@
-import { DecodeAuthEip8 } from './auth/DecodeAuthEip8';
+import { DecodeAuthEip8 } from './DecodeAuthEip8';
 import { injectable } from 'inversify';
 
 @injectable()

@@ -1,4 +1,5 @@
 import { FrameCommunication } from './FrameCommunication';
+import { getClassFromTestContainer } from '../../../container/getClassFromTestContainer';
 
 describe('FrameCommunication', () => {
   const initiatorNonce = Buffer.from('41'.repeat(32), 'hex');
@@ -12,7 +13,7 @@ describe('FrameCommunication', () => {
   let receiver: FrameCommunication;
 
   beforeEach(() => {
-    sender = new FrameCommunication().setup({
+    sender = getClassFromTestContainer(FrameCommunication).setup({
       ephemeralSharedSecret,
       initiatorNonce,
       receiverNonce,
@@ -20,7 +21,7 @@ describe('FrameCommunication', () => {
       initiatorPacket,
     });
 
-    receiver = new FrameCommunication().setup({
+    receiver = getClassFromTestContainer(FrameCommunication).setup({
       ephemeralSharedSecret,
       initiatorNonce: receiverNonce,
       receiverNonce: initiatorNonce,

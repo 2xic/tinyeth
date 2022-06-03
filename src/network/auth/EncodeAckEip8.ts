@@ -1,6 +1,5 @@
 import { injectable, inject } from 'inversify';
 import { KeyPair } from '../../signatures/KeyPair';
-import { Signatures } from '../../signatures/Signatures';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { GetRandomBytesInteractor } from '../nonce-generator/GetRandomBytesInteractor';
 
@@ -8,7 +7,7 @@ import { GetRandomBytesInteractor } from '../nonce-generator/GetRandomBytesInter
 export class EncodeAckEip8 {
   constructor(
     private keyPair: KeyPair,
-    private getNonceGenerator: GetRandomBytesInteractor,
+    private getRandomBytesInteractor: GetRandomBytesInteractor,
     @inject('EMPHERMAL_PRIVATE_KEY')
     private ephemeralPrivateKey: string
   ) {}
@@ -19,7 +18,7 @@ export class EncodeAckEip8 {
         privateKey: this.ephemeralPrivateKey,
       })
     );
-    const nonce = this.getNonceGenerator.getRandomBytes({ length: 32 });
+    const nonce = this.getRandomBytesInteractor.getRandomBytes({ length: 32 });
 
     return {
       results: [publicKey, nonce, Buffer.from([0x4])],

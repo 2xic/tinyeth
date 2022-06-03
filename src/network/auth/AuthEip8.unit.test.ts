@@ -1,7 +1,7 @@
-import { UnitTestContainer } from '../container/UnitTestContainer';
-import { KeyPair } from '../signatures/KeyPair';
+import { UnitTestContainer } from '../../container/UnitTestContainer';
+import { KeyPair } from '../../signatures/KeyPair';
 import { Auth8Eip } from './AuthEip8';
-import { getBufferFromHex } from '../utils/getBufferFromHex';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
 describe('AuthEip8', () => {
   it('should decrypt a auth packet correctly', async () => {

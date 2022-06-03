@@ -24,7 +24,6 @@ export class ConstructAuthMessage {
         publicKey: ethNodePublicKey,
       })
     );
-    console.log(ecdhKey.toString('hex'));
     assertEqual(ecdhKey.length, 32);
 
     const tokenXorNonce = xor(ecdhKey, nonce);

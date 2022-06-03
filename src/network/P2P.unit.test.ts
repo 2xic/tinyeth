@@ -1,4 +1,4 @@
-import { parseEncode } from './parseEnode';
+import { parseEncode } from './utils/parseEnode';
 
 describe('P2P', () => {
   it('should parse an enocde', () => {

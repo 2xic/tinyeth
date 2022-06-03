@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { KeyPair } from '../signatures/KeyPair';
-import { EciesDecrypt } from './ecies/EciesDecrypt';
-import { EciesEncrypt } from './ecies/EciesEncrypt';
+import { KeyPair } from '../../signatures/KeyPair';
+import { EciesDecrypt } from '../ecies/EciesDecrypt';
+import { EciesEncrypt } from '../ecies/EciesEncrypt';
 
 @injectable()
 export class RlpxEcies {

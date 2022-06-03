@@ -1,5 +1,5 @@
 import { getBufferFromHex } from '../utils/getBufferFromHex';
-import { parseEncode } from './parseEnode';
+import { parseEncode } from './utils/parseEnode';
 import { Peer } from './Peer';
 import { MockSocket } from './socket/MockSocket';
 import { MockNonceGenerator } from './nonce-generator/MockNonceGenerator';
@@ -7,12 +7,8 @@ import { UnitTestContainer } from '../container/UnitTestContainer';
 import { NonceGenerator } from './nonce-generator/NonceGenerator';
 import { Container } from 'inversify';
 import { AbstractSocket } from './socket/AbstractSocket';
-import { ConstructAuthMessage } from './auth/ConstructAuthMessage';
 import { GetRandomBytesInteractor } from './nonce-generator/GetRandomBytesInteractor';
-import { convertToObject } from 'typescript';
-import { KeyPath } from 'ecies-geth';
-import { KeyPair } from '../signatures';
-import { MessageType } from './CommunicationState';
+import { MessageType } from './rlpx/CommunicationState';
 
 describe('Peer', () => {
   let peer: Peer;

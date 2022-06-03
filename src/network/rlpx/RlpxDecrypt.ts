@@ -1,5 +1,5 @@
 import { RlpxEcies } from './RlpxEcies';
-import { assertEqual } from '../utils/enforce';
+import { assertEqual } from '../../utils/enforce';
 import { injectable } from 'inversify';
 
 @injectable()

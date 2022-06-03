@@ -1,7 +1,7 @@
 import { RlpDecoder } from '../../rlp/RlpDecoder';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { injectable } from 'inversify';
-import { RlpxDecrpyt } from '../RlpxDecrypt';
+import { RlpxDecrpyt } from '../rlpx/RlpxDecrypt';
 
 @injectable()
 export class DecodeAuthEip8 {
