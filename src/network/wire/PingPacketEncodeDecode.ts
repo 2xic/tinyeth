@@ -5,7 +5,11 @@ import { PacketEncodeDecode } from './PacketEncodeDecode';
 import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';
 import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
 import ip6addr from 'ip6addr';
+import { injectable } from 'inversify';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { createTypeReferenceDirectiveResolutionCache } from 'typescript';
 
+@injectable()
 export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
   public encode(options: { input: PingPacket }): string {
     /*
@@ -17,12 +21,16 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
     const input: InputTypes = [
       0x4,
       [
-        Buffer.from(ip6addr.parse(_input.fromIp).toBuffer().slice(-4)),
-        Buffer.from(convertNumberToPadHex(_input.fromUdpPort), 'hex'),
-        Buffer.from(convertNumberToPadHex(_input.fromTcpPort), 'hex'),
+        this.getIpBuffer(_input.fromIp),
+        _input.fromUdpPort
+          ? Buffer.from(convertNumberToPadHex(_input.fromUdpPort), 'hex')
+          : Buffer.alloc(0),
+        _input.fromTcpPort
+          ? Buffer.from(convertNumberToPadHex(_input.fromTcpPort), 'hex')
+          : Buffer.alloc(0),
       ],
       [
-        Buffer.from(ip6addr.parse(_input.toIp).toBuffer()),
+        this.getIpBuffer(_input.toIp),
         Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex'),
         Buffer.from(convertNumberToPadHex(_input.toTcpPort), 'hex'),
       ],
@@ -30,9 +38,13 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
       ...(_input.sequence ? _input.sequence : []),
     ];
 
-    return new RlpEncoder().encode({
+    const encoded = new RlpEncoder().encode({
       input,
     });
+
+    console.log(encoded);
+
+    return encoded;
   }
 
   public decode(options: { input: SimpleTypes[] }): PingPacket {
@@ -41,13 +53,14 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
     const [version] = rlpReader.readArray<number>({
       length: 1,
       isNumeric: true,
+      isFlat: true,
     });
-    const [sender, senderUdp, senderTcp] = rlpReader.readArray<string>({
+    const [senderIp, senderUdp, senderTcp] = rlpReader.readArray<number>({
       length: 3,
       isNumeric: true,
     });
     const [recipientIp, recipientUdpPort, recipientTcpPort] =
-      rlpReader.readArray<string>({
+      rlpReader.readArray<number>({
         length: 3,
         isNumeric: true,
       });
@@ -56,17 +69,27 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
       isNumeric: true,
     });
 
+    const recipient = getBufferFromHex(recipientIp.toString(16));
+    const sender = getBufferFromHex(senderIp.toString(16));
+
     return {
       version,
       expiration,
-      fromIp: parseHexIp(Buffer.from(sender)),
-      fromTcpPort: senderTcp,
-      fromUdpPort: senderUdp,
+      fromIp: parseHexIp(sender),
+      fromTcpPort: senderTcp.toString(),
+      fromUdpPort: senderUdp.toString(),
 
-      toIp: parseHexIp(Buffer.from(recipientIp)),
-      toUdpPort: recipientUdpPort,
-      toTcpPort: recipientTcpPort,
+      toIp: parseHexIp(recipient),
+      toUdpPort: recipientUdpPort.toString(),
+      toTcpPort: recipientTcpPort.toString(),
     };
+  }
+
+  private getIpBuffer(ip: string) {
+    const encoded = Buffer.from(ip6addr.parse(ip).toBuffer());
+    const isIpv4 = ip.split('.').length === 4;
+
+    return isIpv4 ? encoded.slice(-4) : encoded;
   }
 }
 
@@ -74,8 +97,8 @@ export interface PingPacket {
   version: number;
   expiration: number;
   fromIp: string;
-  fromUdpPort: string;
-  fromTcpPort: string;
+  fromUdpPort: string | null;
+  fromTcpPort: string | null;
 
   toIp: string;
   toUdpPort: string;

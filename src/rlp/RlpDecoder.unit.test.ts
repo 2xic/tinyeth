@@ -1,5 +1,6 @@
 import { cleanString } from '../utils';
 import { RlpDecoder } from './RlpDecoder';
+import { RlpEncoder } from './RlpEncoder';
 
 describe('RlpDecoder', () => {
   const interactor = new RlpDecoder();
@@ -324,5 +325,14 @@ describe('RlpDecoder', () => {
     interactor.decode({
       input: packet,
     });
+  });
+
+  // TODO: check the rlp documentation - should this be encoded differently ?
+  it.skip('should correctly decode a ping packet', () => {
+    const encoded = new RlpEncoder().encode({
+      input: Buffer.from('765F', 'hex'),
+    });
+    const decoded = new RlpDecoder().decode({ input: encoded });
+    expect(decoded).toBe('30303');
   });
 });

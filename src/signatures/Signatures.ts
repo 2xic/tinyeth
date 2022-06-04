@@ -81,7 +81,9 @@ export class Signatures {
     }
 
     if (message.length !== 32) {
-      throw new Error('Invalid message length');
+      throw new Error(
+        `Invalid message length, expected 32, but got ${message.length}`
+      );
     }
 
     const { signature, recid: recovery } = secp256k1.ecdsaSign(

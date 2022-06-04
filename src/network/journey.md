@@ -99,6 +99,12 @@ So to solve the last few problems, the easiest way is to make the code in a way 
 So the plan is to make the eip8 communication happen in memory between two "peers", and we should then easily see if there are any obvious problems in the communication state. 
 
 ### Day x + 9
-I think RLPX should be mmore or less implemented now.
+I think RLPX should be more or less implemented now.
 
 Will implement logic for the wire protocol tomorrow, and then I think things should be "nice". 
+
+### Day x + 10
+Set up the scaffolding for the wire protocol. Most of the packet code was already written, but have to setup the code for sending the udp datagrams. To handle this we updated to use node 18, and use the built in logic.
+
+Tried to send a ping packet to a bootstrap node, but looks like there is some logic we are missing.
+

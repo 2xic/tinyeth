@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { sha3_256 } from '../utils/sha3_256';
 import { RlpEncoder } from './RlpEncoder';
+import { RlpDecoder } from './RlpDecoder';
 
 describe('RlpEncoder', () => {
   const interactor = new RlpEncoder();

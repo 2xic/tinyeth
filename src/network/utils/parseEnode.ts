@@ -1,8 +1,4 @@
-export function parseEncode(enode: string): {
-  publicKey: string;
-  address: string;
-  port: number;
-} {
+export function parseEncode(enode: string): ParsedEnode {
   const [publicKey, ip] = enode.split('@');
   const [address, port] = ip.split(':');
 
@@ -11,4 +7,10 @@ export function parseEncode(enode: string): {
     address,
     port: Number(port),
   };
+}
+
+export interface ParsedEnode {
+  publicKey: string;
+  address: string;
+  port: number;
 }

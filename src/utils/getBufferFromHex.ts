@@ -7,6 +7,10 @@ export function getBufferFromHex(inputHash: string | Buffer): Buffer {
   }
 
   if (typeof inputHash === 'string') {
+    const isEscaped = JSON.stringify(inputHash).includes('\\u');
+    if (isEscaped) {
+      return Buffer.from(inputHash);
+    }
     const hash = inputHash.startsWith('0x')
       ? `${inputHash.slice(2)}`
       : inputHash;

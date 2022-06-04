@@ -56,7 +56,7 @@ describe('Packets', () => {
       `)
     );
 
-    const decodedPacket = new Packet().decodePing({ input: pingPacket });
+    const decodedPacket = new Packet().decodeWirePacket({ input: pingPacket });
     if (!('version' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }
@@ -64,12 +64,12 @@ describe('Packets', () => {
     expect(decodedPacket.version).toBe(4);
     expect(decodedPacket.expiration).toBe(1136239445);
     expect(decodedPacket.fromIp).toBe('127.0.0.1');
-    expect(decodedPacket.fromTcpPort).toBe(5544);
-    expect(decodedPacket.fromUdpPort).toBe(3322);
+    expect(decodedPacket.fromTcpPort).toBe('5544');
+    expect(decodedPacket.fromUdpPort).toBe('3322');
 
-    //expect(decodedPacket.toIp).toBe('0.0.0.0');
-    expect(decodedPacket.toUdpPort).toBe(2222);
-    expect(decodedPacket.toTcpPort).toBe(3333);
+    //    expect(decodedPacket.toIp).toBe('00.00.00.00');
+    expect(decodedPacket.toUdpPort).toBe('2222');
+    expect(decodedPacket.toTcpPort).toBe('3333');
   });
 
   it('should correctly encode a ping packet', () => {
@@ -106,7 +106,7 @@ describe('Packets', () => {
       `)
     );
 
-    const decodedPacket = new Packet().decodePing({ input: pingPacket });
+    const decodedPacket = new Packet().decodeWirePacket({ input: pingPacket });
     if (!('version' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }
@@ -127,7 +127,7 @@ describe('Packets', () => {
   `)
     );
 
-    const decodedPacket = new Packet().decodePing({ input: pongPacket });
+    const decodedPacket = new Packet().decodeWirePacket({ input: pongPacket });
     if (!('to' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }
@@ -149,7 +149,9 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
   `)
     );
 
-    const decodedPacket = new Packet().decodePing({ input: findNodePacket });
+    const decodedPacket = new Packet().decodeWirePacket({
+      input: findNodePacket,
+    });
     if (!('target' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }
@@ -179,7 +181,9 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
   `)
     );
 
-    const decodedPacket = new Packet().decodePing({ input: neighboursPacket });
+    const decodedPacket = new Packet().decodeWirePacket({
+      input: neighboursPacket,
+    });
     if (!('nodes' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }

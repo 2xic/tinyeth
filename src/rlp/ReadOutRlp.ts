@@ -39,7 +39,12 @@ export class ReadOutRlp {
       const valueConverter = (item: T): T => {
         if (isNumeric) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if ((item as any).toString().startsWith('0x')) {
+          if (Buffer.isBuffer(item)) {
+            return parseInt(
+              (item as any as Buffer).toString('hex'),
+              16
+            ) as unknown as T;
+          } else if ((item as any).toString().startsWith('0x')) {
             return parseInt(item as unknown as string, 16) as unknown as T;
           }
         }
@@ -54,6 +59,7 @@ export class ReadOutRlp {
         );
       }
     }
+
     throw new Error(
       `Trying to read an array that is not an array. Index ${
         this.index

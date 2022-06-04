@@ -9,7 +9,9 @@ export function parseHexIp(input: Buffer) {
 
     return ipv6;
   } else {
-    throw new Error('Invalid ip');
+    throw new Error(
+      `Invalid ip, length ${input.length} ${input.toString('hex')}`
+    );
   }
 }
 

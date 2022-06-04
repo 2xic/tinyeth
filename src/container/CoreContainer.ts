@@ -26,7 +26,10 @@ import { FrameCommunication } from '../network/auth/frameing/FrameCommunication'
 import { EncodeFrame } from '../network/auth/frameing/EncodeFrame';
 import { DecodeFrame } from '../network/auth/frameing/DecodeFrame';
 import { ReplayHelloPacket } from '../network/packet-types/ReplayHelloPacket';
-
+import { NodeManager } from '../network';
+import { NodeCommunication } from '../network/wire/NodeCommunication';
+import { PingPacketEncodeDecode } from '../network/wire/PingPacketEncodeDecode';
+import { PacketEncapsulation } from '../network/wire/PacketEncapsulation';
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
     const container = new Container({
@@ -53,6 +56,11 @@ export class CoreContainer {
     container
       .bind('IS_LOGGING_ENABLED')
       .toConstantValue(options?.loggingEnabled);
+
+    container.bind(NodeManager).toSelf();
+    container.bind(NodeCommunication).toSelf();
+    container.bind(PingPacketEncodeDecode).toSelf();
+    container.bind(PacketEncapsulation).toSelf();
 
     container.bind(KeyPair).toSelf();
     container.bind(Signatures).toSelf();

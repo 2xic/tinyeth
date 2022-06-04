@@ -3,7 +3,7 @@ import { keccak256 } from '../utils/keccak256';
 import {
   FindNodePacket,
   FindNodePacketEncodeDecode,
-} from './packet-types/FindNodePacketEncodeDecode';
+} from './wire/FindNodePacketEncodeDecode';
 import {
   NeighborsPacket,
   NeighborsPacketEncodeDecode,
@@ -55,7 +55,8 @@ export class Packet {
     return new HelloPacketEncoderDecoder().encode({ input: packet });
   }
 
-  public decodePing({
+  // TODO: This should be moved
+  public decodeWirePacket({
     input,
   }: {
     input: Buffer;
@@ -73,6 +74,7 @@ export class Packet {
       input: metadata.slice(1).toString('hex'),
       returnOnError: true,
     });
+
     if (!Array.isArray(data)) {
       throw new Error('Data is not an array');
     }

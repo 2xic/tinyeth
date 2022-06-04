@@ -1,14 +1,18 @@
+import { injectable } from 'inversify';
 import net from 'net';
-import { P2P } from './P2P';
 
+@injectable()
 export class NodeServer {
   private _server?: net.Server;
 
-  constructor(private p2p: P2P) {}
-
   private PORT_NUMBER = 3000;
 
+  private isRunning?: boolean;
+
   public start() {
+    if (!this.isRunning) {
+      throw new Error('Server is already running');
+    }
     this._server = net.createServer();
     this._server.listen(this.PORT_NUMBER, () => {
       console.log('yeah ?=');
@@ -26,7 +30,6 @@ export class NodeServer {
       });
     });
 
-    console.log(this.p2p.enode);
-    console.log(this.p2p.privateKey);
+    this.isRunning = true;
   }
 }
