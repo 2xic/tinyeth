@@ -22,6 +22,10 @@ import {
   ParsedHelloPacket,
 } from './packet-types/HelloPacketEncoderDecoer';
 
+/**
+ * TODO: This class should be moved, and divide.
+ *  It contains logic for both rlpx and wire.
+ */
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {
     const packetId = packet[0];

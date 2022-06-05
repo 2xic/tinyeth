@@ -42,8 +42,6 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
       input,
     });
 
-    console.log(encoded);
-
     return encoded;
   }
 

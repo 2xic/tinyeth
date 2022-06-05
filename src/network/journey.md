@@ -108,3 +108,7 @@ Set up the scaffolding for the wire protocol. Most of the packet code was alread
 
 Tried to send a ping packet to a bootstrap node, but looks like there is some logic we are missing.
 
+### Day x + 11
+Got the wire protocol to somewhat work :) So I have sent a few pings, and got response back. 
+
+Will make FindNode command work, and then we should not be far from being able to fetch a block through the p2p :') 

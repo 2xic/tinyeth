@@ -1,7 +1,7 @@
-import { NodeManager, ProductionContainer, getRandomGethPeer } from '../dist';
+import { NodeManager, ProductionContainer, getRandomGethPeer, ParsedEnode, gethEnodes, parseEncode } from '../dist';
+
 
 (async () => {
-  const randomNode = getRandomGethPeer();
   const node = new ProductionContainer()
     .create({
       privateKey:
@@ -11,8 +11,10 @@ import { NodeManager, ProductionContainer, getRandomGethPeer } from '../dist';
       loggingEnabled: true,
     })
     .get(NodeManager);
-
-  await node.bootstrap(randomNode);
+  await Promise.all(gethEnodes.map(async (connection) => {
+    await sleep(1000 * Math.random());
+    await node.bootstrap(parseEncode(connection))
+  }))
 
   // eslint-disable-next-line no-constant-condition
   while (true) {

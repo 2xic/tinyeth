@@ -1,8 +1,7 @@
 import { injectable } from 'inversify';
 import { Logger } from '../../utils/Logger';
 import dgram from 'node:dgram';
-
-import { ParsedEnode } from '../utils/parseEnode';
+import { ConnectionOptions } from './NodeManager';
 
 /**
  * This should be abstracted in a way so that Peer can also reuse this class
@@ -10,7 +9,9 @@ import { ParsedEnode } from '../utils/parseEnode';
  */
 @injectable()
 export class NodeCommunication {
-  private socket?: dgram.Socket;
+  private _socket?: dgram.Socket;
+
+  private connection?: ConnectionOptions;
 
   constructor(private logger: Logger) {}
 
@@ -18,42 +19,63 @@ export class NodeCommunication {
     onMessage,
     nodeOptions,
   }: {
-    nodeOptions: ParsedEnode;
+    nodeOptions: ConnectionOptions;
     onMessage: (data: Buffer) => void;
   }) {
-    this.socket = dgram.createSocket('udp4');
+    this._socket = dgram.createSocket('udp4');
 
-    this.socket.on('connect', () => {
+    this._socket.on('connect', () => {
       console.log('Connection :)');
     });
 
-    this.socket.on('data', (data) => {
-      this.logger.log(`Got data of length ${data.length}`);
+    this._socket.on('error', (error) => {
+      this.logger.log(`Got error ${error}`);
+    });
+
+    this._socket.on('message', (data) => {
+      this.logger.log(`\tGot message of length ${data.length}`);
       onMessage(data);
     });
 
-    this.socket.on('message', (data) => {
-      this.logger.log(`Got message of length ${data.length}`);
+    this._socket.on('close', () => {
+      this.logger.log('Remote closed :(');
     });
 
-    this.socket.bind(41234);
-
-    await new Promise<void>((resolve) => {
-      this.socket!.connect(nodeOptions.port, nodeOptions.address, () => {
-        resolve();
-      });
+    this._socket.on('listening', () => {
+      const address = this.socket.address();
+      console.log(`server listening ${address.address}:${address.port}`);
     });
+    this.connection = nodeOptions;
   }
 
   public async sendMessage(message: Buffer) {
+    if (1280 < message.length) {
+      throw new Error(
+        'Packet is larger than the maximum size set by the wire protocol (1280)'
+      );
+    }
     await new Promise<void>((resolve, reject) => {
-      this.socket!.send(message, (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
+      this.socket.send(
+        message,
+        0,
+        message.length,
+        this.connection?.port,
+        this.connection?.address,
+        (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
         }
-      });
+      );
     });
+  }
+
+  private get socket() {
+    if (!this._socket) {
+      throw new Error('Socket not connected');
+    }
+    return this._socket;
   }
 }
