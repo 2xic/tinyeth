@@ -8,9 +8,11 @@ export class DecodeAuthEip8 {
   constructor(private rlpx: RlpxDecrpyt, private rlpDecoder: RlpDecoder) {}
 
   public async decodeAuthEip8({ input }: { input: Buffer }) {
+    console.log(['input packet', input.toString('hex')]);
     const decryptedMessage = await this.rlpx.decryptMessage({
       encryptedMessage: input,
     });
+    console.log(decryptedMessage.toString('hex'));
     const decodedPacket = this.rlpDecoder.decode({
       input: decryptedMessage.toString('hex'),
       returnOnError: true,

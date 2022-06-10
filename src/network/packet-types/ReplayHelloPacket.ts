@@ -1,4 +1,3 @@
-import { KeyPath } from 'ecies-geth';
 import { injectable } from 'inversify';
 import { KeyPair } from '../../signatures/KeyPair';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';

@@ -6,8 +6,6 @@ import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';
 import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
 import ip6addr from 'ip6addr';
 import { injectable } from 'inversify';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { createTypeReferenceDirectiveResolutionCache } from 'typescript';
 
 @injectable()
 export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
@@ -53,33 +51,34 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
       isNumeric: true,
       isFlat: true,
     });
-    const [senderIp, senderUdp, senderTcp] = rlpReader.readArray<number>({
+    const [senderIp, senderUdp, senderTcp] = rlpReader.readArray<Buffer>({
       length: 3,
-      isNumeric: true,
+      isBuffer: true,
     });
     const [recipientIp, recipientUdpPort, recipientTcpPort] =
-      rlpReader.readArray<number>({
+      rlpReader.readArray<Buffer>({
         length: 3,
-        isNumeric: true,
+        isBuffer: true,
       });
     const [expiration] = rlpReader.readArray<number>({
       length: 1,
       isNumeric: true,
     });
 
-    const recipient = getBufferFromHex(recipientIp.toString(16));
-    const sender = getBufferFromHex(senderIp.toString(16));
-
     return {
       version,
       expiration,
-      fromIp: parseHexIp(sender),
-      fromTcpPort: senderTcp.toString(),
-      fromUdpPort: senderUdp.toString(),
+      fromIp: parseHexIp(senderIp),
+      fromTcpPort: senderTcp.readIntBE(0, senderTcp.length).toString(),
+      fromUdpPort: senderUdp.readIntBE(0, senderUdp.length).toString(),
 
-      toIp: parseHexIp(recipient),
-      toUdpPort: recipientUdpPort.toString(),
-      toTcpPort: recipientTcpPort.toString(),
+      toIp: parseHexIp(recipientIp),
+      toUdpPort: recipientUdpPort
+        .readIntBE(0, recipientUdpPort.length)
+        .toString(),
+      toTcpPort: recipientTcpPort
+        .readIntBE(0, recipientTcpPort.length)
+        .toString(),
     };
   }
 

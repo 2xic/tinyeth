@@ -73,9 +73,10 @@ export class Packet {
     const metadata = input.slice(97);
     const typeNumber = metadata[0];
     const packetType = this.getPacketType(typeNumber);
+    const packet = metadata.slice(1);
 
     const data = new RlpDecoder().decode({
-      input: metadata.slice(1).toString('hex'),
+      input: packet.toString('hex'),
       returnOnError: true,
     });
 

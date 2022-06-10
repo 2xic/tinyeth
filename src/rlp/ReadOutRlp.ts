@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { SimpleTypes } from './types/TypeEncoderDecoder';
 
 export class ReadOutRlp {
@@ -11,10 +13,12 @@ export class ReadOutRlp {
     isNumeric,
     valueFetcher,
     isFlat,
+    isBuffer,
   }: {
     skip?: number;
     length: number;
     isNumeric?: boolean;
+    isBuffer?: boolean;
     isFlat?: boolean;
     valueFetcher?: (item: SimpleTypes) => T[];
   }): Array<T> {
@@ -37,7 +41,17 @@ export class ReadOutRlp {
       }
 
       const valueConverter = (item: T): T => {
-        if (isNumeric) {
+        if (isBuffer) {
+          if ((item as any).toString().startsWith('0x')) {
+            return getBufferFromHex((item as any).toString()) as unknown as T;
+          } else if (typeof item === 'boolean') {
+            return Buffer.from([0]) as unknown as T;
+          } else if (typeof item === 'string') {
+            return Buffer.from(item, 'ascii') as unknown as T;
+          } else if (typeof item === 'number') {
+            return Buffer.from([item]) as unknown as T;
+          }
+        } else if (isNumeric) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (Buffer.isBuffer(item)) {
             return parseInt(

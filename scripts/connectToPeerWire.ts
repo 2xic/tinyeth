@@ -1,4 +1,4 @@
-import { NodeManager, ProductionContainer, getRandomGethPeer, ParsedEnode, gethEnodes, parseEncode } from '../dist';
+import { NodeManager, ProductionContainer, gethEnodes, parseEncode } from '../dist';
 
 
 (async () => {

@@ -1,4 +1,3 @@
-import { Container } from 'inversify';
 import { UnitTestContainer } from '../../container/UnitTestContainer';
 import {
   CommunicationState,
@@ -11,7 +10,6 @@ import { ExposedFrameCommunication } from '../auth/frameing/ExposedFrameCommunic
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { EncodeFrame } from '../auth/frameing/EncodeFrame';
 import { DecodeFrame } from '../auth/frameing/DecodeFrame';
-import crypto from 'crypto';
 
 describe('CommunicationState', () => {
   it('should run correct determinsitcally', async () => {
@@ -107,17 +105,25 @@ describe('CommunicationState', () => {
     );
   });
 
+  // This is sometimes flacky, not sure why.
   it('should correctly preform a handshake', async () => {
-    const senderPrivateKey = crypto.randomBytes(32).toString('hex');
+    const [senderPrivateKey, receiverPrivateKey] = [
+      'a19d58e8e50ab08dd376dbfd513b554a8ccde7ddcaa6505a6ac35776176144d7',
+      '5791c6c8c400a13b98b82f4cb7b5e78ec0634d0ba14373c201dd36fc9f63362a',
+    ];
+
+    //const senderPrivateKey = crypto.randomBytes(32).toString('hex');
     const senderContainer = new UnitTestContainer().create({
       privateKey: senderPrivateKey,
       ephemeralPrivateKey: senderPrivateKey,
     });
-    const receiverPrivateKey = crypto.randomBytes(32).toString('hex');
+    //const receiverPrivateKey = crypto.randomBytes(32).toString('hex');
     const receiverContainer = new UnitTestContainer().create({
       privateKey: receiverPrivateKey,
       ephemeralPrivateKey: receiverPrivateKey,
     });
+
+    console.log([senderPrivateKey, receiverPrivateKey]);
 
     const senderContainerCommunicationState =
       senderContainer.get(CommunicationState);
@@ -131,6 +137,8 @@ describe('CommunicationState', () => {
       publicKey: senderContainerCommunicationState.publicKey,
     });
 
+    console.log('hei');
+
     const authMessage = await new Promise<Buffer>((resolve, reject) =>
       senderContainerCommunicationState
         .sendMessage(
@@ -142,16 +150,23 @@ describe('CommunicationState', () => {
         .catch(reject)
     );
 
+    console.log(authMessage.toString('hex'));
+
     const ackMessage = await new Promise<Buffer>((resolve, reject) => {
       receiverContainerCommunicationState
         .parseMessage(authMessage, async (value) => resolve(value))
         .catch(reject);
     });
-    await new Promise<Buffer>((resolve, reject) =>
+
+    console.log(ackMessage.toString('hex'));
+
+    const parsedAckMessage = await new Promise<Buffer>((resolve, reject) =>
       senderContainerCommunicationState
         .parseMessage(ackMessage, async (value) => resolve(value))
         .catch(reject)
     );
+
+    console.log(parsedAckMessage.toString('hex'));
 
     const senderContainerFrameComunication = senderContainer.get(
       FrameCommunication
@@ -179,6 +194,8 @@ describe('CommunicationState', () => {
     const reciverMacEncodeFrame =
       receiverContainer.get(EncodeFrame).egressMacHash;
     expect(senderMacDecodeFrame).toBe(reciverMacEncodeFrame);
+
+    console.log(2);
 
     const sendPing = await new Promise<Buffer>((resolve, reject) => {
       senderContainerCommunicationState

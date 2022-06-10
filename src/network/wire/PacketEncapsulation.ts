@@ -1,4 +1,3 @@
-import { KeyPath, sign } from 'ecies-geth';
 import { injectable } from 'inversify';
 import { KeyPair } from '../../signatures/KeyPair';
 import { Signatures } from '../../signatures/Signatures';

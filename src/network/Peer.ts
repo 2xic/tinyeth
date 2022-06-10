@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
 import { MessageQueue } from './MessageQueue';
 import { CommunicationState, MessageOptions } from './rlpx/CommunicationState';
-import { OperationCanceledException } from 'typescript';
+
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;

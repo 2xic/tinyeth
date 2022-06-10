@@ -22,7 +22,6 @@ import { EciesEncrypt } from '../network/ecies/EciesEncrypt';
 import { EncodeAckEip8 } from '../network/auth/EncodeAckEip8';
 import { CommunicationState } from '../network/rlpx/CommunicationState';
 import { EciesDecrypt } from '../network/ecies/EciesDecrypt';
-import { FrameCommunication } from '../network/auth/frameing/FrameCommunication';
 import { EncodeFrame } from '../network/auth/frameing/EncodeFrame';
 import { DecodeFrame } from '../network/auth/frameing/DecodeFrame';
 import { ReplayHelloPacket } from '../network/packet-types/ReplayHelloPacket';

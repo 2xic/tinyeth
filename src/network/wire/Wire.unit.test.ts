@@ -1,4 +1,4 @@
-import { Container, optional } from 'inversify';
+import { Container } from 'inversify';
 import { UnitTestContainer } from '../../container/UnitTestContainer';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Packet, PacketTypes } from '../Packet';
@@ -18,6 +18,7 @@ describe('Wire', () => {
         'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291',
     });
   });
+
   it('should encode a packet correctly', async () => {
     const pingPacketEncoder = container.get(PingPacketEncodeDecode);
     const encapsulateMEssage = container.get(PacketEncapsulation);
@@ -40,12 +41,14 @@ describe('Wire', () => {
     const message = pingPacketEncoder.encode({
       input: inputPacket,
     });
+
     const pingMessage = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(message),
       packetType: Buffer.from([0x1]),
     });
 
     const data = packetEncodeDecode.decodeWirePacket({ input: pingMessage });
+
     expect(data).toBeTruthy();
 
     if (data.packetType === PacketTypes.PING) {
@@ -55,11 +58,7 @@ describe('Wire', () => {
       expect(inputPacket.toIp).toBe(packet.toIp);
       expect(inputPacket.fromTcpPort).toBe(null);
       expect(inputPacket.fromUdpPort).toBe(null);
-
-      // TODO : double check the rlp
-      // expect(isNaN(Number(packet.toUdpPort))).toBe(false);
-      //expect(inputPacket.toUdpPort).toBe(packet.toUdpPort);
-
+      expect(inputPacket.toUdpPort).toBe(packet.toUdpPort);
       expect(inputPacket.toTcpPort).toBe(packet.toTcpPort);
       expect(inputPacket.expiration).toBe(packet.expiration);
     } else {

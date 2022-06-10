@@ -53,6 +53,7 @@
     "inversify": "^6.0.1",
     "ip6addr": "^0.2.5",
     "js-sha3": "^0.8.0",
+    "jsfuzz": "^1.0.15",
     "keccak": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "secp256k1": "^4.0.3",
