@@ -11,8 +11,14 @@ import { NodeManager, ProductionContainer, gethEnodes, parseEncode } from '../di
       loggingEnabled: true,
     })
     .get(NodeManager);
-  await Promise.all(gethEnodes.map(async (connection) => {
+  node.events.on('alive', async (address: string) => {
+    console.log([address, 'is alive :)'])
+    await node.findNeighbors(address);
+  })
+  const nodes = gethEnodes.sort(() => Math.random() < 0.5 ? -1 : 1).slice(0, 1);
+  await Promise.all(nodes.map(async (connection) => {
     await sleep(1000 * Math.random());
+
     await node.bootstrap(parseEncode(connection))
   }))
 

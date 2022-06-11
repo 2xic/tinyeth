@@ -4,22 +4,17 @@ import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';
 import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
-import ip6addr from 'ip6addr';
 import { injectable } from 'inversify';
+import { getIpBuffer } from '../utils/getIpBuffer';
 
 @injectable()
 export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
   public encode(options: { input: PingPacket }): string {
-    /*
-      packet-data = [4, from, to, expiration, enr-seq ...]
-      from = [sender-ip, sender-udp-port, sender-tcp-port]
-      to = [recipient-ip, recipient-udp-port, 0]
-    */
     const _input = options.input;
     const input: InputTypes = [
       0x4,
       [
-        this.getIpBuffer(_input.fromIp),
+        getIpBuffer(_input.fromIp),
         _input.fromUdpPort
           ? Buffer.from(convertNumberToPadHex(_input.fromUdpPort), 'hex')
           : Buffer.alloc(0),
@@ -28,7 +23,7 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
           : Buffer.alloc(0),
       ],
       [
-        this.getIpBuffer(_input.toIp),
+        getIpBuffer(_input.toIp),
         Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex'),
         Buffer.from(convertNumberToPadHex(_input.toTcpPort), 'hex'),
       ],
@@ -80,13 +75,6 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
         .readIntBE(0, recipientTcpPort.length)
         .toString(),
     };
-  }
-
-  private getIpBuffer(ip: string) {
-    const encoded = Buffer.from(ip6addr.parse(ip).toBuffer());
-    const isIpv4 = ip.split('.').length === 4;
-
-    return isIpv4 ? encoded.slice(-4) : encoded;
   }
 }
 

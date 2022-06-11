@@ -1,83 +1,102 @@
 import { injectable } from 'inversify';
 import { NodeCommunication } from './NodeCommunication';
-import { PingPacketEncodeDecode } from './PingPacketEncodeDecode';
-import dayjs from 'dayjs';
 import { Logger } from '../../utils/Logger';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { PacketEncapsulation } from './PacketEncapsulation';
 import { Packet, PacketTypes } from '../Packet';
-import { FindNodePacketEncodeDecode } from './FindNodePacketEncodeDecode';
-import { KeyPair } from '../../signatures';
+import { WireMessages } from './WireMessages';
+import { keccak256 } from '../../utils/keccak256';
+import { EventEmitter } from 'node:events';
+import { assertEqual } from '../../utils/enforce';
+import { PongPacket } from './PongPacketEncodeDecode';
+import { PingPacket } from './PingPacketEncodeDecode';
 
 @injectable()
 export class NodeManager {
   constructor(
     private nodeCommunication: NodeCommunication,
-    private PingPacketEncoder: PingPacketEncodeDecode,
-    private encapsulateMEssage: PacketEncapsulation,
     private logger: Logger,
-    private keyPair: KeyPair
+    private wireMessages: WireMessages
   ) {}
 
-  public async bootstrap(options: ConnectionOptions) {
-    const message = await this.PingPacketEncoder.encode({
-      input: {
-        version: 4,
-        expiration: dayjs().add(60, 'seconds').unix(),
-        fromIp: '0.0.0.0',
-        fromUdpPort: null,
-        fromTcpPort: null,
+  public events: EventEmitter = new EventEmitter();
 
-        toIp: options.address,
-        toUdpPort: options.port.toString(),
-        toTcpPort: options.port.toString(),
-      },
-    });
+  private pingRecord: Record<string, string> = {};
+  private stateRecord: Record<string, State> = {};
+
+  public async bootstrap(options: ConnectionOptions) {
     this.logger.log(`Trying to connect to ${options.address}...`);
+    this.stateRecord[options.address] = State.WAITING_FOR_PING_OR_PONG;
+
     await this.nodeCommunication.connect({
-      onMessage: this.messageHandler.bind(this),
+      onMessage: (message) => this.messageHandler(message, options.address), //this.messageHandler.bind(this),
       nodeOptions: options,
     });
-    const pingMessage = this.encapsulateMEssage.encapsulate({
-      message: getBufferFromHex(message),
-      packetType: Buffer.from([0x1]),
-    });
+
+    const { pingMessage, hash: pingHash } = this.wireMessages.ping(options);
     this.logger.log(
       `Trying to send message to ${options.address} of length ${pingMessage.length}...`
     );
     this.logger.log(`\t ${pingMessage.toString('hex')}`);
+    this.pingRecord[options.address] = pingHash.toString('hex');
     await this.nodeCommunication.sendMessage(pingMessage);
     this.logger.log(`Sent message :) to ${options.address}...`);
   }
 
-  private async messageHandler(message: Buffer) {
+  private async messageHandler(message: Buffer, address: string) {
     this.logger.log(`Got a message of length ${message.length}`);
     const packetReceived = new Packet().decodeWirePacket({ input: message });
-    const findNeighbors = this.encapsulateMEssage.encapsulate({
-      message: getBufferFromHex(
-        new FindNodePacketEncodeDecode().encode({
-          input: {
-            target: this.keyPair.getPublicKey(),
-            expiration: dayjs().add(60, 'seconds').unix(),
-          },
-        })
-      ),
-      packetType: Buffer.from([0x3]),
-    });
+    console.log(packetReceived);
+    console.log(this.pingRecord);
+
     if (packetReceived.packetType === PacketTypes.PING) {
       console.log('got ping :)');
-      //   await this.nodeCommunication.sendMessage(findNeighbors);
+      const packet = packetReceived as PingPacket;
+      console.log('sending pong :)');
+      await this.nodeCommunication.sendMessage(
+        this.wireMessages.pong(
+          {
+            address: address,
+            port: Number(packet.fromTcpPort!),
+          },
+          packetReceived.messageHash
+        ).pongMessage
+      );
+      if (!this.hasSentNeighborMessage({ address })) {
+        this.events.emit('alive', address);
+      }
     } else if (packetReceived.packetType === PacketTypes.PONG) {
       console.log('got pong :)');
-      console.log('\t sending find neighbors!');
-      await this.nodeCommunication.sendMessage(findNeighbors);
+      assertEqual(
+        this.pingRecord[address],
+        (packetReceived as unknown as PongPacket).hash.slice(2),
+        'Unmatched pong hash'
+      );
     } else {
       console.log('got ', packetReceived);
     }
+  }
+
+  public async findNeighbors(address: string) {
+    if (!this.hasSentNeighborMessage({ address })) {
+      const { findNeighbors } = this.wireMessages.findNeighbor();
+
+      console.log('\t sending find neighbors!');
+      this.stateRecord[address] = State.SENT_FIND_NEIGHBORS;
+      this.logger.log(`\t ${findNeighbors.toString('hex')}`);
+      await this.nodeCommunication.sendMessage(findNeighbors);
+    }
+  }
+
+  private hasSentNeighborMessage({ address }: { address: string }) {
+    return this.stateRecord[address] == State.SENT_FIND_NEIGHBORS;
   }
 }
 
 export interface ConnectionOptions {
   address: string;
   port: number;
+}
+
+enum State {
+  WAITING_FOR_PING_OR_PONG,
+  SENT_FIND_NEIGHBORS,
 }

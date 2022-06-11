@@ -101,6 +101,7 @@ export class Packet {
 
     return {
       packetType,
+      messageHash,
       ...results,
     };
   }
@@ -139,6 +140,7 @@ export enum PacketTypes {
 
 interface ParsedPacket {
   packetType: PacketTypes;
+  messageHash: Buffer;
 }
 
 type DecodedPacketTypes =

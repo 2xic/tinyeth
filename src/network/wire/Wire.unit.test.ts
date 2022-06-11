@@ -7,6 +7,7 @@ import { PacketEncapsulation } from './PacketEncapsulation';
 import { PingPacket, PingPacketEncodeDecode } from './PingPacketEncodeDecode';
 import dayjs from 'dayjs';
 import { FindNodePacketEncodeDecode } from './FindNodePacketEncodeDecode';
+import { PongPacket, PongPacketEncodeDecode } from './PongPacketEncodeDecode';
 
 describe('Wire', () => {
   let container: Container;
@@ -42,7 +43,7 @@ describe('Wire', () => {
       input: inputPacket,
     });
 
-    const pingMessage = encapsulateMEssage.encapsulate({
+    const { encodedMessage: pingMessage } = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(message),
       packetType: Buffer.from([0x1]),
     });
@@ -61,6 +62,48 @@ describe('Wire', () => {
       expect(inputPacket.toUdpPort).toBe(packet.toUdpPort);
       expect(inputPacket.toTcpPort).toBe(packet.toTcpPort);
       expect(inputPacket.expiration).toBe(packet.expiration);
+    } else {
+      throw new Error('Error');
+    }
+  });
+
+  it('should encode a pong packet correctly', async () => {
+    const pongPacketEncoder = container.get(PongPacketEncodeDecode);
+    const encapsulateMEssage = container.get(PacketEncapsulation);
+    const packetEncodeDecode = new Packet();
+
+    const options = getRandomGethPeer();
+    expect(isNaN(options.port)).toBe(false);
+
+    const input = {
+      toIp: options.address,
+      toTcpPort: '3330',
+      toUdpPort: '3330',
+
+      expiration: dayjs().add(1, 'day').unix(),
+      hash: '2d5f7e0a73865cb0d06ff777009245b01b56d942e15dd486213984201c09b562',
+    };
+
+    const message = pongPacketEncoder.encode({
+      input,
+    });
+
+    const { encodedMessage: pingMessage } = encapsulateMEssage.encapsulate({
+      message: getBufferFromHex(message),
+      packetType: Buffer.from([0x2]),
+    });
+
+    const data = packetEncodeDecode.decodeWirePacket({ input: pingMessage });
+
+    expect(data).toBeTruthy();
+
+    if (data.packetType === PacketTypes.PONG) {
+      const packet = data as PongPacket;
+      expect(input.toIp).toBe(packet.toIp);
+      expect(input.toUdpPort).toBe(packet.toUdpPort);
+      expect(input.toTcpPort).toBe(packet.toTcpPort);
+      expect(input.expiration).toBe(packet.expiration);
+      expect(`0x${input.hash}`).toBe(packet.hash);
     } else {
       throw new Error('Error');
     }
@@ -87,11 +130,11 @@ describe('Wire', () => {
     const message = pingPacketEncoder.encode({
       input: inputPacket,
     });
-    const pingMessage = encapsulateMEssage.encapsulate({
+    const { encodedMessage: pingMessage } = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(message),
       packetType: Buffer.from([0x1]),
     });
-    const pingMessage2 = encapsulateMEssage.encapsulate({
+    const { encodedMessage: pingMessage2 } = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(message),
       packetType: Buffer.from([0x1]),
     });
@@ -116,7 +159,7 @@ describe('Wire', () => {
     const message = pingPacketEncoder.encode({
       input: inputPacket,
     });
-    const pingMessage = encapsulateMEssage.encapsulate({
+    const { encodedMessage: pingMessage } = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(message),
       packetType: Buffer.from([0x1]),
     });
@@ -134,7 +177,7 @@ describe('Wire', () => {
         expiration: 1654441902,
       },
     });
-    const encapsulated = encapsulateMEssage.encapsulate({
+    const { encodedMessage: encapsulated } = encapsulateMEssage.encapsulate({
       message: getBufferFromHex(packet),
       packetType: Buffer.from([0x3]),
     });

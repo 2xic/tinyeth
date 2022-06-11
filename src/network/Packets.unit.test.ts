@@ -128,12 +128,11 @@ describe('Packets', () => {
     );
 
     const decodedPacket = new Packet().decodeWirePacket({ input: pongPacket });
-    if (!('to' in decodedPacket)) {
+    if (!('toIp' in decodedPacket)) {
       throw new Error('Ping packet parsed incorrectly');
     }
 
     expect(decodedPacket.packetType).toBe(PacketTypes.PONG);
-    expect(decodedPacket.to).toBe('0x20010db885a308d313198a2e03707348');
   });
 
   it('should correctly decode a findnode packet', () => {
