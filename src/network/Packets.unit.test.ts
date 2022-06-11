@@ -190,6 +190,8 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
     expect(decodedPacket.packetType).toBe(PacketTypes.NEIGHBORS);
     expect(decodedPacket.nodes.length).toBe(4);
     expect(decodedPacket.nodes[0].ip).toBeTruthy();
+    expect(decodedPacket.nodes[0].tcpPort).toBeTruthy();
+    expect(decodedPacket.nodes[0].udpPort).toBeTruthy();
   });
 
   it('should correctly create an hello packet', () => {

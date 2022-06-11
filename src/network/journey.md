@@ -112,3 +112,19 @@ Tried to send a ping packet to a bootstrap node, but looks like there is some lo
 Got the wire protocol to somewhat work :) So I have sent a few pings, and got response back. 
 
 Will make FindNode command work, and then we should not be far from being able to fetch a block through the p2p :') 
+
+### Day x + 12
+Been around a week since I worked on this project - had to do some reprioritization of stuff (being an adult is not easy !!!! ). Jokes aside.
+
+Fixed some issues with the wire protocol, mainly a small confusion on my side that I thought I did not have to reply with a pong message if I initiated with a ping (silly bug!!!).
+
+Now I'm able to connect with the wire protocol, and find close neighbors. This is nice, because it makes it a lot easier to test RLPx for instance.
+-> Because I can find nodes more easily :D
+
+
+
+
+
+
+
+

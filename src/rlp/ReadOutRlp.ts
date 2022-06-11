@@ -27,19 +27,6 @@ export class ReadOutRlp {
         this.index += skip;
       }
 
-      if (isFlat) {
-        if (Array.isArray(this.rlp[this.index])) {
-          return this.rlp[this.index++] as unknown as T[];
-        }
-        return this.rlp.slice(this.index++) as unknown as T[];
-      }
-
-      const item = this.rlp[this.index++];
-
-      if (valueFetcher) {
-        return valueFetcher(item);
-      }
-
       const valueConverter = (item: T): T => {
         if (isBuffer) {
           if ((item as any).toString().startsWith('0x')) {
@@ -64,6 +51,23 @@ export class ReadOutRlp {
         }
         return item;
       };
+
+      if (isFlat) {
+        if (Array.isArray(this.rlp[this.index])) {
+          return (this.rlp[this.index++] as unknown as T[]).map((item) =>
+            valueConverter(item)
+          );
+        }
+        return (this.rlp.slice(this.index++) as unknown as T[]).map((item) =>
+          valueConverter(item)
+        );
+      }
+
+      const item = this.rlp[this.index++];
+
+      if (valueFetcher) {
+        return valueFetcher(item);
+      }
 
       if (length === 1 && !Array.isArray(item)) {
         return [valueConverter(item as unknown as T)];

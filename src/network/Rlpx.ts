@@ -42,11 +42,6 @@ export class Rlpx {
       ethNodePublicKey,
     });
 
-    console.log([
-      'auth boost',
-      results.map((item) => item.toString('hex')).join(''),
-    ]);
-
     return {
       results: Buffer.concat([mac, encryptedMessage]),
       header,

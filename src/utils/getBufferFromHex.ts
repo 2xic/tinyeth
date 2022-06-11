@@ -20,6 +20,8 @@ export function getBufferFromHex(inputHash: string | Buffer): Buffer {
     }
 
     return Buffer.from(hash, 'hex');
+  } else if (typeof inputHash === 'number') {
+    return Buffer.from([inputHash]);
   }
   return inputHash;
 }

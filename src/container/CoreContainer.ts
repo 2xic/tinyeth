@@ -31,6 +31,7 @@ import { PingPacketEncodeDecode } from '../network/wire/PingPacketEncodeDecode';
 import { PacketEncapsulation } from '../network/wire/PacketEncapsulation';
 import { WireMessages } from '../network/wire/WireMessages';
 import { PongPacketEncodeDecode } from '../network/wire/PongPacketEncodeDecode';
+import { NeighborsPacketEncodeDecode } from '../network/wire/NeighborsPacketEncodeDecode';
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
     const container = new Container({
@@ -62,6 +63,7 @@ export class CoreContainer {
     container.bind(NodeCommunication).toSelf();
     container.bind(PingPacketEncodeDecode).toSelf();
     container.bind(PongPacketEncodeDecode).toSelf();
+    container.bind(NeighborsPacketEncodeDecode).toSelf();
     container.bind(PacketEncapsulation).toSelf();
     container.bind(WireMessages).toSelf();
 

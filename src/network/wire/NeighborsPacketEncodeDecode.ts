@@ -1,6 +1,11 @@
+import { injectable } from 'inversify';
+import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
+import { getNumberFromBuffer } from '../utils/getNumberFromBuffer';
+import { parseHexIp } from '../utils/parseHexIp';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 
+@injectable()
 export class NeighborsPacketEncodeDecode
   implements PacketEncodeDecode<NeighborsPacket>
 {
@@ -15,15 +20,18 @@ export class NeighborsPacketEncodeDecode
     }
     const parsedNodes: NodeProperties[] = [];
     for (const node of nodes) {
-      if (!Array.isArray(node)) {
-        throw new Error('node is not an array');
-      }
-      const [ip] = node;
-      if (!(typeof ip == 'string')) {
-        throw new Error('expected ip to be a string');
-      }
+      const decoder = new ReadOutRlp(node);
+      const [ip, tcpPort, udpPort, publicKey] = decoder.readArray<Buffer>({
+        length: 3,
+        isBuffer: true,
+        isFlat: true,
+      });
+
       parsedNodes.push({
-        ip,
+        ip: parseHexIp(ip),
+        tcpPort: getNumberFromBuffer(tcpPort),
+        udpPort: getNumberFromBuffer(udpPort),
+        publicKey,
       });
     }
 
@@ -39,4 +47,7 @@ export interface NeighborsPacket {
 
 interface NodeProperties {
   ip: string;
+  tcpPort: number;
+  udpPort: number;
+  publicKey: Buffer;
 }

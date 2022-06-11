@@ -44,18 +44,18 @@ export class NodeManager {
   private async messageHandler(message: Buffer, address: string) {
     this.logger.log(`Got a message of length ${message.length}`);
     const packetReceived = new Packet().decodeWirePacket({ input: message });
-    console.log(packetReceived);
-    console.log(this.pingRecord);
+    this.logger.log(packetReceived);
+    this.logger.log(this.pingRecord);
 
     if (packetReceived.packetType === PacketTypes.PING) {
-      console.log('got ping :)');
+      this.logger.log('got ping :)');
       const packet = packetReceived as PingPacket;
-      console.log('sending pong :)');
+      this.logger.log('sending pong :)');
       await this.nodeCommunication.sendMessage(
         this.wireMessages.pong(
           {
             address: address,
-            port: Number(packet.fromTcpPort!),
+            port: Number(packet.fromTcpPort),
           },
           packetReceived.messageHash
         ).pongMessage
@@ -64,14 +64,14 @@ export class NodeManager {
         this.events.emit('alive', address);
       }
     } else if (packetReceived.packetType === PacketTypes.PONG) {
-      console.log('got pong :)');
+      this.logger.log('got pong :)');
       assertEqual(
         this.pingRecord[address],
         (packetReceived as unknown as PongPacket).hash.slice(2),
         'Unmatched pong hash'
       );
     } else {
-      console.log('got ', packetReceived);
+      this.logger.log('got ', [packetReceived]);
     }
   }
 
@@ -79,7 +79,7 @@ export class NodeManager {
     if (!this.hasSentNeighborMessage({ address })) {
       const { findNeighbors } = this.wireMessages.findNeighbor();
 
-      console.log('\t sending find neighbors!');
+      this.logger.log('\t sending find neighbors!');
       this.stateRecord[address] = State.SENT_FIND_NEIGHBORS;
       this.logger.log(`\t ${findNeighbors.toString('hex')}`);
       await this.nodeCommunication.sendMessage(findNeighbors);
