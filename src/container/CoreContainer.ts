@@ -32,6 +32,7 @@ import { PacketEncapsulation } from '../network/wire/PacketEncapsulation';
 import { WireMessages } from '../network/wire/WireMessages';
 import { PongPacketEncodeDecode } from '../network/wire/PongPacketEncodeDecode';
 import { NeighborsPacketEncodeDecode } from '../network/wire/NeighborsPacketEncodeDecode';
+import { DebugCommunicationState } from '../network/rlpx/DebugCommunicationState';
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
     const container = new Container({
@@ -74,7 +75,11 @@ export class CoreContainer {
     container.bind(EncodeAuthEip8).toSelf();
 
     container.bind(EncodeAckEip8).toSelf();
-    container.bind(CommunicationState).toSelf();
+    if (options?.debugMode) {
+      container.bind(CommunicationState).to(DebugCommunicationState);
+    } else {
+      container.bind(CommunicationState).toSelf();
+    }
 
     container.bind(RawTransaction).toSelf();
     container.bind(Transactions).toSelf();
@@ -108,4 +113,5 @@ export interface ContainerOptions {
   ephemeralPrivateKey?: string;
   deterministicRandomness?: boolean;
   loggingEnabled?: boolean;
+  debugMode?: boolean;
 }

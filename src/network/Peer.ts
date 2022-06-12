@@ -20,11 +20,7 @@ export class Peer {
     private communicationState: CommunicationState
   ) {}
 
-  public async connect(options?: {
-    publicKey: string;
-    address: string;
-    port: number;
-  }) {
+  public async connect(options?: PeerConnectionOptions) {
     const nodeOptions = options ? options : getRandomPeer();
     this.logger.log(nodeOptions);
     this.socket.on('close', () => {
@@ -58,11 +54,8 @@ export class Peer {
 
     this.socket.on('data', async (data) => {
       this.logger.log(`Got data of length ${data.length}`);
-      //  await this.parseMessage(data);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      await this.communicationState.parseMessage(
-        data,
-        this.connectionWrite.bind(this)
+      await this.communicationState.parseMessage(data, (message) =>
+        this.connectionWrite(message)
       );
     });
 
@@ -73,7 +66,7 @@ export class Peer {
     });
     this._activeConnection = this.socket;
     if (options?.publicKey) {
-      await this.communicationState.setRemotePublicKey({
+      this.communicationState.setRemotePublicKey({
         publicKey: options?.publicKey,
       });
     }
@@ -101,9 +94,9 @@ export class Peer {
   }
 
   private async connectionWrite(message: Buffer) {
-    this.logger.log(`writing on the wire SER, ${message.length}`);
-    this.logger.log(` ${message.toString('hex')}`);
     if (message.length) {
+      // this.logger.log(`writing on the wire SER, ${message.length}`);
+      // this.logger.log(` ${message.toString('hex')}`);
       await new Promise<void>((resolve, reject) => {
         this.connection.write(message, (error) => {
           if (error) {
@@ -126,4 +119,10 @@ export class Peer {
   public get nodePublicKey() {
     return this.keyPair.getPublicKey();
   }
+}
+
+export interface PeerConnectionOptions {
+  publicKey: string;
+  address: string;
+  port: number;
 }

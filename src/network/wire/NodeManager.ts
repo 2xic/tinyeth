@@ -3,11 +3,12 @@ import { NodeCommunication } from './NodeCommunication';
 import { Logger } from '../../utils/Logger';
 import { Packet, PacketTypes } from '../Packet';
 import { WireMessages } from './WireMessages';
-import { keccak256 } from '../../utils/keccak256';
 import { EventEmitter } from 'node:events';
 import { assertEqual } from '../../utils/enforce';
 import { PongPacket } from './PongPacketEncodeDecode';
 import { PingPacket } from './PingPacketEncodeDecode';
+import { NeighborsPacket } from './NeighborsPacketEncodeDecode';
+import { PeerConnectionOptions } from '../Peer';
 
 @injectable()
 export class NodeManager {
@@ -18,6 +19,7 @@ export class NodeManager {
   ) {}
 
   public events: EventEmitter = new EventEmitter();
+  private nodeRecord: Record<string, boolean> = {};
 
   private pingRecord: Record<string, string> = {};
   private stateRecord: Record<string, State> = {};
@@ -44,8 +46,6 @@ export class NodeManager {
   private async messageHandler(message: Buffer, address: string) {
     this.logger.log(`Got a message of length ${message.length}`);
     const packetReceived = new Packet().decodeWirePacket({ input: message });
-    this.logger.log(packetReceived);
-    this.logger.log(this.pingRecord);
 
     if (packetReceived.packetType === PacketTypes.PING) {
       this.logger.log('got ping :)');
@@ -70,6 +70,24 @@ export class NodeManager {
         (packetReceived as unknown as PongPacket).hash.slice(2),
         'Unmatched pong hash'
       );
+      if (!this.hasSentNeighborMessage({ address })) {
+        this.events.emit('alive', address);
+      }
+    } else if (packetReceived.packetType === PacketTypes.NEIGHBORS) {
+      this.logger.log('got neighbors :)');
+      const packet = packetReceived as NeighborsPacket;
+
+      packet.nodes.forEach((peer) => {
+        if (!this.nodeRecord[peer.ip]) {
+          const connectionOptions: PeerConnectionOptions = {
+            address: peer.ip,
+            port: peer.tcpPort,
+            publicKey: peer.publicKey.toString('hex'),
+          };
+          this.nodeRecord[peer.ip] = true;
+          this.events.emit('peer', connectionOptions);
+        }
+      });
     } else {
       this.logger.log('got ', [packetReceived]);
     }

@@ -121,6 +121,49 @@ Fixed some issues with the wire protocol, mainly a small confusion on my side th
 Now I'm able to connect with the wire protocol, and find close neighbors. This is nice, because it makes it a lot easier to test RLPx for instance.
 -> Because I can find nodes more easily :D
 
+### Day x + 13
+Trying to complete the RLPx stuff. Why does it have problem after doing the handshake ? Not sure. So let's break stuff down.
+
+From the RLPx docs (https://github.com/ethereum/devp2p/blob/master/rlpx.md)
+```
+1. initiator connects to recipient and sends its auth message
+2. recipient accepts, decrypts and verifies auth (checks that recovery of signature == keccak256(ephemeral-pubk))
+3. recipient generates auth-ack message from remote-ephemeral-pubk and nonce
+4. recipient derives secrets and sends the first encrypted frame containing the Hello message
+5. initiator receives auth-ack and derives secrets
+6. initiator sends its first encrypted frame containing initiator Hello message
+7. recipient receives and authenticates first encrypted frame
+8. initiator receives and authenticates first encrypted frame
+9.cryptographic handshake is complete if MAC of first encrypted frame is valid on both sides
+```
+1. This is implemented.
+2. This should be handled by the receiver, but given that we get a reply, I would say it means we have correctly implemented step 1.
+3 + 4 -> This should also be handled. 
+5. This should also be okay
+6. We do this, but it's just a replay. Could this cause some problems ? 
+    -> Maybe, we should probably send an hello packet :)
+7. okay
+8. okay
+9. yes
+
+------------
+
+Okay, I think I might know something else that might be wrong.
+
+So, when I decrypt the message I noticed that sometimes the lengths does not add up. I.e the length specified in the packet is not the same as the packet actual length. 
+Could it be that two packets were merged together ? 
+
+-> Best way to figure this out would be have a function log communication between my node and the receiver. Then have the ability to replay this information in a custom test environment.
+-> Hook the "main" class -> override the write / read methods and log them to a custom class.
+    -> dump the data to a json file
+        -> have a test file parse the json file :)
+            -> find bugs + profits ? 
+
+Okay, I ended up writing a simple replay tool today. This should hopefully make it easy to find out where the problem is.
+
+So the goal for next week will be to use the replay tool to find the bugs that are left.
+
+
 
 
 

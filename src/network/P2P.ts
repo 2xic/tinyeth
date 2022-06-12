@@ -1,10 +1,10 @@
 import { KeyPair } from '../signatures/KeyPair';
 
 export class P2P {
-  constructor(private keypair: KeyPair) {}
+  constructor(private keyPair: KeyPair) {}
 
   public get enode(): string {
-    const publicKey = this.keypair.getPublicKey();
+    const publicKey = this.keyPair.getPublicKey();
     if (publicKey.length !== 128) {
       throw new Error('Wrong length');
     }
@@ -12,7 +12,7 @@ export class P2P {
   }
 
   public get privateKey() {
-    return this.keypair.privatekey;
+    return this.keyPair.privatekey;
   }
 
   public get ip() {

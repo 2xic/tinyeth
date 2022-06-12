@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@types/bn.js": "^5.1.0",
+    "@types/buffer-json": "^2.0.1",
     "@types/elliptic": "^6.4.14",
     "@types/ip6addr": "^0.2.3",
     "@types/jest": "^27.0.1",
@@ -43,6 +44,7 @@
     "babel-plugin-transform-typescript-metadata": "^0.3.2",
     "bignumber.js": "^9.0.2",
     "bn.js": "^5.2.0",
+    "buffer-json": "^2.0.0",
     "core-util-is": "^1.0.3",
     "dayjs": "^1.11.2",
     "ecies-geth": "^1.6.4",
@@ -50,6 +52,7 @@
     "eciesjs": "^0.3.14",
     "elliptic": "^6.5.4",
     "eth-ecies": "^1.0.6",
+    "exit-hook": "^2.2.1",
     "inversify": "^6.0.1",
     "ip6addr": "^0.2.5",
     "js-sha3": "^0.8.0",

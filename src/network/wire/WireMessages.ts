@@ -8,7 +8,6 @@ import { KeyPair } from '../../signatures';
 import { ConnectionOptions } from './NodeManager';
 import { assertEqual } from '../../utils/enforce';
 import { PongPacketEncodeDecode } from './PongPacketEncodeDecode';
-import { createInputFiles } from 'typescript';
 
 @injectable()
 export class WireMessages {

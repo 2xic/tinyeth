@@ -1,10 +1,11 @@
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
 import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
 import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { getIpBuffer } from '../utils/getIpBuffer';
+import { getNumberFromBuffer } from '../utils/getNumberFromBuffer';
 import { parseHexIp } from '../utils/parseHexIp';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 
@@ -12,15 +13,16 @@ import { PacketEncodeDecode } from './PacketEncodeDecode';
 export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
   public encode(options: { input: PongPacket }): string {
     const _input = options.input;
+    const convertPort = (port: string | null) =>
+      port
+        ? Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex')
+        : Buffer.alloc(0);
+
     const input: InputTypes = [
       [
         getIpBuffer(_input.toIp),
-        _input.toUdpPort
-          ? Buffer.from(convertNumberToPadHex(_input.toUdpPort), 'hex')
-          : Buffer.alloc(0),
-        _input.toTcpPort
-          ? Buffer.from(convertNumberToPadHex(_input.toTcpPort), 'hex')
-          : Buffer.alloc(0),
+        convertPort(_input.toUdpPort),
+        convertPort(_input.toTcpPort),
       ],
       getBufferFromHex(options.input.hash),
       Buffer.from(convertNumberToPadHex(_input.expiration), 'hex'),
@@ -55,8 +57,8 @@ export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
 
     return {
       toIp: parseHexIp(toAddress),
-      toTcpPort: toTcpPort.readIntBE(0, toTcpPort.length).toString(),
-      toUdpPort: toUdpPort.readIntBE(0, toUdpPort.length).toString(),
+      toTcpPort: getNumberFromBuffer(toTcpPort).toString(),
+      toUdpPort: getNumberFromBuffer(toUdpPort).toString(),
       hash,
       expiration,
     };

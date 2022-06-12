@@ -1,5 +1,4 @@
 import { RlpxEcies } from './RlpxEcies';
-import { assertEqual } from '../../utils/enforce';
 import { injectable } from 'inversify';
 
 @injectable()
@@ -15,12 +14,13 @@ export class RlpxDecrpyt {
     const message = encryptedMessage.slice(2);
     const length = lengthBuffer.readUInt16BE();
 
-    assertEqual(length, message.length, 'Wrong length of decrypt message');
+    // NOTE: looks like this is not required, but you can slice
+    // assertEqual(length, message.length, 'Wrong length of decrypt message');
 
     const decryptedMessage = this.rlpxEcies.decryptMessage({
       // skip first two bytes because they just say the length
       // might have to reconsider this when the node is connected to the network to prevent ddos etc.
-      message,
+      message: message.slice(0, length),
       mac: lengthBuffer,
     });
     return decryptedMessage;

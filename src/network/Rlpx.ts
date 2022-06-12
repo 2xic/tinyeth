@@ -73,10 +73,13 @@ export class Rlpx {
     ethNodePublicKey: string;
   }) {
     const rlp = this.rlpEncoder.encode({ input: coreMessage });
-    const padding = this.getRandomBytes.getRandomBytes({ length: 100 });
+    const padding = this.getRandomBytes.getRandomBytes({
+      length: 100,
+    });
     const encodedRlp = getBufferFromHex(rlp);
     const message = Buffer.concat([encodedRlp, padding]);
 
+    // Difference between the encrypted data - message
     const overhead = 113;
     const totalLength = overhead + message.length;
     const mac = Buffer.from(totalLength.toString(16).padStart(4, '0'), 'hex');
