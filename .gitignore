@@ -7,3 +7,4 @@ metadata.txt
 output
 .nyc_output
 dump.json
+dump_*.json

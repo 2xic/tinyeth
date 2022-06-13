@@ -43,4 +43,25 @@ describe('MacInteractor', () => {
       '15b280429d626df4aa27218faacd6311'
     );
   });
+
+  it('should correctly update an transition', () => {
+    const interactor = new MacInteractor(macSecret, nonce, remoteData);
+    interactor.header({
+      packet: Buffer.from('deadbeefdeadbeefdeadbeefdeadbeef', 'hex'),
+    });
+    interactor.body({
+      packet: Buffer.from('4242b41414242b41414242b41414242b4141', 'hex'),
+    });
+
+    interactor.header({
+      packet: Buffer.from('deadbeefdeadbeefdeadbeefdeadbeef', 'hex'),
+    });
+    interactor.body({
+      packet: Buffer.from('4242b41414242b41414242b41414242b4141', 'hex'),
+    });
+
+    expect(interactor.slicedHash.toString('hex')).toBe(
+      '4a381ecf9b2dee303cb84b5fb66bd65b'
+    );
+  });
 });

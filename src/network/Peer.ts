@@ -54,8 +54,10 @@ export class Peer {
 
     this.socket.on('data', async (data) => {
       this.logger.log(`Got data of length ${data.length}`);
-      await this.communicationState.parseMessage(data, (message) =>
-        this.connectionWrite(message)
+      await this.communicationState.parseMessage(
+        data,
+        (message) => this.connectionWrite(message),
+        () => console.log('error happened while parsing message')
       );
     });
 

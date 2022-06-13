@@ -325,4 +325,15 @@ describe('RlpDecoder', () => {
       input: packet,
     });
   });
+
+  it('should correctly deal with a rlp with noise', () => {
+    const packet = '0xc30102034242';
+    const decoded = interactor.decode({
+      input: packet,
+    });
+    expect(Array.isArray(decoded)).toBe(true);
+    if (Array.isArray(decoded)) {
+      expect(decoded.length).toBe(3);
+    }
+  });
 });

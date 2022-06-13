@@ -29,10 +29,10 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (todo) Implement EIP 1559
     - (todo) Add some tracking of the nonce to make things user friendly.
 
-- [ ] (started on) Implementation parts of the EVM (i.e should be able to run a simple contract based on the bytecode)
+- [ ] (put aside to finish networking first) Implement the EVM (i.e should be able to run a simple contract based on the bytecode)
 
-  Currently added:
-    - Runs a basic contract
+  Currently supports:
+    - Runs basic contracts
     - (wip) you should be able to solve all these https://github.com/fvictorio/evm-puzzles puzzles with logic in this library, it's able to do up to level 7 currently.
     - (wip) improved support for the abi, make it "easy" to encode calldata.
 

@@ -55,7 +55,7 @@ import { CommunicationState } from '../dist/network/rlpx/CommunicationState';
         })
     const node = container.get(CommunicationState) as DebugCommunicationState;
 
-    const state = parse(fs.readFileSync('dump.json').toString('ascii'));
+    const state = parse(fs.readFileSync('dump_large.json').toString('ascii'));
     const remotePublicKey: Buffer = state.find((item: Communication | LocalStateChange) => {
         return 'key' in item ? item.key === '_remotePublicKey' : false;
     }).value;
@@ -70,13 +70,13 @@ import { CommunicationState } from '../dist/network/rlpx/CommunicationState';
         authMessage: authState.authMessage
     });
     const messages: Communication[] = state.filter((item: Communication | LocalStateChange) => 'direction' in item ? true : false)
-    for (const message of messages) {
+    for (const [index, { message, direction }] of Object.entries(messages)) {
         console.log('Replaying message')
-        console.log(message);
-        if (message.direction == 'from') {
-            await node.parseMessage(message.message, async (message) => {
-                console.log(message)
-            })
+        console.log([index, message.length]);
+        if (direction == 'from') {
+            await new Promise<Buffer>((resolve, reject) =>
+                node.parseMessage(message, resolve, reject)
+            )
         } else {
             throw new Error('not implemented')
         }

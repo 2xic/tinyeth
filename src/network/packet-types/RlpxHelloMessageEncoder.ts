@@ -1,11 +1,17 @@
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
-export function RlpxHelloMessageEncoder(publicKey: string) {
+export function RlpxHelloMessageEncoder({
+  publicKey,
+  listenPort,
+}: {
+  publicKey: string;
+  listenPort: number;
+}) {
   const packet = {
     protocolVersion: 5,
     capabilities: [],
     userAgent: 'tinyeth',
-    listenPort: 0,
+    listenPort,
     nodeId: `0x${publicKey}`,
   };
   return [

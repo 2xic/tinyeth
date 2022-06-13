@@ -13,45 +13,33 @@ import {
 
 @injectable()
 export class RlpDecoder {
-  public decode({
-    input,
-    returnOnError,
-  }: {
-    input: string;
-    returnOnError?: boolean;
-  }): SimpleTypes | undefined {
+  public decode({ input }: { input: string }): SimpleTypes | undefined {
     const inputWithoutHexPrefix = input.startsWith('0x')
       ? input.substring(2)
       : input;
     const strippedInput = Buffer.from(inputWithoutHexPrefix, 'hex');
     let parsed = undefined;
 
-    let index = 0;
-    while (index < strippedInput.length) {
-      const { newIndex, decoding } = this.getToken({
-        input: strippedInput,
-        index,
-      });
+    const index = 0;
+    const { decoding } = this.getToken({
+      input: strippedInput,
+      index,
+    });
 
-      if (!parsed) {
-        if (typeof decoding === 'string') {
-          parsed = decoding;
-        } else if (Array.isArray(decoding)) {
-          parsed = decoding;
-        } else if (typeof decoding === 'number') {
-          parsed = decoding;
-        } else if (typeof decoding === 'boolean') {
-          parsed = decoding;
-        }
-      } else {
-        if (returnOnError) {
-          return parsed;
-        }
-        throw new Error(
-          `Unknown state ${JSON.stringify(parsed)} ${JSON.stringify(decoding)}`
-        );
+    if (!parsed) {
+      if (typeof decoding === 'string') {
+        parsed = decoding;
+      } else if (Array.isArray(decoding)) {
+        parsed = decoding;
+      } else if (typeof decoding === 'number') {
+        parsed = decoding;
+      } else if (typeof decoding === 'boolean') {
+        parsed = decoding;
       }
-      index = newIndex;
+    } else {
+      throw new Error(
+        `Unknown state ${JSON.stringify(parsed)} ${JSON.stringify(decoding)}`
+      );
     }
 
     return parsed;

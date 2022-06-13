@@ -22,15 +22,13 @@ export class DecodeFrame {
 
   public parseBody({ message, size }: { message: Buffer; size: number }) {
     const body = message.slice(32, -16);
-    const mac = message.slice(-16);
+    const mac = message.slice(-16).toString('hex');
     this.ingressMac.body({
       packet: body,
     });
+    const calculatedHash = this.ingressMac.slicedHash.toString('hex');
 
-    assertEqual(
-      mac.toString('hex'),
-      this.ingressMac.slicedHash.toString('hex')
-    );
+    assertEqual(mac, calculatedHash, 'wrong body mac');
 
     const decryptedBody = this.ingresAes.update(body).slice(0, size);
 
@@ -38,15 +36,17 @@ export class DecodeFrame {
   }
 
   public parseHeader({ message }: { message: Buffer }) {
+    assertEqual(32 < message.length, true, 'Wrong header length');
+
     const header = message.slice(0, 16);
-    const mac = message.slice(16, 32);
+    const mac = message.slice(16, 32).toString('hex');
     this.ingressMac.header({
       packet: header,
     });
-    assertEqual(
-      mac.toString('hex'),
-      this.ingressMac.slicedHash.toString('hex')
-    );
+    const calculatedHash = this.ingressMac.slicedHash.toString('hex');
+    assertEqual(calculatedHash.length, mac.length, 'Wrong hash length');
+    assertEqual(mac, calculatedHash, 'Wrong header mac');
+
     const decryptedHeader = this.ingresAes.update(header);
 
     return decryptedHeader.slice(0, 3);

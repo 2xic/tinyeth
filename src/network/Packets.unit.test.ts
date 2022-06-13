@@ -28,7 +28,9 @@ describe('Packets', () => {
       80f88305b0476574682f76312e31302e31372d737461626c652d32356339623439662f6c696e75782d616d6436342f676f312e3138cdc58365746842c684736e61700180b840565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e     `)
     );
 
-    const decodedPacket = new Packet().decodeHello({ input: helloPacket });
+    const decodedPacket = new Packet().decodeHello({
+      input: helloPacket.slice(1),
+    });
     expect(decodedPacket.userAgent).toBe(
       'Geth/v1.10.17-stable-25c9b49f/linux-amd64/go1.18'
     );
@@ -161,7 +163,7 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
     );
   });
 
-  it('should correctly decode a neighbours packet', () => {
+  it('should correctly decode a neighbors packet', () => {
     // from https://eips.ethereum.org/EIPS/eip-8
     const neighboursPacket = getBufferFromHex(
       cleanString(`
@@ -200,7 +202,9 @@ dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
       80f88305b0476574682f76312e31302e31372d737461626c652d32356339623439662f6c696e75782d616d6436342f676f312e3138cdc58365746842c684736e61700180b840565201cf682f2e62fc03173098e39e72ca49cb28beef29e956b480763150565be0471c39bccc8ffb4d8684e658034c3e7a93d315f57a42e82506bb29a973273e     `)
     );
 
-    const decodedPacket = new Packet().decodeHello({ input: helloPacket });
+    const decodedPacket = new Packet().decodeHello({
+      input: helloPacket.slice(1),
+    });
 
     const packet = new Packet().encodeHello({ packet: decodedPacket });
     expect(packet.toString('hex')).toBe(helloPacket.toString('hex'));

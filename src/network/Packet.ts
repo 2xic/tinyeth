@@ -29,13 +29,14 @@ import {
 export class Packet {
   public parse({ packet }: { packet: Buffer }) {
     const packetId = packet[0];
+    const packetPayload = packet.slice(1);
     // falsy values are parsed as 0x80 in RLP
     let parsedPacketId = packetId === 0x80 ? 0 : packetId;
     parsedPacketId =
       parsedPacketId === 16 ? RlpxPacketTypes.PING : parsedPacketId;
 
     if (parsedPacketId === RlpxPacketTypes.HELLO) {
-      return this.decodeHello({ input: packet });
+      return this.decodeHello({ input: packetPayload });
     } else if (parsedPacketId === RlpxPacketTypes.DISCONNECT) {
       throw new Error('Disconnect ?');
     } else if (parsedPacketId === RlpxPacketTypes.PING) {
@@ -75,11 +76,8 @@ export class Packet {
     const packetType = this.getPacketType(typeNumber);
     const packet = metadata.slice(1);
 
-    console.log(packet.toString('hex'));
-
     const data = new RlpDecoder().decode({
       input: packet.toString('hex'),
-      returnOnError: true,
     });
 
     if (!Array.isArray(data)) {

@@ -24,27 +24,20 @@ export class FrameCommunication {
   };
 
   public setup({
-    remotePacket,
     localPacket,
     localNonce,
+    remotePacket,
     remoteNonce,
     ephemeralSharedSecret,
     switchNonce = false,
   }: {
-    remotePacket: Buffer;
     localPacket: Buffer;
     localNonce: Buffer;
+    remotePacket: Buffer;
     remoteNonce: Buffer;
     ephemeralSharedSecret: Buffer;
     switchNonce?: boolean;
   }) {
-    /**
-     * Naming here is bad
-     * - it should be remote, and local packet.
-     * - local = you encode
-     * - remote = you decode
-     * makes more sense.
-     */
     const { aesKey, macKey } = this.constructKeys({
       localNonce: localNonce,
       remoteNonce: remoteNonce,

@@ -96,14 +96,13 @@ describe('FrameCommunication', () => {
     expect(encodedMessage.toString('hex')).toBe(
       '0fb74281565bc2a4c9bd7c3b4f58b7b298713713cab14902915b5d39d4adb8daa5733165f2cc52530725e97f583c066921648f294325109b507604fd6a902177'
     );
+    const decodedMessage = receiver
+      .decode({
+        message: encodedMessage,
+      })
+      .toString('hex');
 
-    expect(
-      receiver
-        .decode({
-          message: Buffer.concat([encodedMessage]),
-        })
-        .toString('hex')
-    ).toBe('41');
+    expect(decodedMessage).toBe('41');
   });
 
   it('should deconstruct a empty frame message correctly', () => {

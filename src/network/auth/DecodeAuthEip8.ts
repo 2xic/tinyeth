@@ -2,6 +2,8 @@ import { RlpDecoder } from '../../rlp/RlpDecoder';
 import { ReadOutRlp } from '../../rlp/ReadOutRlp';
 import { injectable } from 'inversify';
 import { RlpxDecrpyt } from '../rlpx/RlpxDecrypt';
+import { assertEqual } from '../../utils/enforce';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
 @injectable()
 export class DecodeAuthEip8 {
@@ -13,7 +15,6 @@ export class DecodeAuthEip8 {
     });
     const decodedPacket = this.rlpDecoder.decode({
       input: decryptedMessage.toString('hex'),
-      returnOnError: true,
     });
 
     const [signature, publicKey, nonce, version] = new ReadOutRlp(
@@ -32,12 +33,18 @@ export class DecodeAuthEip8 {
   }
 
   public async decodeAckEip8({ input }: { input: Buffer }) {
+    // TODO: Make this simpler, could be moved into a function
+    const lengthBuffer = input.slice(0, 2);
+    const message = input.slice(2);
+    const length = lengthBuffer.readUInt16BE();
+    assertEqual(length, message.length, 'Wrong length of decrypt message');
+
     const decryptedMessage = await this.rlpx.decryptMessage({
       encryptedMessage: input,
     });
+
     const decodedPacket = this.rlpDecoder.decode({
       input: decryptedMessage.toString('hex'),
-      returnOnError: true,
     });
 
     const [publicKey, nonce, version] = new ReadOutRlp(decodedPacket).readArray(
@@ -46,6 +53,13 @@ export class DecodeAuthEip8 {
         isFlat: true,
       }
     );
+    assertEqual(
+      getBufferFromHex(publicKey).length,
+      64,
+      'wrong publickey length'
+    );
+    assertEqual(getBufferFromHex(nonce).length, 32, 'wrong nonce length');
+    assertEqual(version, 4, 'wrong version');
 
     return {
       publicKey,

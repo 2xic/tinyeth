@@ -68,31 +68,38 @@ export class CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer) => Promise<void>,
+    callback: (message: Buffer) => void,
+    error: (err: Error) => void,
     parseOnly = false
   ) {
-    //this.logger.log(` new data: ${message.toString('hex')}`);
-    if (this.nextState === MessageState.AUTH) {
-      this.logger.log('[Received AUTH8 message]');
-      const results = await this.parseAuth({ message });
-      await callback(results);
-    } else if (this.nextState == MessageState.ACK) {
-      this.logger.log('[Received ACK message]');
-      await this.parseAck({ message });
+    await (async () => {
+      //this.logger.log(` new data: ${message.toString('hex')}`);
+      if (this.nextState === MessageState.AUTH) {
+        this.logger.log('[Received AUTH8 message]');
+        const results = await this.parseAuth({ message });
+        callback(results);
+      } else if (this.nextState == MessageState.ACK) {
+        this.logger.log('[Received ACK message]');
+        await this.parseAck({ message });
 
-      this.logger.log('[Sending an hello message]');
-      const encodedMessage = this.encodeMessage(
-        RlpxPacketTypes.HELLO,
-        RlpxHelloMessageEncoder(this.keyPair.getPublicKey())
-      );
-      await callback(encodedMessage);
-    } else if (this.nextState === MessageState.PACKETS) {
-      await this.parsePacket({
-        message,
-        callback,
-        parseOnly,
-      });
-    }
+        this.logger.log('[Sending an hello message]');
+        const encodedMessage = this.encodeMessage(
+          RlpxPacketTypes.HELLO,
+          RlpxHelloMessageEncoder({
+            publicKey: this.keyPair.getPublicKey(),
+            listenPort: 0,
+          })
+        );
+        callback(encodedMessage);
+      } else if (this.nextState === MessageState.PACKETS) {
+        await this.parsePacket({
+          message,
+          callback,
+          error,
+          parseOnly,
+        });
+      }
+    })().catch((err) => error(err));
   }
 
   private async parseAuth({ message: remoteMessage }: { message: Buffer }) {
@@ -142,6 +149,7 @@ export class CommunicationState {
       await this.auth8Eip.decodeAckEip8({
         input: message,
       });
+
     const ephemeralSharedSecret = this.ephemeralKeyPair.getEcdh({
       publicKey,
     });
@@ -160,7 +168,25 @@ export class CommunicationState {
     assertEqual(!!message.length, true, 'Element is not defined');
     assertEqual(!!this._sentPacket, true, 'Element is not defined');
 
-    this.frameCommunication = this.frameCommunication.setup({
+    assertEqual(
+      Buffer.isBuffer(ephemeralSharedSecret),
+      true,
+      'shared secret should be buffer'
+    );
+    assertEqual(Buffer.isBuffer(message), true, 'message should be buffer');
+    assertEqual(Buffer.isBuffer(receivedNonce), true, 'nonce should be buffer');
+    assertEqual(
+      Buffer.isBuffer(this._senderNonce),
+      true,
+      'sender nonce should be buffer'
+    );
+    assertEqual(
+      Buffer.isBuffer(this._sentPacket),
+      true,
+      'sender message should be buffer'
+    );
+
+    this.frameCommunication.setup({
       ephemeralSharedSecret: ephemeralSharedSecret,
       remoteNonce: receivedNonce,
       remotePacket: message,
@@ -178,18 +204,24 @@ export class CommunicationState {
   private async parsePacket({
     message,
     callback,
+    error,
     parseOnly,
   }: {
     message: Buffer;
     parseOnly?: boolean;
-    callback: (message: Buffer) => Promise<void>;
+    callback: (message: Buffer) => void;
+    error: (err: Error) => void;
   }) {
     try {
-      this.logger.log('[Received a packet?]');
-
+      this.logger.log(`[Received a packet of length ${message.length}]`);
+      if (message.length < 32) {
+        this.logger.log('Waiting with doing anything ...');
+        return callback(Buffer.alloc(0));
+      }
       const body = this.frameCommunication.decode({
         message,
       });
+      console.log(body.toString('hex'));
       const packetParser = new Packet();
       const hello = packetParser.parse({
         packet: body,
@@ -197,23 +229,25 @@ export class CommunicationState {
       if (!parseOnly) {
         if (typeof hello === 'object') {
           this.logger.log('Got a hello :)');
-          await callback(Buffer.alloc(0));
+          callback(Buffer.alloc(0));
         } else if (hello == RlpxPacketTypes.PING) {
           this.logger.log('Got a ping, replying with pong');
           const encodedMessage = this.encodeMessage(RlpxPacketTypes.PONG);
-          await callback(encodedMessage);
+          callback(encodedMessage);
         } else if (hello == RlpxPacketTypes.PONG) {
           this.logger.log('Got a pong, should reply with ping');
           const encodedMessage = this.encodeMessage(RlpxPacketTypes.PING);
-          await callback(encodedMessage);
+          callback(encodedMessage);
         } else {
           this.logger.log('Unknown state ... ');
         }
       } else {
-        await callback(Buffer.alloc(0));
+        callback(Buffer.alloc(0));
       }
     } catch (err) {
-      console.log(err);
+      if (err instanceof Error) {
+        error(err);
+      }
     }
   }
 

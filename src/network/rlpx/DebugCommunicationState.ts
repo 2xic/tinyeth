@@ -72,14 +72,15 @@ export class DebugCommunicationState extends CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer) => Promise<void>,
+    callback: (message: Buffer) => void,
+    reject: (err: Error) => void,
     parseOnly = false
   ) {
     this.communications.push({
       direction: 'from',
       message,
     });
-    await super.parseMessage(message, callback, parseOnly);
+    await super.parseMessage(message, callback, reject, parseOnly);
   }
 
   public async setSenderNonceState({
@@ -100,6 +101,7 @@ export class DebugCommunicationState extends CommunicationState {
 
   public dump({ path }: { path: string }) {
     fs.writeFileSync(path, stringify(this.communications));
+    console.log(`Saved ${this.communications.length} messages`);
   }
 }
 

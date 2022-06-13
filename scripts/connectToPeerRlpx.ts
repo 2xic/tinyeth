@@ -2,9 +2,13 @@ import { Peer, MessageType, ProductionContainer, getRandomPeer, DebugCommunicati
 import exitHook from 'exit-hook';
 import { CommunicationState } from '../dist/network/rlpx/CommunicationState';
 import path from 'path';
+import fs from 'fs';
 
 (async () => {
-  const container = new ProductionContainer()
+  if (fs.existsSync('dump.json')) {
+    console.log('please remove old dump before running')
+  } else {
+    const container = new ProductionContainer()
     .create({
       privateKey:
         '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
@@ -18,9 +22,9 @@ import path from 'path';
 
   await node.connect(
     {
-      address: '146.190.233.190',
-      port: 30300,
-      publicKey: '70147261807397c434f2351f83ae9be6b33c39e8fab47647692b500e4999f3d3df74a6ee6056e47de2faf04030e3446240ae27d223862ebd5df323d3cede2ee5'
+      address: '54.207.85.107',
+      port: 30303,
+      publicKey: 'b9050e002aa42464e6b07c811a1f9dfec01249af03f67b753e8415420649b184447bb2a784863ccbf327ad9e31aaba803464979dfe6a7facc669151a5fa6ad1b'
     }
   );
 
@@ -38,6 +42,7 @@ import path from 'path';
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await sleep(100);
+  }
   }
 })();
 
