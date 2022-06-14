@@ -10,15 +10,15 @@ export class ReadOutRlp {
   public readArray<T>({
     length,
     skip,
-    isNumeric,
+    convertToNumber,
     valueFetcher,
     isFlat,
-    isBuffer,
+    convertToBuffer,
   }: {
     skip?: number;
     length: number;
-    isNumeric?: boolean;
-    isBuffer?: boolean;
+    convertToNumber?: boolean;
+    convertToBuffer?: boolean;
     isFlat?: boolean;
     valueFetcher?: (item: SimpleTypes) => T[];
   }): Array<T> {
@@ -27,39 +27,20 @@ export class ReadOutRlp {
         this.index += skip;
       }
 
-      const valueConverter = (item: T): T => {
-        if (isBuffer) {
-          if ((item as any).toString().startsWith('0x')) {
-            return getBufferFromHex((item as any).toString()) as unknown as T;
-          } else if (typeof item === 'boolean') {
-            return Buffer.from([0]) as unknown as T;
-          } else if (typeof item === 'string') {
-            return Buffer.from(item, 'ascii') as unknown as T;
-          } else if (typeof item === 'number') {
-            return Buffer.from([item]) as unknown as T;
-          }
-        } else if (isNumeric) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (Buffer.isBuffer(item)) {
-            return parseInt(
-              (item as any as Buffer).toString('hex'),
-              16
-            ) as unknown as T;
-          } else if ((item as any).toString().startsWith('0x')) {
-            return parseInt(item as unknown as string, 16) as unknown as T;
-          }
-        }
-        return item;
-      };
-
       if (isFlat) {
         if (Array.isArray(this.rlp[this.index])) {
           return (this.rlp[this.index++] as unknown as T[]).map((item) =>
-            valueConverter(item)
+            this.valueConverter(item, {
+              convertToBuffer,
+              convertToNumber,
+            })
           );
         }
         return (this.rlp.slice(this.index++) as unknown as T[]).map((item) =>
-          valueConverter(item)
+          this.valueConverter(item, {
+            convertToBuffer,
+            convertToNumber,
+          })
         );
       }
 
@@ -70,10 +51,18 @@ export class ReadOutRlp {
       }
 
       if (length === 1 && !Array.isArray(item)) {
-        return [valueConverter(item as unknown as T)];
+        return [
+          this.valueConverter(item as unknown as T, {
+            convertToBuffer,
+            convertToNumber,
+          }),
+        ];
       } else if (Array.isArray(item)) {
         return (item.slice(0, length) as unknown as T[]).map((item) =>
-          valueConverter(item)
+          this.valueConverter(item, {
+            convertToBuffer,
+            convertToNumber,
+          })
         );
       }
     }
@@ -83,5 +72,33 @@ export class ReadOutRlp {
         this.index
       }, Rlp : ${JSON.stringify(this.rlp)}`
     );
+  }
+
+  private valueConverter<T>(
+    item: T,
+    options: { convertToBuffer?: boolean; convertToNumber?: boolean }
+  ): T {
+    if (options.convertToBuffer) {
+      if ((item as any).toString().startsWith('0x')) {
+        return getBufferFromHex((item as any).toString()) as unknown as T;
+      } else if (typeof item === 'boolean') {
+        return Buffer.from([0]) as unknown as T;
+      } else if (typeof item === 'string') {
+        return Buffer.from(item, 'ascii') as unknown as T;
+      } else if (typeof item === 'number') {
+        return Buffer.from([item]) as unknown as T;
+      }
+    } else if (options.convertToNumber) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (Buffer.isBuffer(item)) {
+        return parseInt(
+          (item as any as Buffer).toString('hex'),
+          16
+        ) as unknown as T;
+      } else if ((item as any).toString().startsWith('0x')) {
+        return parseInt(item as unknown as string, 16) as unknown as T;
+      }
+    }
+    return item;
   }
 }

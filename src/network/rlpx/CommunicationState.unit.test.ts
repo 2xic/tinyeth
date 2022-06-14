@@ -10,6 +10,7 @@ import { ExposedFrameCommunication } from '../auth/frameing/ExposedFrameCommunic
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { EncodeFrame } from '../auth/frameing/EncodeFrame';
 import { DecodeFrame } from '../auth/frameing/DecodeFrame';
+import { Peer } from '../Peer';
 
 describe('CommunicationState', () => {
   it('should run correct determinsitcally', async () => {
@@ -219,7 +220,7 @@ describe('CommunicationState', () => {
     );
   });
 
-  it.skip('should be able to communicate correctly with randomness', async () => {
+  it('should be able to communicate correctly with randomness', async () => {
     const senderContainer = new UnitTestContainer().create({
       privateKey:
         '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
@@ -237,6 +238,16 @@ describe('CommunicationState', () => {
       senderContainer.get(CommunicationState);
     const receiverContainerCommunicationState =
       receiverContainer.get(CommunicationState);
+    const senderContainerPeer = senderContainer.get(Peer);
+    const receiverContainerPeer = receiverContainer.get(Peer);
+    const senderContainerFrameComunication = senderContainer.get(
+      FrameCommunication
+    ) as ExposedFrameCommunication;
+    const receiverContainerFrameComunication = receiverContainer.get(
+      FrameCommunication
+    ) as ExposedFrameCommunication;
+    const macEncodeFrame = senderContainer.get(EncodeFrame);
+    const macDecodeFrame = receiverContainer.get(DecodeFrame);
 
     senderContainerCommunicationState.setRemotePublicKey({
       publicKey: receiverContainerCommunicationState.publicKey,
@@ -267,7 +278,8 @@ describe('CommunicationState', () => {
       senderContainerCommunicationState.parseMessage(
         ackMessage,
         resolve,
-        reject
+        reject,
+        true
       )
     );
     expect(receiverContainerCommunicationState.nextState).toBe(
@@ -278,12 +290,11 @@ describe('CommunicationState', () => {
       receiverContainerCommunicationState.parseMessage(hello, resolve, reject)
     );
 
-    const senderContainerFrameComunication = senderContainer.get(
-      FrameCommunication
-    ) as ExposedFrameCommunication;
-    const receiverContainerFrameComunication = receiverContainer.get(
-      FrameCommunication
-    ) as ExposedFrameCommunication;
+    expect(hello.length).toBeGreaterThan(32);
+    expect(senderContainerPeer.messageSent).toBe(
+      receiverContainerPeer.messageReceived
+    );
+
     expect(senderContainerFrameComunication.options).toBeTruthy();
     expect(receiverContainerFrameComunication.options).toBeTruthy();
 
@@ -295,9 +306,7 @@ describe('CommunicationState', () => {
       senderContainerFrameComunication.options?.macKey.toString('hex')
     ).toBe(receiverContainerFrameComunication.options?.macKey.toString('hex'));
 
-    let macEncodeFrame = senderContainer.get(EncodeFrame).egressMacHash;
-    let macDecodeFrame = receiverContainer.get(DecodeFrame).ingressMacMacHash;
-    expect(macEncodeFrame).toBe(macDecodeFrame);
+    expect(macEncodeFrame.egressMacHash).toBe(macDecodeFrame.ingressMacMacHash);
 
     let senderMacDecodeFrame =
       senderContainer.get(DecodeFrame).ingressMacMacHash;
@@ -330,32 +339,32 @@ describe('CommunicationState', () => {
     expect(receiverContainerCommunicationState.nextState).toBe(
       MessageState.PACKETS
     );
-
-    macEncodeFrame = senderContainer.get(EncodeFrame).egressMacHash;
-    macDecodeFrame = receiverContainer.get(DecodeFrame).ingressMacMacHash;
-    expect(macEncodeFrame).toBe(macDecodeFrame);
+    expect(macEncodeFrame.egressMacHash).toBe(macDecodeFrame.ingressMacMacHash);
 
     senderMacDecodeFrame = senderContainer.get(DecodeFrame).ingressMacMacHash;
     reciverMacEncodeFrame = receiverContainer.get(EncodeFrame).egressMacHash;
     expect(senderMacDecodeFrame).toBe(reciverMacEncodeFrame);
 
-    const sendPingAnotherPing = await new Promise<Buffer>((resolve, reject) => {
-      receiverContainerCommunicationState
-        .sendMessage({ type: MessageType.PING }, async (value) =>
-          resolve(value)
-        )
-        .catch(reject);
-    });
-
+    const actualPong = await new Promise<Buffer>((resolve) =>
+      receiverContainerCommunicationState.sendMessage(
+        { type: MessageType.PONG },
+        resolve
+      )
+    );
+    const sendPingAnotherPing = await new Promise<Buffer>((resolve, reject) =>
+      senderContainerCommunicationState.parseMessage(
+        actualPong,
+        resolve,
+        reject
+      )
+    );
     await new Promise<Buffer>((resolve, reject) =>
-      senderContainerCommunicationState
-        .parseMessage(sendPingAnotherPing, resolve, reject)
+      receiverContainerCommunicationState
+        .parseMessage(sendPingAnotherPing, resolve, reject, true)
         .catch(reject)
     );
 
-    macEncodeFrame = senderContainer.get(EncodeFrame).egressMacHash;
-    macDecodeFrame = receiverContainer.get(DecodeFrame).ingressMacMacHash;
-    expect(macEncodeFrame).toBe(macDecodeFrame);
+    expect(macEncodeFrame.egressMacHash).toBe(macDecodeFrame.ingressMacMacHash);
 
     senderMacDecodeFrame = senderContainer.get(DecodeFrame).ingressMacMacHash;
     reciverMacEncodeFrame = receiverContainer.get(EncodeFrame).egressMacHash;

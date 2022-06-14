@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { ArrayEncoderDecoder } from './types/ArrayEncoderDecoder';
 import { BooleanEncoderDecoder } from './types/BooleanEncoderDecoder';
 import { IsNonValueEncoderDecoder } from './types/IsNonValueEncoderDecoder';
@@ -14,15 +15,12 @@ import {
 @injectable()
 export class RlpDecoder {
   public decode({ input }: { input: string }): SimpleTypes | undefined {
-    const inputWithoutHexPrefix = input.startsWith('0x')
-      ? input.substring(2)
-      : input;
-    const strippedInput = Buffer.from(inputWithoutHexPrefix, 'hex');
+    const buffer = getBufferFromHex(input);
     let parsed = undefined;
 
     const index = 0;
     const { decoding } = this.getToken({
-      input: strippedInput,
+      input: buffer,
       index,
     });
 

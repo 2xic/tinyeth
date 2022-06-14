@@ -20,6 +20,9 @@ export class Peer {
     private communicationState: CommunicationState
   ) {}
 
+  public messageSent = 0;
+  public messageReceived = 0;
+
   public async connect(options?: PeerConnectionOptions) {
     const nodeOptions = options ? options : getRandomPeer();
     this.logger.log(nodeOptions);
@@ -54,6 +57,8 @@ export class Peer {
 
     this.socket.on('data', async (data) => {
       this.logger.log(`Got data of length ${data.length}`);
+      this.messageReceived++;
+
       await this.communicationState.parseMessage(
         data,
         (message) => this.connectionWrite(message),
@@ -97,6 +102,7 @@ export class Peer {
 
   private async connectionWrite(message: Buffer) {
     if (message.length) {
+      this.messageSent++;
       // this.logger.log(`writing on the wire SER, ${message.length}`);
       // this.logger.log(` ${message.toString('hex')}`);
       await new Promise<void>((resolve, reject) => {

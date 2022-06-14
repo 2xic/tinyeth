@@ -33,10 +33,7 @@ export class EncodeFrame {
     );
 
     const header = Buffer.concat([buf, headerData]);
-    const padding =
-      header.length % 16 === 0
-        ? Buffer.alloc(0)
-        : Buffer.alloc(16 - (header.length % 16));
+    const padding = this.getPadding({ message: header });
 
     const headerPadding = Buffer.concat([header, padding]);
 
@@ -46,16 +43,21 @@ export class EncodeFrame {
   }
 
   public encodeBody({ message }: { message: Buffer }) {
-    const padding =
-      message.length % 16 === 0
-        ? Buffer.alloc(0)
-        : Buffer.alloc(16 - (message.length % 16));
-
+    const padding = this.getPadding({ message });
     const body = Buffer.concat([message, padding]);
     const encrypted = this.egressAes.update(body);
     this.egressMac.body({ packet: encrypted });
 
     return Buffer.concat([encrypted, this.egressMac.slicedHash]);
+  }
+
+  private getPadding({ message }: { message: Buffer }) {
+    const padding =
+      message.length % 16 === 0
+        ? Buffer.alloc(0)
+        : Buffer.alloc(16 - (message.length % 16));
+
+    return padding;
   }
 
   public get egressAes() {

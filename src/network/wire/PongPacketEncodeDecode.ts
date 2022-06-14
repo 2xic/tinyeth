@@ -28,8 +28,6 @@ export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
       Buffer.from(convertNumberToPadHex(_input.expiration), 'hex'),
     ];
 
-    console.log(input);
-
     const encoded = new RlpEncoder().encode({
       input,
     });
@@ -42,7 +40,7 @@ export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
     const [toAddress, toTcpPort, toUdpPort] =
       rlpStructureParser.readArray<Buffer>({
         length: 3,
-        isBuffer: true,
+        convertToBuffer: true,
       });
 
     const [hash] = rlpStructureParser.readArray<string>({
@@ -52,7 +50,7 @@ export class PongPacketEncodeDecode implements PacketEncodeDecode<PongPacket> {
 
     const [expiration] = rlpStructureParser.readArray<number>({
       length: 1,
-      isNumeric: true,
+      convertToNumber: true,
     });
 
     return {

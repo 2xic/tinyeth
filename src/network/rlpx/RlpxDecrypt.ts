@@ -1,5 +1,6 @@
 import { RlpxEcies } from './RlpxEcies';
 import { injectable } from 'inversify';
+import { verifyPacketLength } from '../auth/verifyPacketLength';
 
 @injectable()
 export class RlpxDecrpyt {
@@ -10,9 +11,9 @@ export class RlpxDecrpyt {
   }: {
     encryptedMessage: Buffer;
   }): Promise<Buffer> {
-    const lengthBuffer = encryptedMessage.slice(0, 2);
-    const message = encryptedMessage.slice(2);
-    const length = lengthBuffer.readUInt16BE();
+    const { length, lengthBuffer, message } = verifyPacketLength({
+      packet: encryptedMessage,
+    });
 
     const decryptedMessage = this.rlpxEcies.decryptMessage({
       message: message.slice(0, length),

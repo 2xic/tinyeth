@@ -1,4 +1,4 @@
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 
 export function RlpxHelloMessageEncoder({
   publicKey,

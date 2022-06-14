@@ -43,21 +43,21 @@ export class PingPacketEncodeDecode implements PacketEncodeDecode<PingPacket> {
 
     const [version] = rlpReader.readArray<number>({
       length: 1,
-      isNumeric: true,
+      convertToNumber: true,
       isFlat: true,
     });
     const [senderIp, senderUdp, senderTcp] = rlpReader.readArray<Buffer>({
       length: 3,
-      isBuffer: true,
+      convertToBuffer: true,
     });
     const [recipientIp, recipientUdpPort, recipientTcpPort] =
       rlpReader.readArray<Buffer>({
         length: 3,
-        isBuffer: true,
+        convertToBuffer: true,
       });
     const [expiration] = rlpReader.readArray<number>({
       length: 1,
-      isNumeric: true,
+      convertToNumber: true,
     });
 
     return {

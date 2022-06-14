@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { SimpleTypes } from '../../rlp/types/TypeEncoderDecoder';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { PacketEncodeDecode } from './PacketEncodeDecode';
 
+@injectable()
 export class FindNodePacketEncodeDecode
   implements PacketEncodeDecode<FindNodePacket>
 {

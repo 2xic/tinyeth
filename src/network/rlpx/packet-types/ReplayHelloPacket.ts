@@ -1,19 +1,22 @@
 import { injectable } from 'inversify';
-import { KeyPair } from '../../signatures/KeyPair';
-import { FrameCommunication } from '../auth/frameing/FrameCommunication';
-import { Packet } from '../Packet';
-import { ParsedHelloPacket } from './HelloPacketEncoderDecoer';
+import { KeyPair } from '../../../signatures/KeyPair';
+import { FrameCommunication } from '../../auth/frameing/FrameCommunication';
+import {
+  ParsedHelloPacket,
+  RlpxHelloPacketEncoderDecoder,
+} from './RlpxHelloPacketEncoderDecoder';
 
 @injectable()
 export class ReplayHelloPacket {
   constructor(
     private frameCommunication: FrameCommunication,
-    private keyPair: KeyPair
+    private keyPair: KeyPair,
+    private helloPacketEncoder: RlpxHelloPacketEncoderDecoder
   ) {}
 
   public replayPacket({ hello }: { hello: ParsedHelloPacket }) {
-    const helloMessage = new Packet().encodeHello({
-      packet: {
+    const helloMessage = this.helloPacketEncoder.encode({
+      input: {
         ...hello,
         nodeId: `0x${this.keyPair.getPublicKey()}`,
       },

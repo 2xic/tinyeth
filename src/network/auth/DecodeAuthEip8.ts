@@ -4,6 +4,7 @@ import { injectable } from 'inversify';
 import { RlpxDecrpyt } from '../rlpx/RlpxDecrypt';
 import { assertEqual } from '../../utils/enforce';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { verifyPacketLength } from './verifyPacketLength';
 
 @injectable()
 export class DecodeAuthEip8 {
@@ -33,12 +34,7 @@ export class DecodeAuthEip8 {
   }
 
   public async decodeAckEip8({ input }: { input: Buffer }) {
-    // TODO: Make this simpler, could be moved into a function
-    const lengthBuffer = input.slice(0, 2);
-    const message = input.slice(2);
-    const length = lengthBuffer.readUInt16BE();
-    assertEqual(length, message.length, 'Wrong length of decrypt message');
-
+    verifyPacketLength({ packet: input });
     const decryptedMessage = await this.rlpx.decryptMessage({
       encryptedMessage: input,
     });

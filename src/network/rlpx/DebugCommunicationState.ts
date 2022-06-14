@@ -9,6 +9,10 @@ import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { Rlpx } from '../Rlpx';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { stringify } from 'buffer-json';
+import { DecodeAuthMessageInteractor } from './DecodeAuthMessageInteractor';
+import { DecodeAckMessageInteractor } from './DecodeAckMessageInteractor';
+import { RlpxMessageEncoder } from './RlpxMessageEncoder';
+import { RlpxMessageDecoder } from './packet-types/RlpxMessageDecoder';
 
 @injectable()
 export class DebugCommunicationState extends CommunicationState {
@@ -19,7 +23,11 @@ export class DebugCommunicationState extends CommunicationState {
     logger: Logger,
     ephemeralKeyPair: KeyPair,
     auth8Eip: Auth8Eip,
-    frameCommunication: FrameCommunication
+    frameCommunication: FrameCommunication,
+    decodeAuthMessageInteractor: DecodeAuthMessageInteractor,
+    decodeAckMessageInteractor: DecodeAckMessageInteractor,
+    rlpxMessageEncoder: RlpxMessageEncoder,
+    rlpxMessageDecoder: RlpxMessageDecoder
   ) {
     super(
       rlpx,
@@ -28,7 +36,11 @@ export class DebugCommunicationState extends CommunicationState {
       logger,
       ephemeralKeyPair,
       auth8Eip,
-      frameCommunication
+      frameCommunication,
+      decodeAuthMessageInteractor,
+      decodeAckMessageInteractor,
+      rlpxMessageEncoder,
+      rlpxMessageDecoder
     );
   }
 
@@ -55,20 +67,6 @@ export class DebugCommunicationState extends CommunicationState {
 
     return response;
   }
-
-  /*
-  public async sendMessage(
-    message: MessageOptions,
-    callback: (message: Buffer) => Promise<void>
-  ) {
-    await super.sendMessage(message, async (message) => {
-      this.communications.push({
-        direction: 'to',
-        message,
-      });
-      await callback(message);
-    });
-  }*/
 
   public async parseMessage(
     message: Buffer,

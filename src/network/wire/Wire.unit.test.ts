@@ -1,13 +1,13 @@
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../../container/UnitTestContainer';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { Packet, PacketTypes } from '../Packet';
 import { getRandomGethPeer } from '../utils/getRandomPeer';
 import { PacketEncapsulation } from './PacketEncapsulation';
 import { PingPacket, PingPacketEncodeDecode } from './PingPacketEncodeDecode';
 import dayjs from 'dayjs';
 import { FindNodePacketEncodeDecode } from './FindNodePacketEncodeDecode';
 import { PongPacket, PongPacketEncodeDecode } from './PongPacketEncodeDecode';
+import { WireMessageDecoder, WirePacketTypes } from './WireMessageDecoder';
 
 describe('Wire', () => {
   let container: Container;
@@ -23,7 +23,7 @@ describe('Wire', () => {
   it('should encode a packet correctly', async () => {
     const pingPacketEncoder = container.get(PingPacketEncodeDecode);
     const encapsulateMEssage = container.get(PacketEncapsulation);
-    const packetEncodeDecode = new Packet();
+    const packetEncodeDecode = container.get(WireMessageDecoder);
 
     const options = getRandomGethPeer();
     expect(isNaN(options.port)).toBe(false);
@@ -48,11 +48,11 @@ describe('Wire', () => {
       packetType: Buffer.from([0x1]),
     });
 
-    const data = packetEncodeDecode.decodeWirePacket({ input: pingMessage });
+    const data = packetEncodeDecode.decode({ input: pingMessage });
 
     expect(data).toBeTruthy();
 
-    if (data.packetType === PacketTypes.PING) {
+    if (data.packetType === WirePacketTypes.PING) {
       const packet = data as PingPacket;
       expect(inputPacket.version).toBe(packet.version);
       expect(inputPacket.fromIp).toBe(packet.fromIp);
@@ -70,7 +70,7 @@ describe('Wire', () => {
   it('should encode a pong packet correctly', async () => {
     const pongPacketEncoder = container.get(PongPacketEncodeDecode);
     const encapsulateMEssage = container.get(PacketEncapsulation);
-    const packetEncodeDecode = new Packet();
+    const packetEncodeDecode = container.get(WireMessageDecoder);
 
     const options = getRandomGethPeer();
     expect(isNaN(options.port)).toBe(false);
@@ -93,11 +93,11 @@ describe('Wire', () => {
       packetType: Buffer.from([0x2]),
     });
 
-    const data = packetEncodeDecode.decodeWirePacket({ input: pingMessage });
+    const data = packetEncodeDecode.decode({ input: pingMessage });
 
     expect(data).toBeTruthy();
 
-    if (data.packetType === PacketTypes.PONG) {
+    if (data.packetType === WirePacketTypes.PONG) {
       const packet = data as PongPacket;
       expect(input.toIp).toBe(packet.toIp);
       expect(input.toUdpPort).toBe(packet.toUdpPort);

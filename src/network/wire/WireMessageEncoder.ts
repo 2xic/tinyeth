@@ -10,7 +10,7 @@ import { assertEqual } from '../../utils/enforce';
 import { PongPacketEncodeDecode } from './PongPacketEncodeDecode';
 
 @injectable()
-export class WireMessages {
+export class WireMessageEncoder {
   constructor(
     private pingPacketEncoder: PingPacketEncodeDecode,
     private pongPacketEncoder: PongPacketEncodeDecode,

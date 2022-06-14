@@ -24,15 +24,22 @@ import { CommunicationState } from '../network/rlpx/CommunicationState';
 import { EciesDecrypt } from '../network/ecies/EciesDecrypt';
 import { EncodeFrame } from '../network/auth/frameing/EncodeFrame';
 import { DecodeFrame } from '../network/auth/frameing/DecodeFrame';
-import { ReplayHelloPacket } from '../network/packet-types/ReplayHelloPacket';
+import { ReplayHelloPacket } from '../network/rlpx/packet-types/ReplayHelloPacket';
 import { NodeManager } from '../network';
 import { NodeCommunication } from '../network/wire/NodeCommunication';
 import { PingPacketEncodeDecode } from '../network/wire/PingPacketEncodeDecode';
 import { PacketEncapsulation } from '../network/wire/PacketEncapsulation';
-import { WireMessages } from '../network/wire/WireMessages';
+import { WireMessageEncoder } from '../network/wire/WireMessageEncoder';
 import { PongPacketEncodeDecode } from '../network/wire/PongPacketEncodeDecode';
 import { NeighborsPacketEncodeDecode } from '../network/wire/NeighborsPacketEncodeDecode';
 import { DebugCommunicationState } from '../network/rlpx/DebugCommunicationState';
+import { DecodeAuthMessageInteractor } from '../network/rlpx/DecodeAuthMessageInteractor';
+import { DecodeAckMessageInteractor } from '../network/rlpx/DecodeAckMessageInteractor';
+import { RlpxMessageEncoder } from '../network/rlpx/RlpxMessageEncoder';
+import { WireMessageDecoder } from '../network/wire/WireMessageDecoder';
+import { FindNodePacketEncodeDecode } from '../network/wire/FindNodePacketEncodeDecode';
+import { RlpxHelloPacketEncoderDecoder } from '../network/rlpx/packet-types/RlpxHelloPacketEncoderDecoder';
+import { RlpxMessageDecoder } from '../network/rlpx/packet-types/RlpxMessageDecoder';
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
     const container = new Container({
@@ -65,14 +72,21 @@ export class CoreContainer {
     container.bind(PingPacketEncodeDecode).toSelf();
     container.bind(PongPacketEncodeDecode).toSelf();
     container.bind(NeighborsPacketEncodeDecode).toSelf();
+    container.bind(FindNodePacketEncodeDecode).toSelf();
     container.bind(PacketEncapsulation).toSelf();
-    container.bind(WireMessages).toSelf();
+    container.bind(WireMessageEncoder).toSelf();
 
     container.bind(KeyPair).toSelf();
     container.bind(Signatures).toSelf();
 
     container.bind(DecodeAuthEip8).toSelf();
     container.bind(EncodeAuthEip8).toSelf();
+    container.bind(DecodeAuthMessageInteractor).toSelf();
+    container.bind(DecodeAckMessageInteractor).toSelf();
+    container.bind(RlpxMessageEncoder).toSelf();
+    container.bind(WireMessageDecoder).toSelf();
+    container.bind(RlpxHelloPacketEncoderDecoder).toSelf();
+    container.bind(RlpxMessageDecoder).toSelf();
 
     container.bind(EncodeAckEip8).toSelf();
     if (options?.debugMode) {

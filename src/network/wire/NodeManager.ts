@@ -1,21 +1,22 @@
 import { injectable } from 'inversify';
 import { NodeCommunication } from './NodeCommunication';
 import { Logger } from '../../utils/Logger';
-import { Packet, PacketTypes } from '../Packet';
-import { WireMessages } from './WireMessages';
+import { WireMessageEncoder } from './WireMessageEncoder';
 import { EventEmitter } from 'node:events';
 import { assertEqual } from '../../utils/enforce';
 import { PongPacket } from './PongPacketEncodeDecode';
 import { PingPacket } from './PingPacketEncodeDecode';
 import { NeighborsPacket } from './NeighborsPacketEncodeDecode';
 import { PeerConnectionOptions } from '../Peer';
+import { WireMessageDecoder, WirePacketTypes } from './WireMessageDecoder';
 
 @injectable()
 export class NodeManager {
   constructor(
     private nodeCommunication: NodeCommunication,
     private logger: Logger,
-    private wireMessages: WireMessages
+    private wireMessagesEncoder: WireMessageEncoder,
+    private wireMessageDecoder: WireMessageDecoder
   ) {}
 
   public events: EventEmitter = new EventEmitter();
@@ -33,7 +34,8 @@ export class NodeManager {
       nodeOptions: options,
     });
 
-    const { pingMessage, hash: pingHash } = this.wireMessages.ping(options);
+    const { pingMessage, hash: pingHash } =
+      this.wireMessagesEncoder.ping(options);
     this.logger.log(
       `Trying to send message to ${options.address} of length ${pingMessage.length}...`
     );
@@ -45,14 +47,14 @@ export class NodeManager {
 
   private async messageHandler(message: Buffer, address: string) {
     this.logger.log(`Got a message of length ${message.length}`);
-    const packetReceived = new Packet().decodeWirePacket({ input: message });
+    const packetReceived = this.wireMessageDecoder.decode({ input: message });
 
-    if (packetReceived.packetType === PacketTypes.PING) {
+    if (packetReceived.packetType === WirePacketTypes.PING) {
       this.logger.log('got ping :)');
       const packet = packetReceived as PingPacket;
       this.logger.log('sending pong :)');
       await this.nodeCommunication.sendMessage(
-        this.wireMessages.pong(
+        this.wireMessagesEncoder.pong(
           {
             address: address,
             port: Number(packet.fromTcpPort),
@@ -63,7 +65,7 @@ export class NodeManager {
       if (!this.hasSentNeighborMessage({ address })) {
         this.events.emit('alive', address);
       }
-    } else if (packetReceived.packetType === PacketTypes.PONG) {
+    } else if (packetReceived.packetType === WirePacketTypes.PONG) {
       this.logger.log('got pong :)');
       assertEqual(
         this.pingRecord[address],
@@ -73,7 +75,7 @@ export class NodeManager {
       if (!this.hasSentNeighborMessage({ address })) {
         this.events.emit('alive', address);
       }
-    } else if (packetReceived.packetType === PacketTypes.NEIGHBORS) {
+    } else if (packetReceived.packetType === WirePacketTypes.NEIGHBORS) {
       this.logger.log('got neighbors :)');
       const packet = packetReceived as NeighborsPacket;
 
@@ -95,7 +97,7 @@ export class NodeManager {
 
   public async findNeighbors(address: string) {
     if (!this.hasSentNeighborMessage({ address })) {
-      const { findNeighbors } = this.wireMessages.findNeighbor();
+      const { findNeighbors } = this.wireMessagesEncoder.findNeighbor();
 
       this.logger.log('\t sending find neighbors!');
       this.stateRecord[address] = State.SENT_FIND_NEIGHBORS;

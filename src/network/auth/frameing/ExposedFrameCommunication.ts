@@ -13,6 +13,7 @@ export class ExposedFrameCommunication extends FrameCommunication {
   ) {
     super(encodeFrame, decodeFrame, logger);
   }
+
   public get options() {
     return this.initializedOptions;
   }

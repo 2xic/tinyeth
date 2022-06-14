@@ -40,7 +40,7 @@ describe('AuthEip8', () => {
     expect(packet.publicKey).toBe(`0x${publicKey}`);
   });
 
-  it.skip('should decrypt a auth ack correctly', async () => {
+  it('should decrypt a auth ack correctly', async () => {
     const input = getBufferFromHex(
       '01ea0451958701280a56482929d3b0757da8f7fbe5286784beead59d95089c217c9b917788989470' +
         'b0e330cc6e4fb383c0340ed85fab836ec9fb8a49672712aeabbdfd1e837c1ff4cace34311cd7f4de' +
@@ -67,7 +67,9 @@ describe('AuthEip8', () => {
       .decodeAuthEip8({
         input,
       });
-    expect(packet.version).toBe(4);
+    expect(packet).toBeTruthy();
+    expect(packet.signature).toBeTruthy();
+    expect(packet.publicKey).toBeTruthy();
   });
 
   it('should correctly parse a packet from geth', async () => {

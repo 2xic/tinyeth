@@ -1,10 +1,12 @@
-import { RlpEncoder } from '../../rlp/RlpEncoder';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { PacketEncodeDecode } from '../wire/PacketEncodeDecode';
-import { RlpDecoder } from '../../rlp/RlpDecoder';
-import { ReadOutRlp } from '../../rlp/ReadOutRlp';
+import { RlpEncoder } from '../../../rlp/RlpEncoder';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
+import { PacketEncodeDecode } from '../../wire/PacketEncodeDecode';
+import { RlpDecoder } from '../../../rlp/RlpDecoder';
+import { ReadOutRlp } from '../../../rlp/ReadOutRlp';
+import { injectable } from 'inversify';
 
-export class HelloPacketEncoderDecoder
+@injectable()
+export class RlpxHelloPacketEncoderDecoder
   implements PacketEncodeDecode<ParsedHelloPacket>
 {
   public encode(options: { input: ParsedHelloPacket }): Buffer {

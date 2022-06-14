@@ -23,7 +23,7 @@ export class NeighborsPacketEncodeDecode
       const decoder = new ReadOutRlp(node);
       const [ip, tcpPort, udpPort, publicKey] = decoder.readArray<Buffer>({
         length: 3,
-        isBuffer: true,
+        convertToBuffer: true,
         isFlat: true,
       });
 
