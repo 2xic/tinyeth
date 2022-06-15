@@ -3,7 +3,6 @@ import { DecodeFrame } from './DecodeFrame';
 import { EncodeFrame } from './EncodeFrame';
 import { FrameCommunication } from './FrameCommunication';
 import { Logger } from '../../../utils/Logger';
-import { Keccak } from 'keccak';
 
 @injectable()
 export class ExposedFrameCommunication extends FrameCommunication {

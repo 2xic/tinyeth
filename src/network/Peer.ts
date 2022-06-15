@@ -4,13 +4,18 @@ import { AbstractSocket } from './socket/AbstractSocket';
 import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
 import { MessageQueue } from './MessageQueue';
-import { CommunicationState, MessageOptions } from './rlpx/CommunicationState';
+import {
+  CommunicationState,
+  MessageOptions,
+  MessageType,
+} from './rlpx/CommunicationState';
 
 @injectable()
 export class Peer {
   private _activeConnection?: AbstractSocket;
 
   private isConnected = false;
+  private ping?: NodeJS.Timer;
 
   constructor(
     private keyPair: KeyPair,
@@ -81,12 +86,20 @@ export class Peer {
         resolve();
       });
     });
+
     this._activeConnection = this.socket;
+
     if (options?.publicKey) {
       this.communicationState.setRemotePublicKey({
         publicKey: options?.publicKey,
       });
     }
+
+    this.ping = setInterval(async () => {
+      await this.sendMessage({
+        type: MessageType.PING,
+      });
+    }, 3000);
   }
 
   public async sendMessage(message: MessageOptions) {

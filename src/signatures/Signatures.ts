@@ -1,8 +1,5 @@
-import { sign } from 'ecies-geth';
-import { PublicKey } from 'eciesjs';
 import { injectable } from 'inversify';
 import secp256k1 from 'secp256k1';
-import { assertEqual } from '../utils/enforce';
 import { keccak256 } from '../utils/keccak256';
 
 /*

@@ -10,3 +10,4 @@ dump.json
 dump_*.json
 nodes.json
 dump copy.json
+scripts/*.json

@@ -12,7 +12,6 @@ export class FrameCommunication {
     protected logger: Logger
   ) {}
 
-  private headerBuffer: Buffer | undefined;
   private nextSize: number | undefined;
 
   protected initializedOptions?: {
@@ -89,7 +88,6 @@ export class FrameCommunication {
   public decode({ message }: { message: Buffer }) {
     let size;
     let skip = 32;
-
     if (!this.nextSize) {
       const header = this.decodeFrame.parseHeader({ message });
       size = header.slice(0, 3).readIntBE(0, 3);

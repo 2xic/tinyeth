@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { parse } from 'buffer-json';
 import { CommunicationState } from '../CommunicationState';
 import {
@@ -16,7 +17,7 @@ export async function replayFile({
 }: {
   filePath: string;
   debug?: boolean;
-  loggingEnabled: boolean;
+  loggingEnabled?: boolean;
 }) {
   const container = new UnitTestContainer().create({
     privateKey:

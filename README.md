@@ -7,11 +7,9 @@ _Just something so I get a better understanding of the core parts of the protoco
 ### Plan
 
 - [ ] Network support (should be able to fetch a block from another node)
-  - Wire protocol is more or less implemented. It's currently able to find neighbor nodes which is needed for the RLPx.
-    - [Discovery protocol](https://github.com/ethereum/devp2p/blob/master/discv4.md)
-    - [discv4](https://github.com/ethereum/devp2p/blob/master/discv4.md#wire-protocol)
-      - The version that is currently implemented. I know [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md) is out.
-  - (wip) [RLPx](https://github.com/ethereum/devp2p/blob/master/rlpx.md) should now be more or less implemented. However there seem to be an non obvious bug causing problems, which is what I currently try to debug.
+  - Wire/discovery protocol is more or less implemented. It's currently able to find neighbor nodes which is needed for the RLPx. [Discv4](https://github.com/ethereum/devp2p/blob/master/discv4.md#wire-protocol) is currently implemented. I know [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md) is out.
+  - [RLPx](https://github.com/ethereum/devp2p/blob/master/rlpx.md) is able to do the initial handshake, and send messages. Need some stability improvements, but it's getting there.
+  - (soon/wip) Capabilities for RPLx. I.e [ETH](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#eth62-2015) is the last step to be able to fetch a block :) 
 
 - [x] Implement encoding and decoding of RLP
 

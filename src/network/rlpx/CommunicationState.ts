@@ -71,7 +71,12 @@ export class CommunicationState {
       );
       callback(encodedMessage);
     } else if (MessageType.PING === message.type) {
-      callback(this.rlpxMessageEncoder.encodeMessage(RlpxPacketTypes.PONG));
+      if (this.nextState === MessageState.PACKETS) {
+        callback(this.rlpxMessageEncoder.encodeMessage(RlpxPacketTypes.PONG));
+      } else {
+        this.logger.log('No auth yet - delaying ping');
+        callback(Buffer.alloc(0));
+      }
     } else {
       throw new Error(`Unknown message type${message.type}`);
     }
@@ -180,6 +185,7 @@ export class CommunicationState {
       if (body.length === 0) {
         return callback(Buffer.alloc(0));
       }
+
       const packet = this.rlpxMessageDecoder.decode({
         packet: body,
       });
@@ -192,12 +198,14 @@ export class CommunicationState {
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PONG
           );
+          this.logger.log(`Pong ${encodedMessage.length} length`);
           callback(encodedMessage);
         } else if (packet == RlpxPacketTypes.PONG) {
           this.logger.log('Got a pong, should reply with ping');
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PING
           );
+          this.logger.log(`Ping ${encodedMessage.length} length`);
           callback(encodedMessage);
         } else if (packet == RlpxPacketTypes.DISCONNECT) {
           callback(RlpxPacketTypes.DISCONNECT);

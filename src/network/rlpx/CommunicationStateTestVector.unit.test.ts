@@ -9,7 +9,6 @@ import { EncodeAuthEip8 } from '../auth/EncodeAuthEip8';
 import { DebugCommunicationState } from './DebugCommunicationState';
 import { Auth8Eip } from '../auth/AuthEip8';
 import { ExposedFrameCommunication } from '../auth/frameing/ExposedFrameCommunication';
-import { DecodeFrame } from '../auth/frameing/DecodeFrame';
 
 // will go through the test vectors in https://eips.ethereum.org/EIPS/eip-8 and make sure the secret and mac is correct
 describe('CommunicationStateTestVector', () => {
