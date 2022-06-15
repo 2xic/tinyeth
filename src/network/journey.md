@@ -163,6 +163,18 @@ Okay, I ended up writing a simple replay tool today. This should hopefully make 
 
 So the goal for next week will be to use the replay tool to find the bugs that are left.
 
+### Day x + 14 / 15
+Refactoring mostly at the beginning.
+
+I don't think I have any bugs in the rlpx logic, so will implement tests for the communication in the eip https://eips.ethereum.org/EIPS/eip-8 and verify.
+
+Implemented the test vectors, and looks like i had a bug :) I had switched up the nonces used in the encoding setup. hehe. Don't trust, but verify I guess :) Interesting that I did not found this bug earlier though.
+
+Looks like things are working now actually after having fixed the nonce bug.
+
+RPLx should hopefully be up and running 
+
+
 
 
 

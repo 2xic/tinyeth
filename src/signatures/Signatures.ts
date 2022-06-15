@@ -1,5 +1,8 @@
+import { sign } from 'ecies-geth';
+import { PublicKey } from 'eciesjs';
 import { injectable } from 'inversify';
 import secp256k1 from 'secp256k1';
+import { assertEqual } from '../utils/enforce';
 import { keccak256 } from '../utils/keccak256';
 
 /*
@@ -12,22 +15,6 @@ import { keccak256 } from '../utils/keccak256';
 */
 @injectable()
 export class Signatures {
-  public async verifyMessage({
-    message,
-    signature,
-    r,
-  }: {
-    message: Uint8Array;
-    signature: Uint8Array;
-    r: number;
-  }) {
-    const publicKey = secp256k1
-      .ecdsaRecover(signature, r, new Uint8Array(Buffer.from(message)), false)
-      .slice(1);
-
-    return Buffer.from(publicKey).toString('hex');
-  }
-
   public signTransaction({
     chainId,
     privateKey,
@@ -111,5 +98,17 @@ export class Signatures {
     return Buffer.from(
       secp256k1.ecdsaRecover(signature, r, message, false).slice(1)
     ).toString('hex');
+  }
+
+  public verify({
+    signature,
+    publicKey,
+    message,
+  }: {
+    signature: Uint8Array;
+    publicKey: Uint8Array;
+    message: Uint8Array;
+  }) {
+    return secp256k1.ecdsaVerify(signature, message, publicKey);
   }
 }

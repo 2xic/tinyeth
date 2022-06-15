@@ -25,7 +25,7 @@ describe('KeyPair', () => {
       message: 'test',
     });
 
-    const signaturePublicKEy = await interactor.verifyMessage({
+    const signaturePublicKEy = await interactor.getPublicKeyFromSignature({
       message,
       signature,
       r,

@@ -72,8 +72,10 @@ export class WireMessageEncoder {
     };
   }
 
-  public findNeighbor() {
+  public findNeighbor({ target: inputTarget }: { target?: string }) {
+    // TODO: remove the hardcoded target
     const target =
+      inputTarget ||
       '22a5785c04f8e01670da51aaa8920e91bdba73414548b717817056dc76dae07846f8ae934d3174b19182a2f267843f932a3c5a7047fb1e13be1d3e329a587917'; // this.keyPair.getPublicKey();
     // https://github.com/ethereum/devp2p/blob/master/discv4.md#findnode-packet-0x03
     assertEqual(

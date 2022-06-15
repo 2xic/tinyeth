@@ -61,8 +61,18 @@ export class Peer {
 
       await this.communicationState.parseMessage(
         data,
-        (message) => this.connectionWrite(message),
-        () => console.log('error happened while parsing message')
+        async (message) => {
+          if (Buffer.isBuffer(message)) {
+            await this.connectionWrite(message);
+          } else {
+            this.logger.log('Asked to disconnect...');
+            this.socket.destroy();
+          }
+        },
+        (error) => {
+          this.logger.log('error happened while parsing message');
+          this.logger.log(error);
+        }
       );
     });
 
@@ -103,8 +113,7 @@ export class Peer {
   private async connectionWrite(message: Buffer) {
     if (message.length) {
       this.messageSent++;
-      // this.logger.log(`writing on the wire SER, ${message.length}`);
-      // this.logger.log(` ${message.toString('hex')}`);
+
       await new Promise<void>((resolve, reject) => {
         this.connection.write(message, (error) => {
           if (error) {

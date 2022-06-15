@@ -8,3 +8,5 @@ output
 .nyc_output
 dump.json
 dump_*.json
+nodes.json
+dump copy.json

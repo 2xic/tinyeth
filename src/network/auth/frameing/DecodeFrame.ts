@@ -20,8 +20,16 @@ export class DecodeFrame {
     this._ingressMac = new MacInteractor(mac.macKey, mac.nonce, mac.packet);
   }
 
-  public parseBody({ message, size }: { message: Buffer; size: number }) {
-    const body = message.slice(32, -16);
+  public parseBody({
+    message,
+    size,
+    skip = 32,
+  }: {
+    message: Buffer;
+    size: number;
+    skip?: number;
+  }) {
+    const body = message.slice(skip, -16);
     const mac = message.slice(-16).toString('hex');
     this.ingressMac.body({
       packet: body,
@@ -36,7 +44,7 @@ export class DecodeFrame {
   }
 
   public parseHeader({ message }: { message: Buffer }) {
-    assertEqual(32 < message.length, true, 'Wrong header length');
+    //  assertEqual(32 < message.length, true, 'Wrong header length');
 
     const header = message.slice(0, 16);
     const mac = message.slice(16, 32).toString('hex');

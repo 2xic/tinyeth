@@ -26,7 +26,7 @@ describe('', () => {
           aa3d67d641936511c8f8d6ad8698b820a7cf9e1be7155e9a241f556658c55428ec0563514365799a
           4be2be5a685a80971ddcfa80cb422cdd0101ec04cb847f000001820cfa8215a8d790000000000000
           000000000000000000018208ae820d058443b9a3550102
-          `)
+        `)
     );
 
     const decodedPacket = wireMessageDecoder.decode({

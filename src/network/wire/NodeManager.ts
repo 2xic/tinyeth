@@ -87,7 +87,7 @@ export class NodeManager {
             publicKey: peer.publicKey.toString('hex'),
           };
           this.nodeRecord[peer.ip] = true;
-          this.events.emit('peer', connectionOptions);
+          this.events.emit('peer', connectionOptions, address);
         }
       });
     } else {
@@ -95,9 +95,11 @@ export class NodeManager {
     }
   }
 
-  public async findNeighbors(address: string) {
-    if (!this.hasSentNeighborMessage({ address })) {
-      const { findNeighbors } = this.wireMessagesEncoder.findNeighbor();
+  public async findNeighbors(address: string, target?: string) {
+    if (!this.hasSentNeighborMessage({ address, target })) {
+      const { findNeighbors } = this.wireMessagesEncoder.findNeighbor({
+        target,
+      });
 
       this.logger.log('\t sending find neighbors!');
       this.stateRecord[address] = State.SENT_FIND_NEIGHBORS;
@@ -106,8 +108,14 @@ export class NodeManager {
     }
   }
 
-  private hasSentNeighborMessage({ address }: { address: string }) {
-    return this.stateRecord[address] == State.SENT_FIND_NEIGHBORS;
+  private hasSentNeighborMessage({
+    address,
+    target,
+  }: {
+    address: string;
+    target?: string;
+  }) {
+    return this.stateRecord[`${address}${target}`] == State.SENT_FIND_NEIGHBORS;
   }
 }
 

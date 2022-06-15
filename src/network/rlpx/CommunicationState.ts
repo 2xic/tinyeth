@@ -1,11 +1,7 @@
 import { injectable } from 'inversify';
-import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
 import { KeyPair } from '../../signatures/KeyPair';
 import { Signatures } from '../../signatures/Signatures';
-import { assertEqual } from '../../utils/enforce';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Logger } from '../../utils/Logger';
-import { xor } from '../../utils/XorBuffer';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { Auth8Eip } from '../auth/AuthEip8';
 import { Rlpx } from '../Rlpx';
@@ -25,12 +21,12 @@ import {
 export class CommunicationState {
   constructor(
     private rlpx: Rlpx,
-    private keyPair: KeyPair,
+    protected keyPair: KeyPair,
     private signatures: Signatures,
     private logger: Logger,
     private ephemeralKeyPair: KeyPair,
-    private auth8Eip: Auth8Eip,
-    private frameCommunication: FrameCommunication,
+    protected auth8Eip: Auth8Eip,
+    protected frameCommunication: FrameCommunication,
     private decodeAuthMessageInteractor: DecodeAuthMessageInteractor,
     private decodeAckMessageInteractor: DecodeAckMessageInteractor,
     private rlpxMessageEncoder: RlpxMessageEncoder,
@@ -49,7 +45,7 @@ export class CommunicationState {
 
   private _sentPacket?: Buffer;
 
-  private _remotePublicKey?: string;
+  protected _remotePublicKey?: string;
 
   public get publicKey() {
     return this.keyPair.getPublicKey();
@@ -83,7 +79,7 @@ export class CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer) => void,
+    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void,
     error: (err: Error) => void,
     parseOnly = false
   ) {
@@ -172,38 +168,39 @@ export class CommunicationState {
     parseOnly,
   }: {
     message: Buffer;
-    callback: (message: Buffer) => void;
+    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void;
     error: (err: Error) => void;
     parseOnly?: boolean;
   }) {
     try {
       this.logger.log(`[Received a packet of length ${message.length}]`);
-      if (message.length < 32) {
-        this.logger.log('Waiting with doing anything ...');
-        return callback(Buffer.alloc(0));
-      }
       const body = this.frameCommunication.decode({
         message,
       });
-      const hello = this.rlpxMessageDecoder.decode({
+      if (body.length === 0) {
+        return callback(Buffer.alloc(0));
+      }
+      const packet = this.rlpxMessageDecoder.decode({
         packet: body,
       });
       if (!parseOnly) {
-        if (typeof hello === 'object') {
+        if (typeof packet === 'object') {
           this.logger.log('Got a hello :)');
           callback(Buffer.alloc(0));
-        } else if (hello == RlpxPacketTypes.PING) {
+        } else if (packet == RlpxPacketTypes.PING) {
           this.logger.log('Got a ping, replying with pong');
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PONG
           );
           callback(encodedMessage);
-        } else if (hello == RlpxPacketTypes.PONG) {
+        } else if (packet == RlpxPacketTypes.PONG) {
           this.logger.log('Got a pong, should reply with ping');
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PING
           );
           callback(encodedMessage);
+        } else if (packet == RlpxPacketTypes.DISCONNECT) {
+          callback(RlpxPacketTypes.DISCONNECT);
         } else {
           this.logger.log('Unknown state ... ');
         }

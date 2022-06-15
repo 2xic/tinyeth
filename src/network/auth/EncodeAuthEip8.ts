@@ -20,6 +20,12 @@ export class EncodeAuthEip8 {
         secret: ecdhKey,
         nonce,
       },
+      metadata: {
+        bufferSignature,
+        rawPublicKey,
+        nonce,
+        ecdhKey,
+      },
     };
   }
 }

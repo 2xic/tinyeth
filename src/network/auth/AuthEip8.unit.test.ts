@@ -2,8 +2,20 @@ import { UnitTestContainer } from '../../container/UnitTestContainer';
 import { KeyPair } from '../../signatures/KeyPair';
 import { Auth8Eip } from './AuthEip8';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { Signatures } from '../../signatures/Signatures';
+import { xor } from '../../utils/XorBuffer';
 
 describe('AuthEip8', () => {
+  const staticA =
+    '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee';
+  const ephemeralA =
+    '869d6ecf5211f1cc60418a13b9d870b22959d0c16f02bec714c960dd2298a32d';
+
+  const staticB =
+    'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291';
+  const ephemeralB =
+    'e238eb8e04fee6511ab04c6dd3c89ce097b11f25d584863ac2b6d5b35b1847e4';
+
   it('should decrypt a auth packet correctly', async () => {
     const input = getBufferFromHex(
       '01b304ab7578555167be8154d5cc456f567d5ba302662433674222360f08d5f1534499d3678b513b' +
@@ -18,29 +30,58 @@ describe('AuthEip8', () => {
         '2aa067241aaa433f0bb053c7b31a838504b148f570c0ad62837129e547678c5190341e4f1693956c' +
         '3bf7678318e2d5b5340c9e488eefea198576344afbdf66db5f51204a6961a63ce072c8926c'
     );
-    const packet = await new UnitTestContainer()
-      .create({
-        privateKey:
-          'b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291',
-        ephemeralPrivateKey:
-          'e238eb8e04fee6511ab04c6dd3c89ce097b11f25d584863ac2b6d5b35b1847e4',
-      })
-      .get(Auth8Eip)
-      .decodeAuthEip8({
-        input,
-      });
+    const container = new UnitTestContainer().create({
+      privateKey: staticB,
+      ephemeralPrivateKey: ephemeralB,
+    });
+    const packet = await container.get(Auth8Eip).decodeAuthEip8({
+      input,
+    });
 
     expect(packet.version).toBe(4);
     expect(packet.nonce).toBe(
       '0x7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6'
     );
-    const publicKey = new KeyPair(
-      '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee'
-    ).getPublicKey();
-    expect(packet.publicKey).toBe(`0x${publicKey}`);
+    expect(packet.signature.slice(2)).toBe(
+      '299ca6acfd35e3d72d8ba3d1e2b60b5561d5af5218eb5bc182045769eb4226910a301acae3b369fffc4a4899d6b02531e89fd4fe36a2cf0d93607ba470b50f7800'
+    );
+    const senderKeyPairA = new KeyPair(staticA);
+    const senderPublicKeyA = senderKeyPairA.getPublicKey();
+    expect(packet.publicKey).toBe(`0x${senderPublicKeyA}`);
+
+    const sharedKey = new KeyPair(staticA).getEcdh({
+      publicKey: new KeyPair(staticB).getPublicKey(),
+    });
+    expect(sharedKey.toString('hex')).toBe(
+      '2d21423c1dc3355da36e7f2c2b530eeffcf0680f93201a958b2ec3a7d04958e6'
+    );
+
+    const signature = getBufferFromHex(packet.signature);
+    expect(signature.length).toBe(65);
+
+    const publicKey = new KeyPair(ephemeralA).getPublicKey({
+      skipSlice: true,
+    });
+
+    const isCorrectSignature = container.get(Signatures).verify({
+      signature: signature.slice(0, 64),
+      message: xor(sharedKey, getBufferFromHex(packet.nonce)),
+      publicKey: getBufferFromHex(publicKey),
+    });
+    expect(isCorrectSignature).toBe(true);
+
+    const extractedPublicKey = container
+      .get(Signatures)
+      .getPublicKeyFromSignature({
+        signature: signature.slice(0, 64),
+        r: signature[signature.length - 1],
+        message: xor(sharedKey, getBufferFromHex(packet.nonce)),
+      });
+    expect(extractedPublicKey).toBe(publicKey.slice(2));
   });
 
-  it('should decrypt a auth ack correctly', async () => {
+  it('should decrypt a auth ack_2 correctly', async () => {
+    // ack_2 https://eips.ethereum.org/EIPS/eip-8
     const input = getBufferFromHex(
       '01ea0451958701280a56482929d3b0757da8f7fbe5286784beead59d95089c217c9b917788989470' +
         'b0e330cc6e4fb383c0340ed85fab836ec9fb8a49672712aeabbdfd1e837c1ff4cace34311cd7f4de' +
@@ -58,18 +99,25 @@ describe('AuthEip8', () => {
     );
     const packet = await new UnitTestContainer()
       .create({
-        privateKey:
-          '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
-        ephemeralPrivateKey:
-          '869d6ecf5211f1cc60418a13b9d870b22959d0c16f02bec714c960dd2298a32d',
+        privateKey: staticA,
+        ephemeralPrivateKey: ephemeralA,
       })
       .get(Auth8Eip)
-      .decodeAuthEip8({
+      .decodeAckEip8({
         input,
       });
+
     expect(packet).toBeTruthy();
-    expect(packet.signature).toBeTruthy();
-    expect(packet.publicKey).toBeTruthy();
+    expect(packet.publicKey).toHaveLength(130);
+    expect(ephemeralA).toHaveLength(64);
+
+    const senderKeyPairB = new KeyPair(ephemeralB);
+    const senderPublicKeyB = senderKeyPairB.getPublicKey();
+    expect(packet.publicKey).toBe(`0x${senderPublicKeyB}`);
+    expect(packet.nonce).toBe(
+      '0x559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd'
+    );
+    expect(packet.version).toBe(4);
   });
 
   it('should correctly parse a packet from geth', async () => {

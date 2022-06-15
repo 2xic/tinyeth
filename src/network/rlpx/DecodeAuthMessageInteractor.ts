@@ -40,6 +40,7 @@ export class DecodeAuthMessageInteractor {
 
     assertEqual(remotePublicKey, inputRemotePublicKey);
 
+    // TODO: this is wrong -> change the keypair to a custom one.
     const ephemeralSharedSecret = this.ephemeralKeyPair.getEcdh({
       publicKey: remotePublicKey,
     });

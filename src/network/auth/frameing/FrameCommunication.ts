@@ -12,6 +12,9 @@ export class FrameCommunication {
     protected logger: Logger
   ) {}
 
+  private headerBuffer: Buffer | undefined;
+  private nextSize: number | undefined;
+
   protected initializedOptions?: {
     remotePacket: Buffer;
     initiatorPacket: Buffer;
@@ -47,7 +50,7 @@ export class FrameCommunication {
     this.decodeFrame.setup({
       aesKey: aesKey,
       mac: {
-        nonce: remoteNonce,
+        nonce: localNonce,
         packet: remotePacket,
         macKey: macKey,
       },
@@ -56,7 +59,7 @@ export class FrameCommunication {
     this.encodeFrame.setup({
       aesKey: aesKey,
       mac: {
-        nonce: localNonce,
+        nonce: remoteNonce,
         packet: localPacket,
         macKey: macKey,
       },
@@ -84,16 +87,31 @@ export class FrameCommunication {
   }
 
   public decode({ message }: { message: Buffer }) {
-    const header = this.decodeFrame.parseHeader({ message });
-    const size = header.slice(0, 3).readIntBE(0, 3);
-    this.logger.log(`Got header with ${size} length`);
+    let size;
+    let skip = 32;
+
+    if (!this.nextSize) {
+      const header = this.decodeFrame.parseHeader({ message });
+      size = header.slice(0, 3).readIntBE(0, 3);
+      this.logger.log(`Got header with ${size} length`);
+      if (message.length - 32 < size) {
+        this.nextSize = size;
+        return Buffer.alloc(0);
+      }
+    } else {
+      size = this.nextSize;
+      skip = 0;
+      this.logger.log(`Had header with ${size} length`);
+    }
 
     const body = this.decodeFrame.parseBody({
       message,
       size,
+      skip,
     });
 
     this.logger.log(`\t Decoded stream ${body.toString('hex')}`);
+    this.nextSize = undefined;
 
     return body;
   }

@@ -1,7 +1,7 @@
 import { FrameCommunication } from './FrameCommunication';
 import { getClassFromTestContainer } from '../../../container/getClassFromTestContainer';
 
-describe('FrameCommunication', () => {
+describe.skip('FrameCommunication', () => {
   const initiatorNonce = Buffer.from('41'.repeat(32), 'hex');
   const receiverNonce: Buffer = Buffer.from('42'.repeat(32), 'hex');
   const ephemeralSharedSecret = Buffer.from('22'.repeat(32), 'hex');

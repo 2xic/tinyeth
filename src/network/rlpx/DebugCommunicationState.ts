@@ -12,18 +12,21 @@ import { stringify } from 'buffer-json';
 import { DecodeAuthMessageInteractor } from './DecodeAuthMessageInteractor';
 import { DecodeAckMessageInteractor } from './DecodeAckMessageInteractor';
 import { RlpxMessageEncoder } from './RlpxMessageEncoder';
-import { RlpxMessageDecoder } from './packet-types/RlpxMessageDecoder';
+import {
+  RlpxMessageDecoder,
+  RlpxPacketTypes,
+} from './packet-types/RlpxMessageDecoder';
 
 @injectable()
 export class DebugCommunicationState extends CommunicationState {
   constructor(
     rlpx: Rlpx,
-    keyPair: KeyPair,
+    protected keyPair: KeyPair,
     signatures: Signatures,
     logger: Logger,
     ephemeralKeyPair: KeyPair,
-    auth8Eip: Auth8Eip,
-    frameCommunication: FrameCommunication,
+    protected auth8Eip: Auth8Eip,
+    protected frameCommunication: FrameCommunication,
     decodeAuthMessageInteractor: DecodeAuthMessageInteractor,
     decodeAckMessageInteractor: DecodeAckMessageInteractor,
     rlpxMessageEncoder: RlpxMessageEncoder,
@@ -70,7 +73,7 @@ export class DebugCommunicationState extends CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer) => void,
+    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void,
     reject: (err: Error) => void,
     parseOnly = false
   ) {
@@ -97,9 +100,58 @@ export class DebugCommunicationState extends CommunicationState {
     });
   }
 
+  public async loadAuthMessage({
+    input,
+    nonce,
+  }: {
+    input: Buffer;
+    nonce: Buffer;
+  }) {
+    if (!this._remotePublicKey) {
+      throw new Error('Need remote public key set');
+    }
+    const secret = this.keyPair.getEcdh({
+      publicKey: this._remotePublicKey,
+    });
+    super.setSenderNonceState({
+      authMessage: input,
+      header: {
+        nonce: getBufferFromHex(nonce),
+        secret,
+      },
+    });
+  }
+
+  public async initializeFrameCommunication({
+    localPacket,
+    localNonce,
+    remotePacket,
+    remoteNonce,
+    ephemeralSharedSecret,
+    switchNonce = false,
+  }: {
+    localPacket: Buffer;
+    localNonce: Buffer;
+    remotePacket: Buffer;
+    remoteNonce: Buffer;
+    ephemeralSharedSecret: Buffer;
+    switchNonce?: boolean;
+  }) {
+    return this.frameCommunication.setup({
+      localNonce,
+      localPacket,
+      remoteNonce,
+      remotePacket,
+      switchNonce,
+      ephemeralSharedSecret,
+    });
+  }
+
   public dump({ path }: { path: string }) {
-    fs.writeFileSync(path, stringify(this.communications));
-    console.log(`Saved ${this.communications.length} messages`);
+    if (this.communications.length > 5) {
+      fs.writeFileSync(path, stringify(this.communications));
+      console.log(`Saved ${this.communications.length} messages`);
+    }
   }
 }
 

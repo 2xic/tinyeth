@@ -23,6 +23,8 @@ export class MockNonceGenerator implements NonceGenerator {
 
     if (!nonce || nonce.length !== length) {
       throw new Error('Invalid nonce :/');
+    } else if (!Buffer.isBuffer(nonce)) {
+      throw new Error('Wrong nonce type');
     }
 
     return nonce;

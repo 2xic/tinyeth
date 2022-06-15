@@ -1,7 +1,10 @@
 import { NodeManager, ProductionContainer, gethEnodes, parseEncode, ConnectionOptions, Peer, PeerConnectionOptions, MessageType } from '../dist';
-
+import fs from 'fs';
 
 (async () => {
+  let prevSaveCount = 0;
+  let savedNodes: PeerConnectionOptions[] = []
+
   const container = new ProductionContainer()
     .create({
       privateKey:
@@ -12,22 +15,26 @@ import { NodeManager, ProductionContainer, gethEnodes, parseEncode, ConnectionOp
     })
   const node = container
     .get(NodeManager);
+
   node.events.on('alive', async (address: string) => {
     console.log([address, 'is alive :)'])
     await node.findNeighbors(address);
   })
-  node.events.on('peer', async (connectionOptions: PeerConnectionOptions) => {
-    console.log('Trying to connect to node ')
-    console.log(connectionOptions);
-/*    const forkedContainer = container.createChild().get(Peer)
-    await forkedContainer.connect(connectionOptions);
+  node.events.on('peer', async (connectionOptions: PeerConnectionOptions, address: string) => {
+    savedNodes.push(connectionOptions);
+    await node.findNeighbors(address, connectionOptions.publicKey);
+  });
 
-    await forkedContainer.sendMessage({
-      type: MessageType.AUTH_EIP_8,
-    });*/
-  })
+  setInterval(() => {
+    if (prevSaveCount !== savedNodes.length) {
+      console.log(`Dumping ${savedNodes.length} nodes`)
+      fs.writeFileSync('nodes.json', JSON.stringify(savedNodes));
+      prevSaveCount = savedNodes.length;
+    }
+  }, 500);
 
   const nodes = gethEnodes.sort(() => Math.random() < 0.5 ? -1 : 1).slice(0, 1);
+
   await Promise.all(nodes.map(async (connection) => {
     await sleep(1000 * Math.random());
 

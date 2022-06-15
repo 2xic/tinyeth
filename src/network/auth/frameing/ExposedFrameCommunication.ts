@@ -3,6 +3,7 @@ import { DecodeFrame } from './DecodeFrame';
 import { EncodeFrame } from './EncodeFrame';
 import { FrameCommunication } from './FrameCommunication';
 import { Logger } from '../../../utils/Logger';
+import { Keccak } from 'keccak';
 
 @injectable()
 export class ExposedFrameCommunication extends FrameCommunication {
@@ -16,5 +17,13 @@ export class ExposedFrameCommunication extends FrameCommunication {
 
   public get options() {
     return this.initializedOptions;
+  }
+
+  public async ingressMacUpdate({ text }: { text: string }) {
+    this.decodeFrame.ingressMac.update({
+      packet: Buffer.from(text, 'ascii'),
+    });
+
+    return this.decodeFrame.ingressMac.fullHash.toString('hex');
   }
 }

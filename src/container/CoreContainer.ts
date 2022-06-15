@@ -53,7 +53,7 @@ export class CoreContainer {
     container
       .bind('EMPHERMAL_PRIVATE_KEY')
       .toConstantValue(
-        options?.privateKey || crypto.randomBytes(32).toString('hex')
+        options?.ephemeralPrivateKey || crypto.randomBytes(32).toString('hex')
       );
 
     container
