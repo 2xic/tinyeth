@@ -34,6 +34,9 @@ export class CommunicationState {
   ) {}
 
   public nextState: MessageState = MessageState.AUTH;
+  public isReadyForStatus = false;
+  public hasPong = false;
+  private sentHello = false;
 
   /*
     TODO: Move this into a own class
@@ -65,14 +68,18 @@ export class CommunicationState {
       callback(authMessage, header);
     } else if (MessageType.HELLO === message.type) {
       throw new Error('Nono, please go in order ser');
-    } else if (MessageType.PONG === MessageType.PONG) {
+    } else if (MessageType.PONG === message.type) {
       const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
         RlpxPacketTypes.PONG
       );
       callback(encodedMessage);
     } else if (MessageType.PING === message.type) {
-      if (this.nextState === MessageState.PACKETS) {
-        callback(this.rlpxMessageEncoder.encodeMessage(RlpxPacketTypes.PONG));
+      if (this.sentHello) {
+        this.logger.log('Created a ping :)');
+        const ping = this.rlpxMessageEncoder.encodeMessage(
+          RlpxPacketTypes.PING
+        );
+        callback(ping);
       } else {
         this.logger.log('No auth yet - delaying ping');
         callback(Buffer.alloc(0));
@@ -106,6 +113,7 @@ export class CommunicationState {
             listenPort: 0,
           })
         );
+        this.sentHello = true;
         callback(encodedMessage);
       } else if (this.nextState === MessageState.PACKETS) {
         await this.parsePacket({
@@ -192,8 +200,13 @@ export class CommunicationState {
       if (!parseOnly) {
         if (typeof packet === 'object') {
           this.logger.log('Got a hello :)');
-          callback(Buffer.alloc(0));
+          const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
+            RlpxPacketTypes.PING
+          );
+          callback(encodedMessage);
         } else if (packet == RlpxPacketTypes.PING) {
+          this.isReadyForStatus = true;
+
           this.logger.log('Got a ping, replying with pong');
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PONG
@@ -202,11 +215,9 @@ export class CommunicationState {
           callback(encodedMessage);
         } else if (packet == RlpxPacketTypes.PONG) {
           this.logger.log('Got a pong, should reply with ping');
-          const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
-            RlpxPacketTypes.PING
-          );
-          this.logger.log(`Ping ${encodedMessage.length} length`);
-          callback(encodedMessage);
+          this.isReadyForStatus = true;
+          this.hasPong = true;
+          callback(Buffer.alloc(0));
         } else if (packet == RlpxPacketTypes.DISCONNECT) {
           callback(RlpxPacketTypes.DISCONNECT);
         } else {
