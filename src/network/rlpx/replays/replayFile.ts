@@ -9,6 +9,7 @@ import {
 import fs from 'fs';
 import { Logger } from '../../../utils/Logger';
 import { UnitTestContainer } from '../../../container/UnitTestContainer';
+import { MessageQueue } from '../MessageQueue';
 
 export async function replayFile({
   filePath,
@@ -27,6 +28,7 @@ export async function replayFile({
     loggingEnabled: loggingEnabled,
   });
   const node = container.get(CommunicationState) as DebugCommunicationState;
+  const logger = container.get(Logger);
 
   const state = parse(fs.readFileSync(filePath).toString('ascii'));
   const remotePublicKey: Buffer = state.find(
@@ -52,21 +54,31 @@ export async function replayFile({
   );
 
   if (debug) {
-    console.log('Message stats');
+    logger.log('Message stats');
     messages.forEach((message) => {
-      console.log(`${message.direction} - length ${message.message.length}`);
+      logger.log(`${message.direction} - length ${message.message.length}`);
     });
   }
 
+  const messageQueue = container.get(MessageQueue);
+
   for (const [index, { message, direction }] of Object.entries(messages)) {
-    container.get(Logger).log('Replaying message');
-    container.get(Logger).log([index, message.length]);
+    logger.log('Replaying message');
+    logger.log(`loading message ${index}`);
+    logger.log([index, message.length]);
+
     if (direction == 'from') {
-      await new Promise<any>((resolve, reject) =>
-        node.parseMessage(message, resolve, reject)
-      );
+      messageQueue.add(message);
+
+      const buffer = messageQueue.read();
+      if (buffer.length) {
+        await new Promise<any>((resolve, reject) =>
+          node.parseMessage(buffer, resolve, reject)
+        );
+      }
     } else {
       throw new Error('not implemented');
     }
   }
+  logger.log('messages read :)');
 }

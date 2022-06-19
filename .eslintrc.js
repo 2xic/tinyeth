@@ -20,6 +20,7 @@ module.exports = {
     "@typescript-eslint/no-floating-promises": "error",
     "prettier/prettier": "error",
     "linebreak-style": ["error", "unix"],
+    "no-console": ["error", { allow: ["warn", "error"] }],
     quotes: ["error", "single"],
     semi: ["error", "always"],
   },

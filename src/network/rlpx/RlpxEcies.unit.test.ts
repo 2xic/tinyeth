@@ -44,7 +44,6 @@ describe('RlpxEcies', () => {
       message: buffer,
     });
     expect(results).toBeTruthy();
-    console.log(results.toString('hex'));
   });
 
   it('should correctly decode ack_1', async () => {

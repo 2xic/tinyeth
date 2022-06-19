@@ -175,11 +175,17 @@ Looks like things are working now actually after having fixed the nonce bug.
 RPLx should hopefully be up and running 
 
 
+### Day x - 16 + 17
+Fixed the RplX bug :) See line 72 in 7f2606dc4bd129b0c0f211defe93420df7905386  :) Silly bug!!!
 
+So, I can now start to look at the capability methods on top of RPLx. Started to look at the status command.
 
+Before starting to implement that - I think it would be nice to refactor the communication state logic.
+-> test are currently broken because I added logic to auto send ping after hello -> could refactor this to keep the tests 
 
+----------
 
+So I have now refactored parts of the communication state logic. There is still some stuff todo, but I think things are starting to become "better". 
 
-
-
+We now use a proper message queue, and are now a lot more stable when connection over rplx. Not all messages comes combined etc, but now we are able to deal with that :) see stability.png :D
 

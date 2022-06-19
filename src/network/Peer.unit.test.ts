@@ -54,8 +54,6 @@ describe.skip('Peer', () => {
         '2802decd078d1c658c65f9469c5877cac14c6f26a894b35bfecc4ce349c52d879fee2fa9a4c546580ceb0e0df14a6f9869eeefa375dd2ad2db1d74dc6ff5977b8523f499c650310ea67dab2b5c55f1929ac12735f5b6895f9641c9aafac51e77157f863a7f499399d2a966f1957dcc43d43aece4a6a9d7692da7d6c7d88d3d70745c7c5a2b64b5a67bfadeb93a8a5c90780f35db090d4b25e17ddcb0a72842304877a5c64bad6f1f7d8978a5cc9ad20a658f893b658961862bc383744e9e6384'
       )
     );
-    await node.messageQueue.process();
-    await node.messageQueue.process();
   });
   const getContainer = () => {
     return new UnitTestContainer().create({

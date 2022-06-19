@@ -1,0 +1,70 @@
+[
+    {
+        "key": "_remotePublicKey",
+        "value": {
+            "type": "Buffer",
+            "data": "base64:MoRJtS/JNQgmfoTGtowtdalUMJCIhpbUq3zCIB95b6oRKhWJfImwPxmf92Z33YSN1CexJXS56yXG+NjVp7Y+Yw=="
+        }
+    },
+    {
+        "key": "createAuthMessageHeader",
+        "value": {
+            "header": {
+                "secret": {
+                    "type": "Buffer",
+                    "data": "base64:fYKZYxS0zXydLwiWIpl7g0VjUCXjfFuGBRxrTAmoxBs="
+                },
+                "nonce": {
+                    "type": "Buffer",
+                    "data": "base64:1YuHAEvjDgSSqCUd6fFW8jWHAHOmTb9yuzifNF4/KjI="
+                }
+            },
+            "authMessage": {
+                "type": "Buffer",
+                "data": "base64:AX4EqAmYRxzPh7kvuTe2M8rbOdAhVI/7IqHh5hiWFxPqhMA+GvMRke44syvqDWiiOLpvuhgWHZAT+MQM7QMioyJBzKzy0kzrtELM+zu0eCvAOEOpLGq1tJca/mkM3ij4JvOt2seIV2ptE1mFv/ttm+l1gG2B91GuMtT4MKH4QA+5jI6WSM1UJ2Fd5yszgWOmmArN3yyEDmJNGWRz0/bePBfXkXycHRrbQgQRIevGqypTptoqsa5Fz4WNCEddlEVkukGNsPsOwTu1xG4LoPdEiaOma54UwJI8p73gB4y67+4Sk7AHCIAbnqdw8lYss0tw+ksXc199BzM8+90woXnVRs4OgbfarfJb/VBMkbFUticMW7HTmfuUiAobuSH+1mbgDq8M+ygo6+3LOMc4NKu+XvCks1K3/HzdHm9t7cDk7NmCldfa1w1cThm/0zv2uSxk9FspJWjqq+AuxCOpMScy7dONU4WRZXOMgJ+pl70PZOAFXl/mRYMLdIccVPN3Bvu0"
+            }
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:AV0EPsNbcdMEC6BONfmUp3FNGpWJ093T+IinffwHDEm4lm1YjOsywu2oY9ALX25tnQkeo/hZlc+devnzjeHYhX04qb9F9j/iv5rKY0ocldPCEbzPiCB1bAfCq1O+zMxBxp0wRyAmsN2KJG0PQUy3cAt91yM1AnNApv0IxIBscHNL2tiPhbW2HJwSl0poM351ICDDSe9awsWVXS5vsGRMvbD0f0oDGffJv2A9hYZBwNrFnMEWmlHRT+gMnWCsRstu45njgMR8Oub4/u62uiOeN255zSmFenUBT97cJ13cGhC+nV8hSamA93zoP0t4IwvmQlhbX/Z+yL6WmX5vBbB86hQOADE8Ea6MxEB2Y/GJqMmvUuSa4tyiSU9s/xX/QzAPCz87AF33r0cy5EEd2LKBPPXjZrY0pu/RbDiC00JedSCqiF8H8TV5r+/dt6axYZuZNhid/uQIrZPEdTTeEbs0c4Ht9wohhxnhfZ8TZOh5Ms6upt3ZfWxXTXa4uQDTjGLrywunRDlwH7BJuhdf9ew2HSe1pNrkup8AK730X0K+A/zHSpme6Y6O+Hub8xHxd4JLKZh4L+7wsr2nUdlW69SYc7u/gyMnmQtxDvLmBbMiDnBY0lwEBU4kOWtTBql38nMgRtVqLc9m55aDwAyzHDgCKVC91eL9cF0UX+jL+J+x1WvsQ9D6FhtC2Vo="
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:9YqtzNEvjg1TioZBKnRZ84wjsykeWw=="
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:F8hxtOZ4PLDeApdktWG1gekLEQUGeSRwtzEGC3atH4w="
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:+QyuKJtsi1oZm38L9mh5mN/WzFV32VTFy+T0hbeKTtoE4jKbzlctaiCadyP92LtDa+DFVhDq4krkfN7nrCHrUfv5dj961sy7EXHL1k94Yr+5m1r1jfqo8C8DdrbiehbWw79a8csFUp5QyrZ9TlZiKQ=="
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:NM6USLESJECseCP6yXwelwEs35+BmigjJalGWYAGx+Q="
+        }
+    },
+    {
+        "direction": "from",
+        "message": {
+            "type": "Buffer",
+            "data": "base64:DfCj9jdcXx2g3fEiJzeU4e1Us31EBQNcyHgT+gbpnVg="
+        }
+    }
+]

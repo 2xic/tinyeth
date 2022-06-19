@@ -28,7 +28,7 @@ export class DecodeFrame {
     message: Buffer;
     size: number;
     skip?: number;
-  }) {
+  }): Buffer {
     const body = message.slice(skip, -16);
     const mac = message.slice(-16).toString('hex');
     this.ingressMac.body({

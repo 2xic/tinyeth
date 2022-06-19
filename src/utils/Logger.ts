@@ -9,6 +9,7 @@ export class Logger {
 
   public log(message?: unknown, optionalParams: unknown[] = []) {
     if (this.isLoggingEnabled) {
+      // eslint-disable-next-line no-console
       console.log(message, ...optionalParams);
     }
   }

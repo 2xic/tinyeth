@@ -23,7 +23,7 @@ export class RlpxHelloPacketEncoderDecoder
     return Buffer.concat([Buffer.from([0x80]), getBufferFromHex(helloPacket)]);
   }
 
-  public decode(options: { input: Buffer }) {
+  public decode(options: { input: Buffer }): ParsedHelloPacket {
     const input = options.input;
     const data = new RlpDecoder().decode({ input: input.toString('hex') });
     const rlpReader = new ReadOutRlp(data);

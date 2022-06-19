@@ -19,5 +19,14 @@ describe('CommunicationStateReplay', () => {
     await replayFile({
       filePath: path.resolve(__dirname, 'replays', 'normal-flow.json'),
     });
+    await replayFile({
+      filePath: path.resolve(__dirname, 'replays', 'normal-flow-2.json'),
+    });
+  });
+
+  it('should correctly deal with a packets with inconsistent length ', async () => {
+    await replayFile({
+      filePath: path.resolve(__dirname, 'replays', 'dump-two-packets.json'),
+    });
   });
 });

@@ -1,64 +1,51 @@
 import { injectable } from 'inversify';
 import { KeyPair } from '../../signatures/KeyPair';
-import { Signatures } from '../../signatures/Signatures';
 import { Logger } from '../../utils/Logger';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { Auth8Eip } from '../auth/AuthEip8';
 import { Rlpx } from '../Rlpx';
 import { RlpxHelloMessageEncoder } from './packet-types/RlpxHelloMessageEncoder';
-import { DecodeAuthMessageInteractor } from './DecodeAuthMessageInteractor';
-import { DecodeAckMessageInteractor } from './DecodeAckMessageInteractor';
 import { RlpxMessageEncoder } from './RlpxMessageEncoder';
 import {
   RlpxMessageDecoder,
   RlpxPacketTypes,
 } from './packet-types/RlpxMessageDecoder';
-/**
+import { MessageState, PeerConnectionState } from './PeerConnectionState';
+import { MyEmitter } from './MyEmitter';
+import { HEADER_SIZE, MessageQueue } from './MessageQueue';
+
+/**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
  * Move it out.
  */
 @injectable()
-export class CommunicationState {
+export class CommunicationState extends MyEmitter<{
+  hello: null;
+  disconnect: string;
+}> {
   constructor(
     private rlpx: Rlpx,
     protected keyPair: KeyPair,
-    private signatures: Signatures,
     private logger: Logger,
-    private ephemeralKeyPair: KeyPair,
     protected auth8Eip: Auth8Eip,
     protected frameCommunication: FrameCommunication,
-    private decodeAuthMessageInteractor: DecodeAuthMessageInteractor,
-    private decodeAckMessageInteractor: DecodeAckMessageInteractor,
     private rlpxMessageEncoder: RlpxMessageEncoder,
-    private rlpxMessageDecoder: RlpxMessageDecoder
-  ) {}
-
-  public nextState: MessageState = MessageState.AUTH;
-  public isReadyForStatus = false;
-  public hasPong = false;
-  private sentHello = false;
-
-  /*
-    TODO: Move this into a own class
-      Frame capsule ? 
-  */
-  private _senderNonce?: Buffer;
-
-  private _secret?: Buffer;
-
-  private _sentPacket?: Buffer;
-
-  protected _remotePublicKey?: string;
+    private rlpxMessageDecoder: RlpxMessageDecoder,
+    private peerConnection: PeerConnectionState,
+    private messageQueue: MessageQueue
+  ) {
+    super();
+  }
 
   public get publicKey() {
     return this.keyPair.getPublicKey();
   }
 
   public setRemotePublicKey({ publicKey }: { publicKey: string }) {
-    this._remotePublicKey = publicKey;
+    this.peerConnection.setRemotePublicKey({ publicKey });
   }
 
-  public async sendMessage(
+  public async constructMessage(
     message: MessageOptions,
     callback: (message: Buffer, header?: unknown) => void
   ) {
@@ -67,23 +54,15 @@ export class CommunicationState {
       const { authMessage, header } = await this.createAuthMessageHeader();
       callback(authMessage, header);
     } else if (MessageType.HELLO === message.type) {
-      throw new Error('Nono, please go in order ser');
+      throw new Error('This method should not be called from here.');
     } else if (MessageType.PONG === message.type) {
       const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
         RlpxPacketTypes.PONG
       );
       callback(encodedMessage);
     } else if (MessageType.PING === message.type) {
-      if (this.sentHello) {
-        this.logger.log('Created a ping :)');
-        const ping = this.rlpxMessageEncoder.encodeMessage(
-          RlpxPacketTypes.PING
-        );
-        callback(ping);
-      } else {
-        this.logger.log('No auth yet - delaying ping');
-        callback(Buffer.alloc(0));
-      }
+      const ping = this.rlpxMessageEncoder.encodeMessage(RlpxPacketTypes.PING);
+      callback(ping);
     } else {
       throw new Error(`Unknown message type${message.type}`);
     }
@@ -91,20 +70,19 @@ export class CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void,
+    callback: (message: Buffer) => void,
     error: (err: Error) => void,
     parseOnly = false
   ) {
     await (async () => {
-      //this.logger.log(` new data: ${message.toString('hex')}`);
-      if (this.nextState === MessageState.AUTH) {
+      if (this.peerConnection.state === MessageState.AUTH) {
         this.logger.log('[Received AUTH8 message]');
-        const results = await this.parseAuth({ message });
+        const results = await this.peerConnection.parseAuth({ message });
         callback(results);
-      } else if (this.nextState == MessageState.ACK) {
+      } else if (this.peerConnection.state == MessageState.ACK) {
         this.logger.log('[Received ACK message]');
-        await this.parseAck({ message });
 
+        await this.peerConnection.parseAck({ message });
         this.logger.log('[Sending an hello message]');
         const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
           RlpxPacketTypes.HELLO,
@@ -113,9 +91,12 @@ export class CommunicationState {
             listenPort: 0,
           })
         );
-        this.sentHello = true;
+        this.messageQueue.setLimit({
+          size: HEADER_SIZE,
+        });
+
         callback(encodedMessage);
-      } else if (this.nextState === MessageState.PACKETS) {
+      } else if (this.peerConnection.state === MessageState.PACKETS) {
         await this.parsePacket({
           message,
           callback,
@@ -126,54 +107,6 @@ export class CommunicationState {
     })().catch((err) => error(err));
   }
 
-  private async parseAuth({ message: remoteMessage }: { message: Buffer }) {
-    const { ephemeralSharedSecret, remoteNonce, localNonce, localPacket } =
-      await this.decodeAuthMessageInteractor.decode({
-        authMessage: remoteMessage,
-        remotePublicKey: this.remotePublicKey,
-      });
-
-    this.frameCommunication.setup({
-      ephemeralSharedSecret: ephemeralSharedSecret,
-
-      remoteNonce: remoteNonce,
-      remotePacket: remoteMessage,
-
-      localNonce,
-      localPacket,
-    });
-    this.nextState = MessageState.PACKETS;
-
-    return localPacket;
-  }
-
-  private async parseAck({ message: ackMessage }: { message: Buffer }) {
-    if (!this._secret || !this._senderNonce || !this._sentPacket) {
-      throw new Error('Something is wrong');
-    }
-
-    const { receivedNonce, ephemeralSharedSecret } =
-      await this.decodeAckMessageInteractor.decode({
-        senderNonce: this._senderNonce,
-        authMessage: this._sentPacket,
-        ackMessage,
-      });
-
-    this.frameCommunication.setup({
-      ephemeralSharedSecret: ephemeralSharedSecret,
-      remoteNonce: receivedNonce,
-      remotePacket: ackMessage,
-
-      localNonce: this._senderNonce,
-      localPacket: this._sentPacket,
-
-      switchNonce: true,
-    });
-
-    this.logger.log('Setup frame communication');
-    this.nextState = MessageState.PACKETS;
-  }
-
   private async parsePacket({
     message,
     callback,
@@ -181,7 +114,7 @@ export class CommunicationState {
     parseOnly,
   }: {
     message: Buffer;
-    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void;
+    callback: (message: Buffer) => void;
     error: (err: Error) => void;
     parseOnly?: boolean;
   }) {
@@ -194,32 +127,26 @@ export class CommunicationState {
         return callback(Buffer.alloc(0));
       }
 
-      const packet = this.rlpxMessageDecoder.decode({
+      const options = this.rlpxMessageDecoder.decode({
         packet: body,
       });
       if (!parseOnly) {
-        if (typeof packet === 'object') {
-          this.logger.log('Got a hello :)');
-          const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
-            RlpxPacketTypes.PING
-          );
-          callback(encodedMessage);
-        } else if (packet == RlpxPacketTypes.PING) {
-          this.isReadyForStatus = true;
-
-          this.logger.log('Got a ping, replying with pong');
+        if (options.packet === RlpxPacketTypes.HELLO) {
+          this.logger.log('[Got a hello :)]');
+          this.emit('hello', null);
+          callback(Buffer.alloc(0));
+        } else if (options.packet == RlpxPacketTypes.PING) {
+          this.logger.log('[Got a ping, replying with pong]');
           const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
             RlpxPacketTypes.PONG
           );
-          this.logger.log(`Pong ${encodedMessage.length} length`);
           callback(encodedMessage);
-        } else if (packet == RlpxPacketTypes.PONG) {
-          this.logger.log('Got a pong, should reply with ping');
-          this.isReadyForStatus = true;
-          this.hasPong = true;
+        } else if (options.packet == RlpxPacketTypes.PONG) {
+          this.logger.log('[Got a pong]');
           callback(Buffer.alloc(0));
-        } else if (packet == RlpxPacketTypes.DISCONNECT) {
-          callback(RlpxPacketTypes.DISCONNECT);
+        } else if (options.packet == RlpxPacketTypes.DISCONNECT) {
+          this.emit('disconnect', options.data.reason);
+          callback(Buffer.alloc(0));
         } else {
           this.logger.log('Unknown state ... ');
         }
@@ -229,10 +156,13 @@ export class CommunicationState {
     } catch (err) {
       if (err instanceof Error) {
         error(err);
+      } else {
+        error(new Error('Something went wrong'));
       }
     }
   }
 
+  // TODO: Remove this
   protected async createAuthMessageHeader() {
     const { results: authMessage, header } =
       await this.rlpx.createEncryptedAuthMessageEip8({
@@ -250,9 +180,10 @@ export class CommunicationState {
     };
   }
 
+  // TODO: Remove this
   protected setSenderNonceState({
-    header,
-    authMessage,
+    header: { secret, nonce },
+    authMessage: packet,
   }: {
     header: {
       nonce: Buffer;
@@ -260,18 +191,15 @@ export class CommunicationState {
     };
     authMessage: Buffer;
   }) {
-    this._senderNonce = header.nonce;
-    this._secret = header.secret;
-    this._sentPacket = authMessage;
-
-    this.nextState = MessageState.ACK;
+    this.peerConnection.setSenderPacket({ packet, secret, nonce });
   }
 
-  private get remotePublicKey() {
-    if (!this._remotePublicKey) {
-      throw new Error('No remote public key set');
-    }
-    return this._remotePublicKey;
+  protected get remotePublicKey() {
+    return this.peerConnection.remotePublicKey;
+  }
+
+  public get nextState() {
+    return this.peerConnection.state;
   }
 }
 
@@ -285,10 +213,4 @@ export enum MessageType {
 }
 interface BaseMessage {
   type: MessageType;
-}
-
-export enum MessageState {
-  AUTH,
-  ACK,
-  PACKETS,
 }

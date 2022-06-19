@@ -16,7 +16,6 @@ import { ConstructAuthMessage } from '../network/auth/ConstructAuthMessage';
 import { RlpDecoder } from '../rlp/RlpDecoder';
 import { Signatures } from '../signatures/Signatures';
 import { Logger } from '../utils/Logger';
-import { MessageQueue } from '../network/MessageQueue';
 import { GetRandomBytesInteractor } from '../network/nonce-generator/GetRandomBytesInteractor';
 import { EciesEncrypt } from '../network/ecies/EciesEncrypt';
 import { EncodeAckEip8 } from '../network/auth/EncodeAckEip8';
@@ -40,6 +39,12 @@ import { WireMessageDecoder } from '../network/wire/WireMessageDecoder';
 import { FindNodePacketEncodeDecode } from '../network/wire/FindNodePacketEncodeDecode';
 import { RlpxHelloPacketEncoderDecoder } from '../network/rlpx/packet-types/RlpxHelloPacketEncoderDecoder';
 import { RlpxMessageDecoder } from '../network/rlpx/packet-types/RlpxMessageDecoder';
+import { SendStatusMessage } from '../network/rlpx/eth/SendStatusMessage';
+import { GetBlockHeader } from '../network/rlpx/eth/GetBlockHeader';
+import { PeerConnectionState } from '../network/rlpx/PeerConnectionState';
+import { PeerConnection } from '../network/rlpx/PeerConnection';
+import { MessageQueue } from '../network/rlpx/MessageQueue';
+
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
     const container = new Container({
@@ -75,6 +80,11 @@ export class CoreContainer {
     container.bind(FindNodePacketEncodeDecode).toSelf();
     container.bind(PacketEncapsulation).toSelf();
     container.bind(WireMessageEncoder).toSelf();
+    container.bind(PeerConnection).toSelf();
+    container.bind(PeerConnectionState).toSelf();
+
+    container.bind(SendStatusMessage).toSelf();
+    container.bind(GetBlockHeader).toSelf();
 
     container.bind(KeyPair).toSelf();
     container.bind(Signatures).toSelf();

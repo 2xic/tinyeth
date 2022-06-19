@@ -1,149 +1,75 @@
 import { KeyPair } from '../signatures/KeyPair';
-import { getRandomPeer } from './utils/getRandomPeer';
-import { AbstractSocket } from './socket/AbstractSocket';
 import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
-import { MessageQueue } from './MessageQueue';
 import {
   CommunicationState,
   MessageOptions,
   MessageType,
 } from './rlpx/CommunicationState';
+import { PeerConnection } from './rlpx/PeerConnection';
 
 @injectable()
 export class Peer {
-  private _activeConnection?: AbstractSocket;
-
-  private isConnected = false;
-  private ping?: NodeJS.Timer;
-
   constructor(
     private keyPair: KeyPair,
-    private socket: AbstractSocket,
     private logger: Logger,
-    public messageQueue: MessageQueue,
-    private communicationState: CommunicationState
+    private communicationState: CommunicationState,
+    private peerConnection: PeerConnection
   ) {}
 
   public messageSent = 0;
   public messageReceived = 0;
 
-  public async connect(options?: PeerConnectionOptions) {
-    const nodeOptions = options ? options : getRandomPeer();
-    this.logger.log(nodeOptions);
-    this.socket.on('close', () => {
-      this.logger.log('Connection closed');
-      this.isConnected = false;
-      this.socket.destroy();
-    });
-    this.socket.on('ready', () => {
-      this.logger.log('Ready');
-    });
-    this.socket.on('error', (err) => {
+  private ping?: NodeJS.Timer;
+  private waitingOnMessage = false;
+
+  public async connect(options: PeerConnectionOptions) {
+    const socket = await this.peerConnection.connect(options);
+
+    socket.on('error', (err) => {
       this.logger.log('Error');
       this.logger.log(err);
     });
-    this.socket.on('connect', () => {
-      this.logger.log('Connected');
-      this.isConnected = true;
-    });
-    this.socket.on('drain', () => {
+    socket.on('drain', () => {
       this.logger.log('drain');
     });
-    this.socket.on('lookup', () => {
+    socket.on('lookup', () => {
       this.logger.log('lookup');
     });
-    this.socket.on('timeout', () => {
+    socket.on('timeout', () => {
       this.logger.log('timeout');
     });
-    this.socket.on('end', () => {
+    socket.on('end', () => {
       this.logger.log('end');
     });
+    socket.on('close', () => {
+      this.logger.log('Socket closed');
+    });
 
-    this.socket.on('data', async (data) => {
-      this.logger.log(`Got data of length ${data.length}`);
-      this.messageReceived++;
-
-      await this.communicationState.parseMessage(
-        data,
-        async (message) => {
-          if (Buffer.isBuffer(message)) {
-            await this.connectionWrite(message);
-          } else {
-            this.logger.log('Asked to disconnect...');
-            this.socket.destroy();
-          }
-        },
-        (error) => {
-          this.logger.log('error happened while parsing message');
-          this.logger.log(error);
+    this.communicationState.on('hello', () => {
+      this.logger.log('Hello was sent - starting ping interval');
+      this.ping = setInterval(async () => {
+        if (!this.waitingOnMessage) {
+          this.waitingOnMessage = true;
+          await this.sendMessage({ type: MessageType.PING });
         }
-      );
+      }, 1500);
     });
 
-    await new Promise<void>((resolve) => {
-      this.socket.connect(nodeOptions.port, nodeOptions.address, () => {
-        resolve();
-      });
+    this.peerConnection.on('packet', () => {
+      this.waitingOnMessage = false;
     });
-
-    this._activeConnection = this.socket;
-
-    if (options?.publicKey) {
-      this.communicationState.setRemotePublicKey({
-        publicKey: options?.publicKey,
-      });
-    }
-
-    this.ping = setInterval(async () => {
-      await this.sendMessage({
-        type: MessageType.PING,
-      });
-    }, 3000);
   }
 
   public async sendMessage(message: MessageOptions) {
-    await this.communicationState.sendMessage(
-      message,
-      this.connectionWrite.bind(this)
+    const messageBuffer = await new Promise<Buffer>((resolve) =>
+      this.communicationState.constructMessage(message, resolve)
     );
+    await this.peerConnection.sendMessage(messageBuffer);
   }
 
   public async disconnect() {
-    const connection = this._activeConnection;
-
-    if (connection) {
-      await new Promise<void>((resolve) => {
-        this._activeConnection = undefined;
-        connection.destroy();
-        connection.on('close', () => {
-          resolve();
-        });
-      });
-    }
-  }
-
-  private async connectionWrite(message: Buffer) {
-    if (message.length) {
-      this.messageSent++;
-
-      await new Promise<void>((resolve, reject) => {
-        this.connection.write(message, (error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      });
-    }
-  }
-
-  public get connection() {
-    if (!this._activeConnection) {
-      throw new Error('No active connection');
-    }
-    return this._activeConnection;
+    await this.peerConnection.disconnect();
   }
 
   public get nodePublicKey() {

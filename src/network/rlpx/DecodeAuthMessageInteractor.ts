@@ -45,6 +45,7 @@ export class DecodeAuthMessageInteractor {
       publicKey: remotePublicKey,
     });
 
+    // TODO: This should be moved into a separate method
     const { results: ackPacket, header } =
       await this.rlpx.createEncryptedAckMessageEip8({
         ethNodePublicKey: remotePublicKey,

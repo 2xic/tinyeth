@@ -33,10 +33,9 @@ import fs from 'fs';
     });
 
     exitHook(() => {
-      console.log('Exiting 2');
-      (container.get(CommunicationState) as DebugCommunicationState).dump({
+      /*(container.get(CommunicationState) as DebugCommunicationState).dump({
         path: path.resolve(__dirname, 'dump.json')
-      })
+      })*/
     });
 
     // eslint-disable-next-line no-constant-condition

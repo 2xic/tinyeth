@@ -1,8 +1,11 @@
 import { injectable } from 'inversify';
 import net from 'net';
+import { Logger } from '../utils/Logger';
 
 @injectable()
 export class NodeServer {
+  constructor(private logger: Logger) {}
+
   private _server?: net.Server;
 
   private PORT_NUMBER = 3000;
@@ -15,18 +18,18 @@ export class NodeServer {
     }
     this._server = net.createServer();
     this._server.listen(this.PORT_NUMBER, () => {
-      console.log('yeah ?=');
+      this.logger.log('yeah ?=');
     });
 
     this._server.on('listening', () => {
-      console.log('Listening');
+      this.logger.log('Listening');
     });
 
     this._server.on('connection', (socket) => {
-      console.log('Connection :)');
+      this.logger.log('Connection :)');
       socket.on('data', (data) => {
-        console.log(data);
-        console.log(data.toString('hex'));
+        this.logger.log(data);
+        this.logger.log(data.toString('hex'));
       });
     });
 

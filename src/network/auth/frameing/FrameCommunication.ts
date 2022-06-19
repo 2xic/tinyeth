@@ -3,16 +3,19 @@ import { EncodeFrame } from './EncodeFrame';
 import { DecodeFrame } from './DecodeFrame';
 import { Logger } from '../../../utils/Logger';
 import { injectable } from 'inversify';
+import { MessageQueue } from '../../rlpx/MessageQueue';
+import { getNumberFromBuffer } from '../../utils/getNumberFromBuffer';
 
 @injectable()
 export class FrameCommunication {
   constructor(
     protected encodeFrame: EncodeFrame,
     protected decodeFrame: DecodeFrame,
-    protected logger: Logger
+    protected logger: Logger,
+    private messageQueue: MessageQueue
   ) {}
 
-  private nextSize: number | undefined;
+  private state: State = State.HEADER;
 
   protected initializedOptions?: {
     remotePacket: Buffer;
@@ -32,14 +35,7 @@ export class FrameCommunication {
     remoteNonce,
     ephemeralSharedSecret,
     switchNonce = false,
-  }: {
-    localPacket: Buffer;
-    localNonce: Buffer;
-    remotePacket: Buffer;
-    remoteNonce: Buffer;
-    ephemeralSharedSecret: Buffer;
-    switchNonce?: boolean;
-  }) {
+  }: FrameCommunicationSetup) {
     const { aesKey, macKey } = this.constructKeys({
       localNonce: localNonce,
       remoteNonce: remoteNonce,
@@ -87,19 +83,29 @@ export class FrameCommunication {
 
   public decode({ message }: { message: Buffer }) {
     let size;
-    let skip = 32;
-    if (!this.nextSize) {
+    let skip;
+
+    if (this.state === State.HEADER) {
       const header = this.decodeFrame.parseHeader({ message });
-      size = header.slice(0, 3).readIntBE(0, 3);
-      this.logger.log(`Got header with ${size} length`);
-      if (message.length - 32 < size) {
-        this.nextSize = size;
+      const bodySize = getNumberFromBuffer(header.slice(0, 3));
+      let nextSize = bodySize + 16;
+      skip = 32;
+
+      // Backwards compatibility for now.
+      if (message.length - 32 < nextSize) {
+        if (bodySize % 16 > 0) nextSize += 16 - (bodySize % 16);
+
+        this.messageQueue.setLimit({
+          size: nextSize,
+        });
+        this.state = State.BODY;
+
         return Buffer.alloc(0);
       }
+      size = nextSize;
     } else {
-      size = this.nextSize;
+      size = message.length;
       skip = 0;
-      this.logger.log(`Had header with ${size} length`);
     }
 
     const body = this.decodeFrame.parseBody({
@@ -109,7 +115,10 @@ export class FrameCommunication {
     });
 
     this.logger.log(`\t Decoded stream ${body.toString('hex')}`);
-    this.nextSize = undefined;
+    this.state = State.HEADER;
+    this.messageQueue.setLimit({
+      size: 32,
+    });
 
     return body;
   }
@@ -144,4 +153,18 @@ export class FrameCommunication {
       macKey,
     };
   }
+}
+
+export interface FrameCommunicationSetup {
+  localPacket: Buffer;
+  localNonce: Buffer;
+  remotePacket: Buffer;
+  remoteNonce: Buffer;
+  ephemeralSharedSecret: Buffer;
+  switchNonce?: boolean;
+}
+
+enum State {
+  HEADER,
+  BODY,
 }

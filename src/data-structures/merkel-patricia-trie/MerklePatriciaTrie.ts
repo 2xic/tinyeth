@@ -42,6 +42,7 @@ export class MerklePatriciaTrie {
       throw new Error('oh no');
     }
 
+    // eslint-disable-next-line no-console
     console.log(this._root.childrenValues);
 
     return {
@@ -138,6 +139,7 @@ export class MerklePatriciaTrie {
           )
         );
       }
+      // eslint-disable-next-line no-console
       console.log(['children values', newNode.childrenValues]);
       return new TrieNode({
         key: packNibbles(currentKey.slice(0, commonPrefixResult.length)),

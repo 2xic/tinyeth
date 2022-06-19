@@ -25,7 +25,7 @@ export class NodeCommunication {
     this._socket = dgram.createSocket('udp4');
 
     this._socket.on('connect', () => {
-      console.log('Connection :)');
+      this.logger.log('Connection :)');
     });
 
     this._socket.on('error', (error) => {
@@ -43,7 +43,7 @@ export class NodeCommunication {
 
     this._socket.on('listening', () => {
       const address = this.socket.address();
-      console.log(`server listening ${address.address}:${address.port}`);
+      this.logger.log(`server listening ${address.address}:${address.port}`);
     });
     this.connection = nodeOptions;
   }

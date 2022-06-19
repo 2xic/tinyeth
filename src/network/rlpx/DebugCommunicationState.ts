@@ -3,47 +3,39 @@ import { CommunicationState } from './CommunicationState';
 import fs from 'fs';
 import { Logger } from '../../utils/Logger';
 import { KeyPair } from '../../signatures';
-import { Signatures } from '../../signatures/Signatures';
 import { Auth8Eip } from '../auth/AuthEip8';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { Rlpx } from '../Rlpx';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { stringify } from 'buffer-json';
-import { DecodeAuthMessageInteractor } from './DecodeAuthMessageInteractor';
-import { DecodeAckMessageInteractor } from './DecodeAckMessageInteractor';
 import { RlpxMessageEncoder } from './RlpxMessageEncoder';
-import {
-  RlpxMessageDecoder,
-  RlpxPacketTypes,
-} from './packet-types/RlpxMessageDecoder';
+import { RlpxMessageDecoder } from './packet-types/RlpxMessageDecoder';
+import { PeerConnectionState } from './PeerConnectionState';
+import { MessageQueue } from './MessageQueue';
 
 @injectable()
 export class DebugCommunicationState extends CommunicationState {
   constructor(
     rlpx: Rlpx,
     protected keyPair: KeyPair,
-    signatures: Signatures,
     logger: Logger,
-    ephemeralKeyPair: KeyPair,
     protected auth8Eip: Auth8Eip,
     protected frameCommunication: FrameCommunication,
-    decodeAuthMessageInteractor: DecodeAuthMessageInteractor,
-    decodeAckMessageInteractor: DecodeAckMessageInteractor,
     rlpxMessageEncoder: RlpxMessageEncoder,
-    rlpxMessageDecoder: RlpxMessageDecoder
+    rlpxMessageDecoder: RlpxMessageDecoder,
+    peerConnection: PeerConnectionState,
+    messageQueue: MessageQueue
   ) {
     super(
       rlpx,
       keyPair,
-      signatures,
       logger,
-      ephemeralKeyPair,
       auth8Eip,
       frameCommunication,
-      decodeAuthMessageInteractor,
-      decodeAckMessageInteractor,
       rlpxMessageEncoder,
-      rlpxMessageDecoder
+      rlpxMessageDecoder,
+      peerConnection,
+      messageQueue
     );
   }
 
@@ -73,7 +65,7 @@ export class DebugCommunicationState extends CommunicationState {
 
   public async parseMessage(
     message: Buffer,
-    callback: (message: Buffer | RlpxPacketTypes.DISCONNECT) => void,
+    callback: (message: Buffer) => void,
     reject: (err: Error) => void,
     parseOnly = false
   ) {
@@ -107,11 +99,11 @@ export class DebugCommunicationState extends CommunicationState {
     input: Buffer;
     nonce: Buffer;
   }) {
-    if (!this._remotePublicKey) {
+    if (!this.remotePublicKey) {
       throw new Error('Need remote public key set');
     }
     const secret = this.keyPair.getEcdh({
-      publicKey: this._remotePublicKey,
+      publicKey: this.remotePublicKey,
     });
     super.setSenderNonceState({
       authMessage: input,
@@ -150,6 +142,7 @@ export class DebugCommunicationState extends CommunicationState {
   public dump({ path }: { path: string }) {
     if (this.communications.length > 5) {
       fs.writeFileSync(path, stringify(this.communications));
+      // eslint-disable-next-line no-console
       console.log(`Saved ${this.communications.length} messages`);
     }
   }

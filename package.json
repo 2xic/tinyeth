@@ -10,6 +10,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc --incremental",
+    "test": "npm run unit",
     "unit": "npm run build && jest",
     "int": "npm run build && jest -c jest.config.int.js",
     "lint": "npx eslint ./ --fix",
