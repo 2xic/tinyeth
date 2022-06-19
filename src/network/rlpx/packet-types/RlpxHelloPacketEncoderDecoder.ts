@@ -47,6 +47,7 @@ export class RlpxHelloPacketEncoderDecoder
     const [nodeId] = rlpReader.readArray<string>({
       length: 1,
     });
+
     return {
       protocolVersion,
       capabilities,

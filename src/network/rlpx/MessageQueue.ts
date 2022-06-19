@@ -29,9 +29,11 @@ export class MessageQueue {
       this.data = this.data.slice(limit);
       return oldBatch;
     } else {
+      /*
       this.logger.log(
         `Waiting on more data (limit : ${this.limit}, data: ${this.data.length}) `
       );
+      */
       return Buffer.alloc(0);
     }
   }

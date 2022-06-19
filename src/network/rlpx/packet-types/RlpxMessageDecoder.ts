@@ -7,10 +7,7 @@ import {
 
 @injectable()
 export class RlpxMessageDecoder {
-  constructor(
-    private helloPacketDecoder: RlpxHelloPacketEncoderDecoder,
-    private logger: Logger
-  ) {}
+  constructor(private helloPacketDecoder: RlpxHelloPacketEncoderDecoder) {}
 
   public decode({ packet }: { packet: Buffer }):
     | {

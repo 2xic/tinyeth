@@ -5,6 +5,7 @@ import {
   ParsedHelloPacket,
   RlpxHelloPacketEncoderDecoder,
 } from './RlpxHelloPacketEncoderDecoder';
+import os from 'os';
 
 @injectable()
 export class ReplayHelloPacket {
@@ -18,6 +19,7 @@ export class ReplayHelloPacket {
     const helloMessage = this.helloPacketEncoder.encode({
       input: {
         ...hello,
+        userAgent: `tinyeth/v0.0.1/${os.platform()}-${os.arch()}/nodejs`,
         nodeId: `0x${this.keyPair.getPublicKey()}`,
       },
     });

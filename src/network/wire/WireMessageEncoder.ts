@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { PacketEncapsulation } from './PacketEncapsulation';
 import { FindNodePacketEncodeDecode } from './FindNodePacketEncodeDecode';
-import { KeyPair } from '../../signatures';
 import { ConnectionOptions } from './NodeManager';
 import { assertEqual } from '../../utils/enforce';
 import { PongPacketEncodeDecode } from './PongPacketEncodeDecode';
@@ -14,8 +13,7 @@ export class WireMessageEncoder {
   constructor(
     private pingPacketEncoder: PingPacketEncodeDecode,
     private pongPacketEncoder: PongPacketEncodeDecode,
-    private encapsulateMEssage: PacketEncapsulation,
-    private keyPair: KeyPair
+    private encapsulateMEssage: PacketEncapsulation
   ) {}
 
   public ping(options: ConnectionOptions) {

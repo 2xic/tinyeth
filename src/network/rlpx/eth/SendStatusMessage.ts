@@ -3,10 +3,14 @@ import { RlpEncoder } from '../../../rlp';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import { Messages } from './Messages';
 import { convertNumberToPadHex } from '../../../utils/convertNumberToPadHex';
+import { FrameCommunication } from '../../auth/frameing/FrameCommunication';
 
 @injectable()
 export class SendStatusMessage {
-  constructor(private rlpEncoder: RlpEncoder) {}
+  constructor(
+    private rlpEncoder: RlpEncoder,
+    private frameCommunication: FrameCommunication
+  ) {}
 
   public sendStatus({ version }: { version: number }) {
     // https://github.com/ethereum/devp2p/blob/master/caps/eth.md#getblockheaders-0x03
@@ -28,7 +32,7 @@ export class SendStatusMessage {
       ],
     });
 
-    return Buffer.concat([
+    const message = Buffer.concat([
       getBufferFromHex(
         this.rlpEncoder.encode({
           input: Messages.STATUS,
@@ -36,5 +40,9 @@ export class SendStatusMessage {
       ),
       getBufferFromHex(payload),
     ]);
+
+    return this.frameCommunication.encode({
+      message,
+    });
   }
 }

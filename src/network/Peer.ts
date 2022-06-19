@@ -7,6 +7,7 @@ import {
   MessageType,
 } from './rlpx/CommunicationState';
 import { PeerConnection } from './rlpx/PeerConnection';
+import { SendStatusMessage } from './rlpx/eth/SendStatusMessage';
 
 @injectable()
 export class Peer {
@@ -14,7 +15,8 @@ export class Peer {
     private keyPair: KeyPair,
     private logger: Logger,
     private communicationState: CommunicationState,
-    private peerConnection: PeerConnection
+    private peerConnection: PeerConnection,
+    private statusMessage: SendStatusMessage
   ) {}
 
   public messageSent = 0;
@@ -22,6 +24,8 @@ export class Peer {
 
   private ping?: NodeJS.Timer;
   private waitingOnMessage = false;
+  private sentStatus = false;
+  private protocolVersion?: number;
 
   public async connect(options: PeerConnectionOptions) {
     const socket = await this.peerConnection.connect(options);
@@ -44,16 +48,31 @@ export class Peer {
     });
     socket.on('close', () => {
       this.logger.log('Socket closed');
+      if (this.ping) {
+        clearInterval(this.ping);
+      }
     });
 
-    this.communicationState.on('hello', () => {
+    this.communicationState.on('hello', (hello) => {
       this.logger.log('Hello was sent - starting ping interval');
+      this.protocolVersion = hello.protocolVersion;
       this.ping = setInterval(async () => {
         if (!this.waitingOnMessage) {
           this.waitingOnMessage = true;
           await this.sendMessage({ type: MessageType.PING });
         }
       }, 1500);
+    });
+
+    this.communicationState.on('pong', async () => {
+      if (!this.sentStatus && this.protocolVersion) {
+        this.sentStatus = true;
+        this.logger.log('Trying to send a status message ... ');
+        const statusMessage = this.statusMessage.sendStatus({
+          version: this.protocolVersion,
+        });
+        await this.peerConnection.sendMessage(statusMessage);
+      }
     });
 
     this.peerConnection.on('packet', () => {

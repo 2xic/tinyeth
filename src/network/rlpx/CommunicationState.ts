@@ -13,6 +13,8 @@ import {
 import { MessageState, PeerConnectionState } from './PeerConnectionState';
 import { MyEmitter } from './MyEmitter';
 import { HEADER_SIZE, MessageQueue } from './MessageQueue';
+import { ParsedHelloPacket } from './packet-types/RlpxHelloPacketEncoderDecoder';
+import { ReplayHelloPacket } from './packet-types/ReplayHelloPacket';
 
 /**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
@@ -20,7 +22,8 @@ import { HEADER_SIZE, MessageQueue } from './MessageQueue';
  */
 @injectable()
 export class CommunicationState extends MyEmitter<{
-  hello: null;
+  hello: ParsedHelloPacket;
+  pong: null;
   disconnect: string;
 }> {
   constructor(
@@ -119,21 +122,21 @@ export class CommunicationState extends MyEmitter<{
     parseOnly?: boolean;
   }) {
     try {
-      this.logger.log(`[Received a packet of length ${message.length}]`);
       const body = this.frameCommunication.decode({
         message,
       });
       if (body.length === 0) {
         return callback(Buffer.alloc(0));
       }
-
+      this.logger.log(`body : ${body.toString('hex')}`);
       const options = this.rlpxMessageDecoder.decode({
         packet: body,
       });
       if (!parseOnly) {
         if (options.packet === RlpxPacketTypes.HELLO) {
           this.logger.log('[Got a hello :)]');
-          this.emit('hello', null);
+          this.logger.log(JSON.stringify(options));
+          this.emit('hello', options.data);
           callback(Buffer.alloc(0));
         } else if (options.packet == RlpxPacketTypes.PING) {
           this.logger.log('[Got a ping, replying with pong]');
@@ -143,6 +146,7 @@ export class CommunicationState extends MyEmitter<{
           callback(encodedMessage);
         } else if (options.packet == RlpxPacketTypes.PONG) {
           this.logger.log('[Got a pong]');
+          this.emit('pong', null);
           callback(Buffer.alloc(0));
         } else if (options.packet == RlpxPacketTypes.DISCONNECT) {
           this.emit('disconnect', options.data.reason);
