@@ -8,6 +8,8 @@ export class Contract {
 
   // TODO : Wrong address construction here
   //        see https://ethereum.stackexchange.com/a/101340
+  //            https://www.evm.codes/#f0
+  //        address = keccak256(rlp([sender_address,sender_nonce]))[12:]
   constructor(
     private bytes: Buffer,
     private _value: BigNumber,

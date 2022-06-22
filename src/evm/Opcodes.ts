@@ -79,6 +79,11 @@ export const opcodes: Record<number, OpCode> = {
     const value = readEvmBuffer(evm, 1, 13);
     evm.stack.push(value);
   }),
+  // PUSH32
+  0x7f: new OpCode(33, ({ evm }) => {
+    const value = readEvmBuffer(evm, 1, 32);
+    evm.stack.push(value);
+  }),
   // DUP1
   0x80: new OpCode(1, ({ evm }) => {
     evm.stack.push(evm.stack.get(-1));
@@ -126,8 +131,8 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // EXTCODESIZE
   0x3b: new OpCode(1, ({ evm }) => {
-    const addr = evm.stack.pop();
-    const contract = evm.network.get(addr.toString());
+    const addr = evm.stack.pop().toString(16);
+    const contract = evm.network.get(addr);
     evm.stack.push(contract.length);
   }),
   // MSTORE
@@ -164,7 +169,7 @@ export const opcodes: Record<number, OpCode> = {
     const pc = evm.stack.pop().toNumber();
     const condition = evm.stack.pop();
 
-    if (condition) {
+    if (condition.isEqualTo(1)) {
       const opcode = evm.program[pc] == JUMP_DEST;
       if (!opcode) {
         throw new InvalidJump();
@@ -199,7 +204,12 @@ export const opcodes: Record<number, OpCode> = {
     evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
   }),
   // REVERT
-  0xfd: new OpCode(1, () => {
+  0xfd: new OpCode(1, ({ evm }) => {
+    const offset = evm.stack.pop().toNumber();
+    const length = evm.stack.pop().toNumber();
+
+    evm.setCallingContextReturnData(evm.memory.slice(offset, offset + length));
+
     throw new Reverted('Reverted');
   }),
 };

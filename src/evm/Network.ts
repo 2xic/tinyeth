@@ -7,7 +7,11 @@ export class Network {
     this._contracts[contract.address] = contract;
   }
 
-  public get(address: string): Contract {
+  public get(inputAddress: string): Contract {
+    let address = inputAddress;
+    if (!address.startsWith('0x')) {
+      address = `0x${address}`;
+    }
     return this._contracts[address];
   }
 

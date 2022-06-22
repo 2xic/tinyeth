@@ -22,7 +22,11 @@ export class Evm {
   private running: boolean;
   private _callingContextReturnData?: Buffer;
 
-  constructor(public program: Buffer, private context: TxContext) {
+  constructor(
+    public program: Buffer,
+    private context: TxContext,
+    private options?: Options
+  ) {
     this.memory = Buffer.alloc(2048, 0);
     this._pc = 0;
     this._lastPc = -1;
@@ -41,7 +45,11 @@ export class Evm {
       );
     }
 
-    const opcode = this.loadOpcode();
+    const { opcode, opcodeNumber } = this.loadOpcode();
+    if (this.options?.debug) {
+      // eslint-disable-next-line no-console
+      console.log(`Running 0x${opcodeNumber.toString(16)}`);
+    }
 
     const results = opcode.onExecute({
       evm: this,
@@ -71,13 +79,16 @@ export class Evm {
     return this.program[this.pc];
   }
 
-  private loadOpcode(): OpCode {
+  private loadOpcode(): { opcode: OpCode; opcodeNumber: number } {
     const opcodeNumber = this.currentOpcodeNumber;
     const opcode = opcodes[opcodeNumber];
     if (!opcode) {
       throw new Error(`0x${opcodeNumber.toString(16)}`);
     }
-    return opcode;
+    return {
+      opcode,
+      opcodeNumber,
+    };
   }
 
   public peekBuffer(index: number) {
@@ -123,4 +134,8 @@ export interface EvmContext {
   evm: Evm;
   byteIndex: number;
   context: TxContext;
+}
+
+interface Options {
+  debug: boolean;
 }
