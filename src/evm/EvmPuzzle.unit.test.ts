@@ -69,4 +69,15 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       data: Buffer.from('60016000526001601ff3', 'hex'),
     }).execute();
   });
+
+  it('should be possible run puzzle 8 contract', () => {
+    const contract = Buffer.from(
+      '36600080373660006000F0600080808080945AF1600014601B57FD5B00',
+      'hex'
+    );
+    new Evm(contract, {
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+  });
 });

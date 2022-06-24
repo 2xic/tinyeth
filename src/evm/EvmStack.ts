@@ -40,4 +40,12 @@ export class EvmStack {
   public toString() {
     return this.stack.toString();
   }
+
+  public swap(from: number, to: number) {
+    const fromItem = this.stack[from];
+    const toItem = this.stack[to];
+
+    this.stack[to] = fromItem;
+    this.stack[from] = toItem;
+  }
 }

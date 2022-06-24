@@ -100,6 +100,10 @@ export const opcodes: Record<number, OpCode> = {
     evm.stack.push(b);
     evm.stack.push(a);
   }),
+  // SWAP6
+  0x94: new OpCode(1, ({ evm }) => {
+    evm.stack.swap(0, 5);
+  }),
   // CALLVALUE
   0x34: new OpCode(1, ({ evm, context }) => {
     evm.stack.push(context.value.value);
