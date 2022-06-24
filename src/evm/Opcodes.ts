@@ -131,7 +131,8 @@ export const opcodes: Record<number, OpCode> = {
   }),
   // EXTCODESIZE
   0x3b: new OpCode(1, ({ evm }) => {
-    const addr = evm.stack.pop().toString(16);
+    const stackItem = evm.stack.pop();
+    const addr = stackItem.toString(16);
     const contract = evm.network.get(addr);
     evm.stack.push(contract.length);
   }),
@@ -191,7 +192,10 @@ export const opcodes: Record<number, OpCode> = {
     const length = evm.stack.pop().toNumber();
 
     const contractBytes = evm.memory.slice(offset, offset + length);
-    const contract = new Contract(contractBytes, new BigNumber(value));
+    const contract = new Contract(
+      contractBytes,
+      new BigNumber(value)
+    ).execute();
 
     evm.network.register({ contract });
     evm.stack.push(new BigNumber(contract.address, 16));

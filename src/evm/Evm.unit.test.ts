@@ -1,4 +1,5 @@
 import { Reverted } from './errors/Reverted';
+import { StackUnderflow } from './errors/StackUnderflow';
 import { Evm } from './Evm';
 import { Wei } from './Wei';
 
@@ -214,7 +215,7 @@ describe('evm', () => {
     evm.step();
     expect(evm.isRunning).toBe(true);
 
-    evm.step();
+    expect(() => evm.step()).toThrowError(StackUnderflow);
   });
 
   it('should correctly run REVERT opcode', () => {
@@ -228,5 +229,28 @@ describe('evm', () => {
     });
     expect(() => evm.execute()).toThrow(Reverted);
     expect(evm.callingContextReturnData?.toString('hex')).toBe('ff01');
+  });
+
+  it('should correctly run CREATE and EXTCODESIZE opcode', () => {
+    const code = [
+      '7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', // PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      '6000', // PUSH1 0
+      '52', // MSTORE
+      '7FFF60005260206000F30000000000000000000000000000000000000000000000', // PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+      '6020', // PUSH1 32
+      '52', // MSTORE
+      '6029', // PUSH 41
+      '6000', // PUSH 0
+      '6000', // PUSH 0
+      'F0', // CREATE
+      '3B', // EXTCODESIZE
+    ].join('');
+    const contract = Buffer.from(code, 'hex');
+    const evm = new Evm(contract, {
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+    expect(evm.stack).toHaveLength(1);
+    expect(evm.stack.get(0).toString()).toBe('32');
   });
 });

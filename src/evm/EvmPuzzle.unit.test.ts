@@ -66,7 +66,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     );
     new Evm(contract, {
       value: new Wei(16),
-      data: Buffer.from('', 'hex'),
+      data: Buffer.from('60016000526001601ff3', 'hex'),
     }).execute();
   });
 });
