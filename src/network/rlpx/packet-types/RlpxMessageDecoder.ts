@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import { Logger } from '../../../utils/Logger';
 import {
   ParsedHelloPacket,
   RlpxHelloPacketEncoderDecoder,

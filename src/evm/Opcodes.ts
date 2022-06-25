@@ -21,74 +21,74 @@ export const opcodes: Record<number, OpCode> = {
   0x1: new OpCode({
     name: 'ADD',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
-      evm.stack.push(a + b);
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a + b);
     },
     gasCost: 3,
   }),
   0x2: new OpCode({
     name: 'MUL',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
-      evm.stack.push(a * b);
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a * b);
     },
     gasCost: 5,
   }),
   0x3: new OpCode({
     name: 'SUB',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
-      evm.stack.push(a - b);
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a - b);
     },
     gasCost: 3,
   }),
   0x14: new OpCode({
     name: 'EQ',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
 
-      evm.stack.push(Number(a === b));
+      stack.push(Number(a === b));
     },
     gasCost: 3,
   }),
   0x15: new OpCode({
     name: 'ISZERO',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
 
-      evm.stack.push(Number(a === 0));
+      stack.push(Number(a === 0));
     },
     gasCost: 3,
   }),
   0x18: new OpCode({
     name: 'XOR',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
-      evm.stack.push(a ^ b);
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a ^ b);
     },
     gasCost: 3,
   }),
   0x39: new OpCode({
     name: 'CODECOPY',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const destOffset = evm.stack.pop().toNumber();
-      const offset = evm.stack.pop().toNumber();
-      const size = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack, memory }) => {
+      const destOffset = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const size = stack.pop().toNumber();
 
       for (let i = 0; i < size; i++) {
-        evm.storage.memory[destOffset + i] = evm.program[offset + i];
+        memory.memory[destOffset + i] = evm.program[offset + i];
       }
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -97,25 +97,25 @@ export const opcodes: Record<number, OpCode> = {
   0x50: new OpCode({
     name: 'POP',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.pop();
+    onExecute: ({ stack }) => {
+      stack.pop();
     },
     gasCost: 2,
   }),
   0x55: new OpCode({
     name: 'SSTORE',
     arguments: 1,
-    onExecute: ({ evm }): ExecutionResults => {
-      const key = evm.stack.pop();
-      const value = evm.stack.pop();
-      const gas = evm.gasComputer.sstore({
+    onExecute: ({ evm, stack, gasComputer, storage }): ExecutionResults => {
+      const key = stack.pop();
+      const value = stack.pop();
+      const gas = gasComputer.sstore({
         gasLeft: 10_000, //evm.gasLeft,
         address: '0xdeadbeef',
         key,
         value,
       });
 
-      evm.storage.storage[key.toString()] = value;
+      storage.write({ key, value });
       return {
         setPc: false,
         // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
@@ -132,9 +132,9 @@ export const opcodes: Record<number, OpCode> = {
     arguments: (index) => index + 1,
     iteratedExecuteConstruction:
       (index) =>
-      ({ evm }) => {
+      ({ evm, stack }) => {
         const value = readEvmBuffer(evm, 1, index);
-        evm.stack.push(value);
+        stack.push(value);
       },
     gasCost: 3,
   }),
@@ -145,11 +145,11 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     iteratedExecuteConstruction:
       (index) =>
-      ({ evm }) => {
+      ({ stack }) => {
         if (index === 1) {
-          evm.stack.push(evm.stack.get(-1));
+          stack.push(stack.get(-1));
         } else {
-          evm.stack.push(evm.stack.get(evm.stack.length - index));
+          stack.push(stack.get(stack.length - index));
         }
       },
     gasCost: 3,
@@ -161,25 +161,25 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     iteratedExecuteConstruction:
       (index) =>
-      ({ evm }) => {
-        evm.stack.swap(0, index);
+      ({ stack }) => {
+        stack.swap(0, index);
       },
     gasCost: 3,
   }),
   0x34: new OpCode({
     name: 'CALLVALUE',
     arguments: 1,
-    onExecute: ({ evm, context }) => {
-      evm.stack.push(context.value.value);
+    onExecute: ({ stack, context }) => {
+      stack.push(context.value.value);
     },
     gasCost: 2,
   }),
   0x35: new OpCode({
     name: 'CALLDATALOAD',
     arguments: 1,
-    onExecute: ({ evm, context }) => {
-      const index = evm.stack.pop().toNumber();
-      evm.stack.push(
+    onExecute: ({ context, stack }) => {
+      const index = stack.pop().toNumber();
+      stack.push(
         parseInt(context.data.slice(index, index + 32).toString('hex'), 16)
       );
     },
@@ -188,21 +188,21 @@ export const opcodes: Record<number, OpCode> = {
   0x36: new OpCode({
     name: 'CALLDATASIZE',
     arguments: 1,
-    onExecute: ({ evm, context }) => {
-      evm.stack.push(context.data.length);
+    onExecute: ({ stack, context }) => {
+      stack.push(context.data.length);
     },
     gasCost: 3,
   }),
   0x37: new OpCode({
     name: 'CALLDATACOPY',
     arguments: 1,
-    onExecute: ({ evm, context }) => {
-      const dataOffset = evm.stack.pop().toNumber();
-      const offset = evm.stack.pop().toNumber();
-      const length = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack, memory, context }) => {
+      const dataOffset = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const length = stack.pop().toNumber();
 
       for (let i = 0; i < length; i++) {
-        evm.storage.memory[dataOffset + i] = context.data[offset + i];
+        memory.memory[dataOffset + i] = context.data[offset + i];
       }
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -211,19 +211,19 @@ export const opcodes: Record<number, OpCode> = {
   0x38: new OpCode({
     name: 'CODESIZE',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.push(evm.program.length);
+    onExecute: ({ evm, stack }) => {
+      stack.push(evm.program.length);
     },
     gasCost: 2,
   }),
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const stackItem = evm.stack.pop();
+    onExecute: ({ evm, stack, network }) => {
+      const stackItem = stack.pop();
       const addr = stackItem.toString(16);
-      const contract = evm.network.get(addr);
-      evm.stack.push(contract.length);
+      const contract = network.get(addr);
+      stack.push(contract.length);
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     gasCost: () => 1,
@@ -231,9 +231,9 @@ export const opcodes: Record<number, OpCode> = {
   0x52: new OpCode({
     name: 'MSTORE',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const offset = evm.stack.pop().toNumber();
-      const value = evm.stack.pop();
+    onExecute: ({ evm, stack, memory }) => {
+      const offset = stack.pop().toNumber();
+      const value = stack.pop();
 
       const uint = Buffer.from(
         new Uint({
@@ -244,7 +244,7 @@ export const opcodes: Record<number, OpCode> = {
       );
 
       for (let i = 0; i < 32; i++) {
-        evm.storage.memory[offset + i] = uint[i];
+        memory.memory[offset + i] = uint[i];
       }
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
@@ -253,8 +253,8 @@ export const opcodes: Record<number, OpCode> = {
   0x56: new OpCode({
     name: 'JUMP',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const pc = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack }) => {
+      const pc = stack.pop().toNumber();
       const opcode = evm.program[pc] == JUMP_DEST;
       if (!opcode) {
         throw new InvalidJump();
@@ -270,9 +270,9 @@ export const opcodes: Record<number, OpCode> = {
   0x57: new OpCode({
     name: 'JUMPI',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const pc = evm.stack.pop().toNumber();
-      const condition = evm.stack.pop();
+    onExecute: ({ evm, stack }) => {
+      const pc = stack.pop().toNumber();
+      const condition = stack.pop();
 
       if (condition.isEqualTo(1)) {
         const opcode = evm.program[pc] == JUMP_DEST;
@@ -299,19 +299,19 @@ export const opcodes: Record<number, OpCode> = {
   0xf0: new OpCode({
     name: 'CREATE',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const value = evm.stack.pop().toNumber();
-      const offset = evm.stack.pop().toNumber();
-      const length = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack, memory, network }) => {
+      const value = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const length = stack.pop().toNumber();
 
-      const contractBytes = evm.storage.memory.slice(offset, offset + length);
+      const contractBytes = memory.memory.slice(offset, offset + length);
       const contract = new Contract(
         contractBytes,
         new BigNumber(value)
       ).execute();
 
-      evm.network.register({ contract });
-      evm.stack.push(new BigNumber(contract.address, 16));
+      network.register({ contract });
+      stack.push(new BigNumber(contract.address, 16));
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 1,
@@ -319,12 +319,12 @@ export const opcodes: Record<number, OpCode> = {
   0xf3: new OpCode({
     name: 'RETURN',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const offset = evm.stack.pop().toNumber();
-      const size = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack, memory }) => {
+      const offset = stack.pop().toNumber();
+      const size = stack.pop().toNumber();
 
       evm.setCallingContextReturnData(
-        evm.storage.memory.slice(offset, offset + size)
+        memory.memory.slice(offset, offset + size)
       );
     },
     // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
@@ -333,12 +333,12 @@ export const opcodes: Record<number, OpCode> = {
   0xfd: new OpCode({
     name: 'REVERT',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      const offset = evm.stack.pop().toNumber();
-      const length = evm.stack.pop().toNumber();
+    onExecute: ({ evm, stack, memory }) => {
+      const offset = stack.pop().toNumber();
+      const length = stack.pop().toNumber();
 
       evm.setCallingContextReturnData(
-        evm.storage.memory.slice(offset, offset + length)
+        memory.memory.slice(offset, offset + length)
       );
 
       throw new Reverted('Reverted');

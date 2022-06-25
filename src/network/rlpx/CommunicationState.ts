@@ -14,7 +14,6 @@ import { MessageState, PeerConnectionState } from './PeerConnectionState';
 import { MyEmitter } from './MyEmitter';
 import { HEADER_SIZE, MessageQueue } from './MessageQueue';
 import { ParsedHelloPacket } from './packet-types/RlpxHelloPacketEncoderDecoder';
-import { ReplayHelloPacket } from './packet-types/ReplayHelloPacket';
 
 /**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.

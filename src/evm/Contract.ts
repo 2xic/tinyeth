@@ -35,7 +35,10 @@ export class Contract {
   }
 
   public execute() {
-    // This should not be allowed -> Redo this in a better way.
+    // This should be done in another way -> Redo this in a better way.
+    // The result of this execution will also effect the previous context, so we need to be able to continue in same context.
+    // by having it in a different container this is not hte case.
+    // I think that all access sets done in this new contract also will affect the ones in the current context.
     const evm = getClassFromTestContainer(Evm)
       .boot(this.bytes, {
         value: new Wei(this.value.toNumber()),

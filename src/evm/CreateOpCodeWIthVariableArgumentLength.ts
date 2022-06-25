@@ -1,4 +1,5 @@
 import { Evm } from './Evm';
+import { EvmStack } from './EvmStack';
 import { ExecutionResults, OpCode } from './OpCode';
 
 export function CreateOpCodeWIthVariableArgumentLength(options: {
@@ -8,7 +9,13 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
   gasCost: number;
   iteratedExecuteConstruction: (
     index: number
-  ) => ({ evm }: { evm: Evm }) => void | ExecutionResults;
+  ) => ({
+    evm,
+    stack,
+  }: {
+    evm: Evm;
+    stack: EvmStack;
+  }) => void | ExecutionResults;
   arguments: number | ((index: number) => number);
 }) {
   const record: Record<number, OpCode> = {};

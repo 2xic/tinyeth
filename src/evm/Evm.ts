@@ -6,18 +6,19 @@ import { Wei } from './Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
 import { calculateDataGasCost, GAS_BASE_COST } from './gas/Gas';
-import { EvmStorage } from './EvmStorage';
+import { EvmMemory } from './EvmMemory';
 import { injectable } from 'inversify';
 import { GasComputer } from './gas/GasComputer';
+import { EvmKeyValueStorage } from './EvmKeyValueStorage';
 
 @injectable()
 export class Evm {
-  // Todo theses should be encapsulated
   constructor(
-    public stack: EvmStack,
-    public network: Network,
-    public storage: EvmStorage,
-    public gasComputer: GasComputer
+    protected stack: EvmStack,
+    protected network: Network,
+    protected memory: EvmMemory,
+    protected storage: EvmKeyValueStorage,
+    protected gasComputer: GasComputer
   ) {}
 
   private running = false;
@@ -62,6 +63,11 @@ export class Evm {
 
     const results = opcode.execute({
       evm: this,
+      stack: this.stack,
+      network: this.network,
+      storage: this.storage,
+      memory: this.memory,
+      gasComputer: this.gasComputer,
       byteIndex: this.pc,
       context: this.context,
     });
@@ -151,10 +157,20 @@ interface TxContext {
   value: Wei;
   data: Buffer;
   nonce: number;
+  /* 
+    Todo 
+    - Caller should be added here also.
+      This affect the access sets for instance.
+  */
 }
 
 export interface EvmContext {
   evm: Evm;
+  stack: EvmStack;
+  network: Network;
+  memory: EvmMemory;
+  storage: EvmKeyValueStorage;
+  gasComputer: GasComputer;
   byteIndex: number;
   context: TxContext;
 }

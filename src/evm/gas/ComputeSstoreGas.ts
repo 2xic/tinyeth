@@ -1,14 +1,15 @@
 import BigNumber from 'bignumber.js';
-import { Container, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { AccessSets } from '../AccessSets';
 import { OutOfGasError } from '../errors/OutOfGasError';
-import { Evm } from '../Evm';
-import { EvmStack } from '../EvmStack';
-import { EvmStorage } from '../EvmStorage';
+import { EvmKeyValueStorage } from '../EvmKeyValueStorage';
 
 @injectable()
 export class ComputeSstoreGas {
-  constructor(private accessSets: AccessSets, private storage: EvmStorage) {}
+  constructor(
+    private accessSets: AccessSets,
+    private storage: EvmKeyValueStorage
+  ) {}
 
   // implementation of https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
   public compute({ gasLeft, address, key, value }: SstoreContext): Results {
@@ -27,12 +28,7 @@ export class ComputeSstoreGas {
       gasCost += 2100;
     }
 
-    // todo: Abstract this storage mapping away -> bignumber in -> convert to 16 inside function.
-    if (
-      (this.storage.storage[key.toString(16)] || new BigNumber(0)).isEqualTo(
-        value
-      )
-    ) {
+    if (this.storage.read({ key }).isEqualTo(value)) {
       gasCost += 100;
     } else {
       if (this.storage.isEqualOriginal({ key })) {
@@ -47,7 +43,7 @@ export class ComputeSstoreGas {
       } else {
         gasCost += 100;
         if (!this.storage.isOriginallyZero({ key })) {
-          if (this.storage.get({ key }).isEqualTo(0)) {
+          if (this.storage.read({ key }).isEqualTo(0)) {
             gasRefund -= 4800;
           } else if (value.isEqualTo(0)) {
             gasRefund += 4800;
