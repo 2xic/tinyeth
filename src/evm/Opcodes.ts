@@ -9,172 +9,251 @@ import { OpCode } from './OpCode';
 const JUMP_DEST = 0x5b;
 
 export const opcodes: Record<number, OpCode> = {
-  // STOP
-  0x0: new OpCode(0, ({ evm }) => {
-    evm.stop();
+  0x0: new OpCode({
+    name: 'STOP',
+    arguments: 0,
+    onExecute: ({ evm }) => {
+      evm.stop();
+    },
+    gasCost: () => 1,
   }),
-  // MUL
-  0x2: new OpCode(1, ({ evm }) => {
-    const a = evm.stack.pop().toNumber();
-    const b = evm.stack.pop().toNumber();
-    evm.stack.push(a * b);
+  0x2: new OpCode({
+    name: 'MUL',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
+      evm.stack.push(a * b);
+    },
+    gasCost: () => 1,
   }),
-  // SUB
-  0x3: new OpCode(1, ({ evm }) => {
-    const a = evm.stack.pop().toNumber();
-    const b = evm.stack.pop().toNumber();
-    evm.stack.push(a - b);
+  0x3: new OpCode({
+    name: 'SUB',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
+      evm.stack.push(a - b);
+    },
+    gasCost: () => 1,
   }),
-  // EQ
-  0x14: new OpCode(1, ({ evm }) => {
-    const a = evm.stack.pop().toNumber();
-    const b = evm.stack.pop().toNumber();
+  0x14: new OpCode({
+    name: 'EQ',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
 
-    evm.stack.push(Number(a === b));
+      evm.stack.push(Number(a === b));
+    },
+    gasCost: () => 1,
   }),
-  // ISZERO
-  0x15: new OpCode(1, ({ evm }) => {
-    const a = evm.stack.pop().toNumber();
+  0x15: new OpCode({
+    name: 'ISZERO',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
 
-    evm.stack.push(Number(a === 0));
+      evm.stack.push(Number(a === 0));
+    },
+    gasCost: () => 1,
   }),
-  // XOR
-  0x18: new OpCode(1, ({ evm }) => {
-    const a = evm.stack.pop().toNumber();
-    const b = evm.stack.pop().toNumber();
-    evm.stack.push(a ^ b);
+  0x18: new OpCode({
+    name: 'XOR',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
+      evm.stack.push(a ^ b);
+    },
+    gasCost: () => 1,
   }),
-  // CODECOPY
-  0x39: new OpCode(1, ({ evm }) => {
-    const destOffset = evm.stack.pop().toNumber();
-    const offset = evm.stack.pop().toNumber();
-    const size = evm.stack.pop().toNumber();
+  0x39: new OpCode({
+    name: 'CODECOPY',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const destOffset = evm.stack.pop().toNumber();
+      const offset = evm.stack.pop().toNumber();
+      const size = evm.stack.pop().toNumber();
 
-    for (let i = 0; i < size; i++) {
-      evm.memory[destOffset + i] = evm.program[offset + i];
-    }
+      for (let i = 0; i < size; i++) {
+        evm.memory[destOffset + i] = evm.program[offset + i];
+      }
+    },
+    gasCost: () => 1,
   }),
-  // POP
-  0x50: new OpCode(1, ({ evm }) => {
-    evm.stack.pop();
+  0x50: new OpCode({
+    name: 'POP',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.pop();
+    },
+    gasCost: () => 1,
   }),
-  // SSTORAGE
-  0x55: new OpCode(1, ({ evm }) => {
-    const key = evm.stack.pop();
-    const value = evm.stack.pop();
+  0x55: new OpCode({
+    name: 'SSTORAGE',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const key = evm.stack.pop();
+      const value = evm.stack.pop();
 
-    evm.storage[key.toString()] = value;
+      evm.storage[key.toString()] = value;
+    },
+    gasCost: () => 1,
   }),
-  // PUSH1
-  0x60: new OpCode(2, ({ evm }) => {
-    evm.stack.push(evm.peekBuffer(1));
+  0x60: new OpCode({
+    name: 'PUSH1',
+    arguments: 2,
+    onExecute: ({ evm }) => {
+      evm.stack.push(evm.peekBuffer(1));
+    },
+    gasCost: () => 1,
   }),
-  // PUSH2
-  0x61: new OpCode(3, ({ evm }) => {
-    const value = readEvmBuffer(evm, 1, 2);
-    evm.stack.push(value);
+  0x61: new OpCode({
+    name: 'PUSH2',
+    arguments: 3,
+    onExecute: ({ evm }) => {
+      const value = readEvmBuffer(evm, 1, 2);
+      evm.stack.push(value);
+    },
+    gasCost: () => 1,
   }),
-  // PUSH13
-  0x6c: new OpCode(14, ({ evm }) => {
-    const value = readEvmBuffer(evm, 1, 13);
-    evm.stack.push(value);
+  0x6c: new OpCode({
+    name: 'PUSH13',
+    arguments: 14,
+    onExecute: ({ evm }) => {
+      const value = readEvmBuffer(evm, 1, 13);
+      evm.stack.push(value);
+    },
+    gasCost: () => 1,
   }),
-  // PUSH32
-  0x7f: new OpCode(33, ({ evm }) => {
-    const value = readEvmBuffer(evm, 1, 32);
-    evm.stack.push(value);
+  0x7f: new OpCode({
+    name: 'PUSH32',
+    arguments: 33,
+    onExecute: ({ evm }) => {
+      const value = readEvmBuffer(evm, 1, 32);
+      evm.stack.push(value);
+    },
+    gasCost: () => 1,
   }),
-  // DUP1
-  0x80: new OpCode(1, ({ evm }) => {
-    evm.stack.push(evm.stack.get(-1));
+  0x80: new OpCode({
+    name: 'DUP1',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.push(evm.stack.get(-1));
+    },
+    gasCost: () => 1,
   }),
-  // DUP2
-  0x81: new OpCode(1, ({ evm }) => {
-    evm.stack.push(evm.stack.get(evm.stack.length - 2));
+  0x81: new OpCode({
+    name: 'DUP2',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.push(evm.stack.get(evm.stack.length - 2));
+    },
+    gasCost: () => 1,
   }),
-  // SWAP1
-  0x90: new OpCode(1, ({ evm }) => {
-    const b = evm.stack.pop();
-    const a = evm.stack.pop();
+  0x90: new OpCode({
+    name: 'SWAP1',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.swap(0, 1);
+    },
+    gasCost: () => 1,
+  }),
+  0x94: new OpCode({
+    name: 'SWAP6',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.swap(0, 5);
+    },
+    gasCost: () => 1,
+  }),
+  0x34: new OpCode({
+    name: 'CALLVALUE',
+    arguments: 1,
+    onExecute: ({ evm, context }) => {
+      evm.stack.push(context.value.value);
+    },
+    gasCost: () => 1,
+  }),
+  0x35: new OpCode({
+    name: 'CALLDATALOAD',
+    arguments: 1,
+    onExecute: ({ evm, context }) => {
+      const index = evm.stack.pop().toNumber();
+      evm.stack.push(
+        parseInt(context.data.slice(index, index + 32).toString('hex'), 16)
+      );
+    },
+    gasCost: () => 1,
+  }),
+  0x36: new OpCode({
+    name: 'CALLDATASIZE',
+    arguments: 1,
+    onExecute: ({ evm, context }) => {
+      evm.stack.push(context.data.length);
+    },
+    gasCost: () => 1,
+  }),
+  0x37: new OpCode({
+    name: 'CALLDATACOPY',
+    arguments: 1,
+    onExecute: ({ evm, context }) => {
+      const dataOffset = evm.stack.pop().toNumber();
+      const offset = evm.stack.pop().toNumber();
+      const length = evm.stack.pop().toNumber();
 
-    evm.stack.push(b);
-    evm.stack.push(a);
+      for (let i = 0; i < length; i++) {
+        evm.memory[dataOffset + i] = context.data[offset + i];
+      }
+    },
+    gasCost: () => 1,
   }),
-  // SWAP6
-  0x94: new OpCode(1, ({ evm }) => {
-    evm.stack.swap(0, 5);
+  0x38: new OpCode({
+    name: 'CODESIZE',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      evm.stack.push(evm.program.length);
+    },
+    gasCost: () => 1,
   }),
-  // CALLVALUE
-  0x34: new OpCode(1, ({ evm, context }) => {
-    evm.stack.push(context.value.value);
+  0x3b: new OpCode({
+    name: 'EXTCODESIZE',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const stackItem = evm.stack.pop();
+      const addr = stackItem.toString(16);
+      const contract = evm.network.get(addr);
+      evm.stack.push(contract.length);
+    },
+    gasCost: () => 1,
   }),
-  // CALLDATALOAD
-  0x35: new OpCode(1, ({ evm, context }) => {
-    const index = evm.stack.pop().toNumber();
-    evm.stack.push(
-      parseInt(context.data.slice(index, index + 32).toString('hex'), 16)
-    );
-  }),
-  // CALLDATASIZE
-  0x36: new OpCode(1, ({ evm, context }) => {
-    evm.stack.push(context.data.length);
-  }),
-  // CALLDATACOPY
-  0x37: new OpCode(1, ({ evm, context }) => {
-    const dataOffset = evm.stack.pop().toNumber();
-    const offset = evm.stack.pop().toNumber();
-    const length = evm.stack.pop().toNumber();
+  0x52: new OpCode({
+    name: 'MSTORE',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const offset = evm.stack.pop().toNumber();
+      const value = evm.stack.pop();
 
-    for (let i = 0; i < length; i++) {
-      evm.memory[dataOffset + i] = context.data[offset + i];
-    }
-  }),
-  // CODESIZE
-  0x38: new OpCode(1, ({ evm }) => {
-    evm.stack.push(evm.program.length);
-  }),
-  // EXTCODESIZE
-  0x3b: new OpCode(1, ({ evm }) => {
-    const stackItem = evm.stack.pop();
-    const addr = stackItem.toString(16);
-    const contract = evm.network.get(addr);
-    evm.stack.push(contract.length);
-  }),
-  // MSTORE
-  0x52: new OpCode(1, ({ evm }) => {
-    const offset = evm.stack.pop().toNumber();
-    const value = evm.stack.pop();
+      const uint = Buffer.from(
+        new Uint({
+          input: value,
+          n: 256,
+        }).value.encoding,
+        'hex'
+      );
 
-    const uint = Buffer.from(
-      new Uint({
-        input: value,
-        n: 256,
-      }).value.encoding,
-      'hex'
-    );
-
-    for (let i = 0; i < 32; i++) {
-      evm.memory[offset + i] = uint[i];
-    }
+      for (let i = 0; i < 32; i++) {
+        evm.memory[offset + i] = uint[i];
+      }
+    },
+    gasCost: () => 1,
   }),
-  // JUMP
-  0x56: new OpCode(1, ({ evm }) => {
-    const pc = evm.stack.pop().toNumber();
-    const opcode = evm.program[pc] == JUMP_DEST;
-    if (!opcode) {
-      throw new InvalidJump();
-    }
-    evm.setPc(pc);
-    return {
-      setPc: true,
-    };
-  }),
-  // JUMPI
-  0x57: new OpCode(1, ({ evm }) => {
-    const pc = evm.stack.pop().toNumber();
-    const condition = evm.stack.pop();
-
-    if (condition.isEqualTo(1)) {
+  0x56: new OpCode({
+    name: 'JUMP',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const pc = evm.stack.pop().toNumber();
       const opcode = evm.program[pc] == JUMP_DEST;
       if (!opcode) {
         throw new InvalidJump();
@@ -183,42 +262,81 @@ export const opcodes: Record<number, OpCode> = {
       return {
         setPc: true,
       };
-    }
+    },
+    gasCost: () => 1,
   }),
-  // JUMPDEST
-  0x5b: new OpCode(1, () => {
-    // Just metadata
+  0x57: new OpCode({
+    name: 'JUMPI',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const pc = evm.stack.pop().toNumber();
+      const condition = evm.stack.pop();
+
+      if (condition.isEqualTo(1)) {
+        const opcode = evm.program[pc] == JUMP_DEST;
+        if (!opcode) {
+          throw new InvalidJump();
+        }
+        evm.setPc(pc);
+        return {
+          setPc: true,
+        };
+      }
+    },
+    gasCost: () => 1,
   }),
-  // CREATE
-  0xf0: new OpCode(1, ({ evm }) => {
-    const value = evm.stack.pop().toNumber();
-    const offset = evm.stack.pop().toNumber();
-    const length = evm.stack.pop().toNumber();
-
-    const contractBytes = evm.memory.slice(offset, offset + length);
-    const contract = new Contract(
-      contractBytes,
-      new BigNumber(value)
-    ).execute();
-
-    evm.network.register({ contract });
-    evm.stack.push(new BigNumber(contract.address, 16));
+  0x5b: new OpCode({
+    name: 'JUMPDEST',
+    arguments: 1,
+    onExecute: () => {
+      // Just metadata
+    },
+    gasCost: () => 1,
   }),
-  // RETURN
-  0xf3: new OpCode(1, ({ evm }) => {
-    const offset = evm.stack.pop().toNumber();
-    const size = evm.stack.pop().toNumber();
+  0xf0: new OpCode({
+    name: 'CREATE',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const value = evm.stack.pop().toNumber();
+      const offset = evm.stack.pop().toNumber();
+      const length = evm.stack.pop().toNumber();
 
-    evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
+      const contractBytes = evm.memory.slice(offset, offset + length);
+      const contract = new Contract(
+        contractBytes,
+        new BigNumber(value)
+      ).execute();
+
+      evm.network.register({ contract });
+      evm.stack.push(new BigNumber(contract.address, 16));
+    },
+    gasCost: () => 1,
   }),
-  // REVERT
-  0xfd: new OpCode(1, ({ evm }) => {
-    const offset = evm.stack.pop().toNumber();
-    const length = evm.stack.pop().toNumber();
+  0xf3: new OpCode({
+    name: 'RETURN',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const offset = evm.stack.pop().toNumber();
+      const size = evm.stack.pop().toNumber();
 
-    evm.setCallingContextReturnData(evm.memory.slice(offset, offset + length));
+      evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
+    },
+    gasCost: () => 1,
+  }),
+  0xfd: new OpCode({
+    name: 'REVERT',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const offset = evm.stack.pop().toNumber();
+      const length = evm.stack.pop().toNumber();
 
-    throw new Reverted('Reverted');
+      evm.setCallingContextReturnData(
+        evm.memory.slice(offset, offset + length)
+      );
+
+      throw new Reverted('Reverted');
+    },
+    gasCost: () => 1,
   }),
 };
 

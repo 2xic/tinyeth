@@ -42,10 +42,11 @@ export class EvmStack {
   }
 
   public swap(from: number, to: number) {
-    const fromItem = this.stack[from];
-    const toItem = this.stack[to];
+    const delta = this.length - 1;
+    const fromItem = this.stack[delta - from];
+    const toItem = this.stack[delta - to];
 
-    this.stack[to] = fromItem;
-    this.stack[from] = toItem;
+    this.stack[delta - to] = fromItem;
+    this.stack[delta - from] = toItem;
   }
 }

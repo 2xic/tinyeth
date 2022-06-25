@@ -51,7 +51,7 @@ export class Evm {
       console.log(`Running 0x${opcodeNumber.toString(16)}`);
     }
 
-    const results = opcode.onExecute({
+    const results = opcode.execute({
       evm: this,
       byteIndex: this.pc,
       context: this.context,

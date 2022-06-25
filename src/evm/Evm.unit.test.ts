@@ -254,6 +254,18 @@ describe('evm', () => {
     expect(evm.stack.get(0).toString()).toBe('32');
   });
 
+  it('should correctly run swap 1', () => {
+    const code = ['6001', '6001', '6002', '90'].join('');
+    const contract = Buffer.from(code, 'hex');
+    const evm = new Evm(contract, {
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+    expect(evm.stack.pop().toString()).toBe('1');
+    expect(evm.stack.pop().toString()).toBe('2');
+    expect(evm.stack.pop().toString()).toBe('1');
+  });
+
   it('should correctly run swap 5', () => {
     const code = ['6002', '6000', '6000', '6000', '6000', '6001', '94'].join(
       ''
