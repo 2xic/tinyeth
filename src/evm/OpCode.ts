@@ -17,6 +17,10 @@ export class OpCode {
   public get length() {
     return this.options.arguments;
   }
+
+  public get mnemonic() {
+    return this.options.name;
+  }
 }
 
 interface ExecutionResults {

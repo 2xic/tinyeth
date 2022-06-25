@@ -27,6 +27,16 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: () => 1,
   }),
+  0x1: new OpCode({
+    name: 'ADD',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
+      evm.stack.push(a + b);
+    },
+    gasCost: () => 1,
+  }),
   0x3: new OpCode({
     name: 'SUB',
     arguments: 1,
@@ -339,6 +349,15 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 1,
   }),
 };
+
+export const mnemonicLookup: Record<string, number> = {};
+Object.entries(opcodes).forEach(([opcode, opcodeImplementation]) => {
+  const ref = mnemonicLookup[opcodeImplementation.mnemonic];
+  if (ref) {
+    throw Error(`Colliding opcode name (${ref} and ${opcode})`);
+  }
+  mnemonicLookup[opcodeImplementation.mnemonic] = parseInt(opcode);
+});
 
 function readEvmBuffer(evm: Evm, offset: number, length: number) {
   const numbers = [];
