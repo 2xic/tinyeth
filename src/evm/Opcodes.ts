@@ -5,7 +5,7 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
-import { OpCode } from './OpCode';
+import { ExecutionResults, OpCode } from './OpCode';
 
 const JUMP_DEST = 0x5b;
 
@@ -88,7 +88,7 @@ export const opcodes: Record<number, OpCode> = {
       const size = evm.stack.pop().toNumber();
 
       for (let i = 0; i < size; i++) {
-        evm.memory[destOffset + i] = evm.program[offset + i];
+        evm.storage.memory[destOffset + i] = evm.program[offset + i];
       }
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -105,14 +105,25 @@ export const opcodes: Record<number, OpCode> = {
   0x55: new OpCode({
     name: 'SSTORE',
     arguments: 1,
-    onExecute: ({ evm }) => {
+    onExecute: ({ evm }): ExecutionResults => {
       const key = evm.stack.pop();
       const value = evm.stack.pop();
+      const gas = evm.gasComputer.sstore({
+        gasLeft: 10_000, //evm.gasLeft,
+        address: '0xdeadbeef',
+        key,
+        value,
+      });
 
-      evm.storage[key.toString()] = value;
+      evm.storage.storage[key.toString()] = value;
+      return {
+        setPc: false,
+        // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
+        computedGas: gas.gasCost - gas.gasRefund,
+      };
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
-    gasCost: () => 1,
+    gasCost: () => 0,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x60,
@@ -191,7 +202,7 @@ export const opcodes: Record<number, OpCode> = {
       const length = evm.stack.pop().toNumber();
 
       for (let i = 0; i < length; i++) {
-        evm.memory[dataOffset + i] = context.data[offset + i];
+        evm.storage.memory[dataOffset + i] = context.data[offset + i];
       }
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -233,7 +244,7 @@ export const opcodes: Record<number, OpCode> = {
       );
 
       for (let i = 0; i < 32; i++) {
-        evm.memory[offset + i] = uint[i];
+        evm.storage.memory[offset + i] = uint[i];
       }
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
@@ -251,6 +262,7 @@ export const opcodes: Record<number, OpCode> = {
       evm.setPc(pc);
       return {
         setPc: true,
+        computedGas: 0,
       };
     },
     gasCost: 8,
@@ -270,6 +282,7 @@ export const opcodes: Record<number, OpCode> = {
         evm.setPc(pc);
         return {
           setPc: true,
+          computedGas: 0,
         };
       }
     },
@@ -291,7 +304,7 @@ export const opcodes: Record<number, OpCode> = {
       const offset = evm.stack.pop().toNumber();
       const length = evm.stack.pop().toNumber();
 
-      const contractBytes = evm.memory.slice(offset, offset + length);
+      const contractBytes = evm.storage.memory.slice(offset, offset + length);
       const contract = new Contract(
         contractBytes,
         new BigNumber(value)
@@ -310,7 +323,9 @@ export const opcodes: Record<number, OpCode> = {
       const offset = evm.stack.pop().toNumber();
       const size = evm.stack.pop().toNumber();
 
-      evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
+      evm.setCallingContextReturnData(
+        evm.storage.memory.slice(offset, offset + size)
+      );
     },
     // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
@@ -323,7 +338,7 @@ export const opcodes: Record<number, OpCode> = {
       const length = evm.stack.pop().toNumber();
 
       evm.setCallingContextReturnData(
-        evm.memory.slice(offset, offset + length)
+        evm.storage.memory.slice(offset, offset + length)
       );
 
       throw new Reverted('Reverted');

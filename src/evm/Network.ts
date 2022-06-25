@@ -1,5 +1,7 @@
+import { injectable } from 'inversify';
 import { Contract } from './Contract';
 
+@injectable()
 export class Network {
   private _contracts: Record<string, Contract> = {};
 

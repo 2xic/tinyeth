@@ -189,3 +189,13 @@ So I have now refactored parts of the communication state logic. There is still 
 
 We now use a proper message queue, and are now a lot more stable when connection over rplx. Not all messages comes combined etc, but now we are able to deal with that :) see stability.png :D
 
+### Day x + 18 + 19
+Done some more work on the EVM over the last few days. Because I Wanted a small break from the networking stuff and I had another side project where I needed to go deeper into the EVM.
+
+Working on fixing up some bugs in the implementation of some opcodes, making the evm closer to the real thing (implementing the gas logic), and just in general improved mailability of the evm logic (i.e made it easier to construct op codes with same logic, but different argument lengths / index -> swap / push / dup etc).
+
+
+
+
+
+

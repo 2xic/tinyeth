@@ -5,35 +5,45 @@ import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
-import { GAS_BASE_COST } from './Gas';
+import { calculateDataGasCost, GAS_BASE_COST } from './gas/Gas';
+import { EvmStorage } from './EvmStorage';
+import { injectable } from 'inversify';
+import { GasComputer } from './gas/GasComputer';
 
+@injectable()
 export class Evm {
-  public stack: EvmStack = new EvmStack();
-  public network: Network = new Network();
-  public memory!: Buffer;
-  public storage: Record<string, BigNumber> = {};
-
-  private running: boolean;
-  private gasCost: number;
-
-  private _pc: number;
-  private _lastPc: number;
-  private _callingContextReturnData?: Buffer;
-
+  // Todo theses should be encapsulated
   constructor(
-    public program: Buffer,
-    private context: TxContext,
-    private options?: Options
-  ) {
-    this.memory = Buffer.alloc(2048, 0);
+    public stack: EvmStack,
+    public network: Network,
+    public storage: EvmStorage,
+    public gasComputer: GasComputer
+  ) {}
+
+  private running = false;
+  private gasCost = 0;
+  private gasLeft = 0;
+
+  private _pc = 0;
+  private _lastPc = -1;
+  private _callingContextReturnData?: Buffer;
+  public program: Buffer = Buffer.alloc(0);
+  private context?: TxContext;
+  private options?: Options;
+
+  public boot(program: Buffer, context: TxContext, options?: Options) {
+    this.program = program;
+    this.context = context;
+    this.options = options;
     this._pc = 0;
     this._lastPc = -1;
-    this.gasCost = GAS_BASE_COST;
+    this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
     this.running = true;
+    return this;
   }
 
   public step(): boolean {
-    if (!this.isRunning) {
+    if (!this.isRunning || !this.context) {
       return false;
     }
     if (this.pc < 0) {
@@ -57,7 +67,15 @@ export class Evm {
     });
     this.gasCost += opcode.gasCost;
 
-    if (!results) {
+    let updatedPc = false;
+    if (results) {
+      if (results.computedGas) {
+        this.gasCost += results.computedGas;
+      }
+      updatedPc = results.setPc;
+    }
+
+    if (!updatedPc) {
       this.setPc(this._pc + opcode.length);
     }
 

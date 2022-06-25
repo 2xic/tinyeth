@@ -1,6 +1,8 @@
 import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
 import { StackUnderflow } from './errors/StackUnderflow';
 
+@injectable()
 export class EvmStack {
   private stack: BigNumber[] = [];
 

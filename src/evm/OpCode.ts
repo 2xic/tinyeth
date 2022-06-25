@@ -33,4 +33,5 @@ export class OpCode {
 
 export interface ExecutionResults {
   setPc: boolean;
+  computedGas: number;
 }

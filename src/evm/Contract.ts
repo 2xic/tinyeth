@@ -3,6 +3,8 @@ import { KeyPair } from '../signatures/KeyPair';
 import crypto from 'crypto';
 import { Evm } from './Evm';
 import { Wei } from './Wei';
+import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+
 export class Contract {
   private _address: string;
 
@@ -33,11 +35,14 @@ export class Contract {
   }
 
   public execute() {
-    const evm = new Evm(this.bytes, {
-      value: new Wei(this.value.toNumber()),
-      data: Buffer.from(''),
-      nonce: 0,
-    }).execute();
+    // This should not be allowed -> Redo this in a better way.
+    const evm = getClassFromTestContainer(Evm)
+      .boot(this.bytes, {
+        value: new Wei(this.value.toNumber()),
+        data: Buffer.from(''),
+        nonce: 0,
+      })
+      .execute();
     if (evm.callingContextReturnData) {
       this.bytes = evm.callingContextReturnData;
     }
