@@ -1,12 +1,14 @@
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
 import { Evm } from './Evm';
+import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './Wei';
 
 describe('evm', () => {
   it('should step through a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = new Evm(Buffer.from('6001600081905550', 'hex'), {
+      nonce: 1,
       value: new Wei(8),
       data: Buffer.from('', 'hex'),
     });
@@ -39,6 +41,7 @@ describe('evm', () => {
   it('should execute a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = new Evm(Buffer.from('6001600081905550', 'hex'), {
+      nonce: 1,
       value: new Wei(8),
       data: Buffer.from('', 'hex'),
     });
@@ -57,6 +60,7 @@ describe('evm', () => {
         'hex'
       ),
       {
+        nonce: 1,
         value: new Wei(0),
         data: Buffer.from('', 'hex'),
       }
@@ -80,6 +84,7 @@ describe('evm', () => {
 
   it('should correctly run simple CREATE opcode contract', () => {
     const evm = new Evm(Buffer.from('600060006000F0', 'hex'), {
+      nonce: 1,
       value: new Wei(8),
       data: Buffer.from('', 'hex'),
     }).execute();
@@ -94,6 +99,7 @@ describe('evm', () => {
     const evm = new Evm(
       Buffer.from('6C63FFFFFFFF60005260046000F3600052600D60006000F0', 'hex'),
       {
+        nonce: 1,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       }
@@ -154,6 +160,7 @@ describe('evm', () => {
     const evm = new Evm(
       contract,
       {
+        nonce: 1,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       },
@@ -224,6 +231,7 @@ describe('evm', () => {
       'hex'
     );
     const evm = new Evm(contract, {
+      nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
     });
@@ -247,6 +255,7 @@ describe('evm', () => {
     ].join('');
     const contract = Buffer.from(code, 'hex');
     const evm = new Evm(contract, {
+      nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
     }).execute();
@@ -258,6 +267,7 @@ describe('evm', () => {
     const code = ['6001', '6001', '6002', '90'].join('');
     const contract = Buffer.from(code, 'hex');
     const evm = new Evm(contract, {
+      nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
     }).execute();
@@ -272,9 +282,98 @@ describe('evm', () => {
     );
     const contract = Buffer.from(code, 'hex');
     const evm = new Evm(contract, {
+      nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
     }).execute();
     expect(evm.stack.toString()).toBe([1, 0, 0, 0, 0, 2].toString());
+  });
+
+  it('should correctly compute the gas cost of simple transactions', () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({ script: 'push1 1' });
+    const evm = new Evm(contract, {
+      nonce: 1,
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+    expect(evm.totalGasCost).toBe(21003);
+  });
+
+  it('should correctly execute SWAP16', () => {
+    // example from https://www.evm.codes/#9f
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        // Set state
+        PUSH1 2
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 1
+
+        // Swap
+        SWAP16
+    `,
+    });
+    const evm = new Evm(contract, {
+      nonce: 1,
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+    expect(evm.totalGasCost).toBe(21054);
+    expect(evm.stack.toString()).toBe(
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2].toString()
+    );
+  });
+
+  it('should correctly execute DUP16', () => {
+    // example from https://www.evm.codes/#8f
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        // Set state
+        PUSH1 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+
+        // Duplicate
+        DUP16
+    `,
+    });
+    const evm = new Evm(contract, {
+      nonce: 1,
+      value: new Wei(16),
+      data: Buffer.from('', 'hex'),
+    }).execute();
+    expect(evm.totalGasCost).toBe(21051);
+    expect(evm.stack.toString()).toBe(
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1].toString()
+    );
   });
 });

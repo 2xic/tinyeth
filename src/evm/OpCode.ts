@@ -6,7 +6,7 @@ export class OpCode {
       name: string;
       arguments: number;
       onExecute: (context: EvmContext) => ExecutionResults | void;
-      gasCost: () => number;
+      gasCost: number | (() => number);
     }
   ) {}
 
@@ -21,8 +21,16 @@ export class OpCode {
   public get mnemonic() {
     return this.options.name;
   }
+
+  public get gasCost() {
+    const gas = this.options.gasCost;
+    if (typeof gas === 'number') {
+      return gas;
+    }
+    return gas();
+  }
 }
 
-interface ExecutionResults {
+export interface ExecutionResults {
   setPc: boolean;
 }

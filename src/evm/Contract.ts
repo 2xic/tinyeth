@@ -36,6 +36,7 @@ export class Contract {
     const evm = new Evm(this.bytes, {
       value: new Wei(this.value.toNumber()),
       data: Buffer.from(''),
+      nonce: 0,
     }).execute();
     if (evm.callingContextReturnData) {
       this.bytes = evm.callingContextReturnData;

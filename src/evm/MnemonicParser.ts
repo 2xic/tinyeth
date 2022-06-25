@@ -1,6 +1,7 @@
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
-import { mnemonicLookup, opcodes } from './Opcodes';
+import { mnemonicLookup } from './MnemonicLookup';
+import { opcodes } from './Opcodes';
 
 export class MnemonicParser {
   public parse(options: ScriptInterface | ConvertInterface): Buffer {
@@ -21,7 +22,7 @@ export class MnemonicParser {
       } else if (!opcode.length) {
         continue;
       }
-      const foundOpcode = mnemonicLookup[opcode];
+      const foundOpcode = mnemonicLookup[opcode.toUpperCase()];
       if (foundOpcode === undefined) {
         throw new Error('Unknown mnemonic ' + opcode);
       }

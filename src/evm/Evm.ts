@@ -5,21 +5,19 @@ import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
+import { GAS_BASE_COST } from './Gas';
 
 export class Evm {
   public stack: EvmStack = new EvmStack();
-
   public network: Network = new Network();
-
   public memory!: Buffer;
-
   public storage: Record<string, BigNumber> = {};
 
-  private _pc: number;
-
-  private _lastPc: number;
-
   private running: boolean;
+  private gasCost: number;
+
+  private _pc: number;
+  private _lastPc: number;
   private _callingContextReturnData?: Buffer;
 
   constructor(
@@ -30,6 +28,7 @@ export class Evm {
     this.memory = Buffer.alloc(2048, 0);
     this._pc = 0;
     this._lastPc = -1;
+    this.gasCost = GAS_BASE_COST;
     this.running = true;
   }
 
@@ -56,6 +55,7 @@ export class Evm {
       byteIndex: this.pc,
       context: this.context,
     });
+    this.gasCost += opcode.gasCost;
 
     if (!results) {
       this.setPc(this._pc + opcode.length);
@@ -123,11 +123,16 @@ export class Evm {
   public get callingContextReturnData() {
     return this._callingContextReturnData;
   }
+
+  public get totalGasCost() {
+    return this.gasCost;
+  }
 }
 
 interface TxContext {
   value: Wei;
   data: Buffer;
+  nonce: number;
 }
 
 export interface EvmContext {

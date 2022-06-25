@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Uint } from '../rlp/types/Uint';
 import { Contract } from './Contract';
+import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
@@ -15,17 +16,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ evm }) => {
       evm.stop();
     },
-    gasCost: () => 1,
-  }),
-  0x2: new OpCode({
-    name: 'MUL',
-    arguments: 1,
-    onExecute: ({ evm }) => {
-      const a = evm.stack.pop().toNumber();
-      const b = evm.stack.pop().toNumber();
-      evm.stack.push(a * b);
-    },
-    gasCost: () => 1,
+    gasCost: 0,
   }),
   0x1: new OpCode({
     name: 'ADD',
@@ -35,7 +26,17 @@ export const opcodes: Record<number, OpCode> = {
       const b = evm.stack.pop().toNumber();
       evm.stack.push(a + b);
     },
-    gasCost: () => 1,
+    gasCost: 3,
+  }),
+  0x2: new OpCode({
+    name: 'MUL',
+    arguments: 1,
+    onExecute: ({ evm }) => {
+      const a = evm.stack.pop().toNumber();
+      const b = evm.stack.pop().toNumber();
+      evm.stack.push(a * b);
+    },
+    gasCost: 5,
   }),
   0x3: new OpCode({
     name: 'SUB',
@@ -45,7 +46,7 @@ export const opcodes: Record<number, OpCode> = {
       const b = evm.stack.pop().toNumber();
       evm.stack.push(a - b);
     },
-    gasCost: () => 1,
+    gasCost: 3,
   }),
   0x14: new OpCode({
     name: 'EQ',
@@ -56,7 +57,7 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.stack.push(Number(a === b));
     },
-    gasCost: () => 1,
+    gasCost: 3,
   }),
   0x15: new OpCode({
     name: 'ISZERO',
@@ -66,7 +67,7 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.stack.push(Number(a === 0));
     },
-    gasCost: () => 1,
+    gasCost: 3,
   }),
   0x18: new OpCode({
     name: 'XOR',
@@ -76,7 +77,7 @@ export const opcodes: Record<number, OpCode> = {
       const b = evm.stack.pop().toNumber();
       evm.stack.push(a ^ b);
     },
-    gasCost: () => 1,
+    gasCost: 3,
   }),
   0x39: new OpCode({
     name: 'CODECOPY',
@@ -90,6 +91,7 @@ export const opcodes: Record<number, OpCode> = {
         evm.memory[destOffset + i] = evm.program[offset + i];
       }
     },
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
     gasCost: () => 1,
   }),
   0x50: new OpCode({
@@ -98,10 +100,10 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ evm }) => {
       evm.stack.pop();
     },
-    gasCost: () => 1,
+    gasCost: 2,
   }),
   0x55: new OpCode({
-    name: 'SSTORAGE',
+    name: 'SSTORE',
     arguments: 1,
     onExecute: ({ evm }) => {
       const key = evm.stack.pop();
@@ -109,74 +111,49 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.storage[key.toString()] = value;
     },
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
     gasCost: () => 1,
   }),
-  0x60: new OpCode({
-    name: 'PUSH1',
-    arguments: 2,
-    onExecute: ({ evm }) => {
-      evm.stack.push(evm.peekBuffer(1));
-    },
-    gasCost: () => 1,
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x60,
+    toOpcode: 0x7f,
+    baseName: 'PUSH',
+    arguments: (index) => index + 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ evm }) => {
+        const value = readEvmBuffer(evm, 1, index);
+        evm.stack.push(value);
+      },
+    gasCost: 3,
   }),
-  0x61: new OpCode({
-    name: 'PUSH2',
-    arguments: 3,
-    onExecute: ({ evm }) => {
-      const value = readEvmBuffer(evm, 1, 2);
-      evm.stack.push(value);
-    },
-    gasCost: () => 1,
-  }),
-  0x6c: new OpCode({
-    name: 'PUSH13',
-    arguments: 14,
-    onExecute: ({ evm }) => {
-      const value = readEvmBuffer(evm, 1, 13);
-      evm.stack.push(value);
-    },
-    gasCost: () => 1,
-  }),
-  0x7f: new OpCode({
-    name: 'PUSH32',
-    arguments: 33,
-    onExecute: ({ evm }) => {
-      const value = readEvmBuffer(evm, 1, 32);
-      evm.stack.push(value);
-    },
-    gasCost: () => 1,
-  }),
-  0x80: new OpCode({
-    name: 'DUP1',
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x80,
+    toOpcode: 0x8f,
+    baseName: 'DUP',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.push(evm.stack.get(-1));
-    },
-    gasCost: () => 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ evm }) => {
+        if (index === 1) {
+          evm.stack.push(evm.stack.get(-1));
+        } else {
+          evm.stack.push(evm.stack.get(evm.stack.length - index));
+        }
+      },
+    gasCost: 3,
   }),
-  0x81: new OpCode({
-    name: 'DUP2',
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x90,
+    toOpcode: 0x9f,
+    baseName: 'SWAP',
     arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.push(evm.stack.get(evm.stack.length - 2));
-    },
-    gasCost: () => 1,
-  }),
-  0x90: new OpCode({
-    name: 'SWAP1',
-    arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.swap(0, 1);
-    },
-    gasCost: () => 1,
-  }),
-  0x94: new OpCode({
-    name: 'SWAP6',
-    arguments: 1,
-    onExecute: ({ evm }) => {
-      evm.stack.swap(0, 5);
-    },
-    gasCost: () => 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ evm }) => {
+        evm.stack.swap(0, index);
+      },
+    gasCost: 3,
   }),
   0x34: new OpCode({
     name: 'CALLVALUE',
@@ -184,7 +161,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ evm, context }) => {
       evm.stack.push(context.value.value);
     },
-    gasCost: () => 1,
+    gasCost: 2,
   }),
   0x35: new OpCode({
     name: 'CALLDATALOAD',
@@ -203,7 +180,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ evm, context }) => {
       evm.stack.push(context.data.length);
     },
-    gasCost: () => 1,
+    gasCost: 3,
   }),
   0x37: new OpCode({
     name: 'CALLDATACOPY',
@@ -217,6 +194,7 @@ export const opcodes: Record<number, OpCode> = {
         evm.memory[dataOffset + i] = context.data[offset + i];
       }
     },
+    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
     gasCost: () => 1,
   }),
   0x38: new OpCode({
@@ -225,7 +203,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ evm }) => {
       evm.stack.push(evm.program.length);
     },
-    gasCost: () => 1,
+    gasCost: 2,
   }),
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
@@ -236,6 +214,7 @@ export const opcodes: Record<number, OpCode> = {
       const contract = evm.network.get(addr);
       evm.stack.push(contract.length);
     },
+    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     gasCost: () => 1,
   }),
   0x52: new OpCode({
@@ -257,6 +236,7 @@ export const opcodes: Record<number, OpCode> = {
         evm.memory[offset + i] = uint[i];
       }
     },
+    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
   }),
   0x56: new OpCode({
@@ -273,7 +253,7 @@ export const opcodes: Record<number, OpCode> = {
         setPc: true,
       };
     },
-    gasCost: () => 1,
+    gasCost: 8,
   }),
   0x57: new OpCode({
     name: 'JUMPI',
@@ -293,7 +273,7 @@ export const opcodes: Record<number, OpCode> = {
         };
       }
     },
-    gasCost: () => 1,
+    gasCost: 10,
   }),
   0x5b: new OpCode({
     name: 'JUMPDEST',
@@ -301,7 +281,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: () => {
       // Just metadata
     },
-    gasCost: () => 1,
+    gasCost: 1,
   }),
   0xf0: new OpCode({
     name: 'CREATE',
@@ -320,6 +300,7 @@ export const opcodes: Record<number, OpCode> = {
       evm.network.register({ contract });
       evm.stack.push(new BigNumber(contract.address, 16));
     },
+    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 1,
   }),
   0xf3: new OpCode({
@@ -331,6 +312,7 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.setCallingContextReturnData(evm.memory.slice(offset, offset + size));
     },
+    // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
   }),
   0xfd: new OpCode({
@@ -346,18 +328,10 @@ export const opcodes: Record<number, OpCode> = {
 
       throw new Reverted('Reverted');
     },
+    // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
   }),
 };
-
-export const mnemonicLookup: Record<string, number> = {};
-Object.entries(opcodes).forEach(([opcode, opcodeImplementation]) => {
-  const ref = mnemonicLookup[opcodeImplementation.mnemonic];
-  if (ref) {
-    throw Error(`Colliding opcode name (${ref} and ${opcode})`);
-  }
-  mnemonicLookup[opcodeImplementation.mnemonic] = parseInt(opcode);
-});
 
 function readEvmBuffer(evm: Evm, offset: number, length: number) {
   const numbers = [];
