@@ -10,6 +10,7 @@ import { EvmMemory } from './EvmMemory';
 import { injectable } from 'inversify';
 import { GasComputer } from './gas/GasComputer';
 import { EvmKeyValueStorage } from './EvmKeyValueStorage';
+import { AccessSets } from './gas/AccessSets';
 
 @injectable()
 export class Evm {
@@ -18,7 +19,8 @@ export class Evm {
     protected network: Network,
     protected memory: EvmMemory,
     protected storage: EvmKeyValueStorage,
-    protected gasComputer: GasComputer
+    protected gasComputer: GasComputer,
+    protected accessSets: AccessSets
   ) {}
 
   private running = false;
@@ -68,6 +70,7 @@ export class Evm {
       storage: this.storage,
       memory: this.memory,
       gasComputer: this.gasComputer,
+      accessSets: this.accessSets,
       byteIndex: this.pc,
       context: this.context,
     });
@@ -170,6 +173,7 @@ export interface EvmContext {
   network: Network;
   memory: EvmMemory;
   storage: EvmKeyValueStorage;
+  accessSets: AccessSets;
   gasComputer: GasComputer;
   byteIndex: number;
   context: TxContext;

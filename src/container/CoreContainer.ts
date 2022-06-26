@@ -44,14 +44,15 @@ import { GetBlockHeader } from '../network/rlpx/eth/GetBlockHeader';
 import { PeerConnectionState } from '../network/rlpx/PeerConnectionState';
 import { PeerConnection } from '../network/rlpx/PeerConnection';
 import { MessageQueue } from '../network/rlpx/MessageQueue';
-import { Evm } from '../evm/Evm';
 import { EvmStack } from '../evm/EvmStack';
 import { Network } from '../evm/Network';
 import { EvmMemory } from '../evm/EvmMemory';
 import { GasComputer } from '../evm/gas/GasComputer';
 import { ComputeSstoreGas } from '../evm/gas/ComputeSstoreGas';
-import { AccessSets } from '../evm/AccessSets';
+import { AccessSets } from '../evm/gas/AccessSets';
 import { EvmKeyValueStorage } from '../evm/EvmKeyValueStorage';
+import { MemoryExpansionGas } from '../evm/gas/MemoyExspansionGas';
+import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -142,6 +143,8 @@ export class CoreContainer {
     container.bind(ComputeSstoreGas).toSelf();
     container.bind(AccessSets).toSelf();
     container.bind(EvmKeyValueStorage).toSelf();
+    container.bind(MemoryExpansionGas).toSelf();
+    container.bind(AccountAccessGas).toSelf();
 
     container.bind(Logger).toSelf();
 

@@ -10,6 +10,13 @@ describe('MnemonicParser', () => {
     });
   });
 
+  it('should correctly parse opcodes with variable length with unmatched argument length', () => {
+    const parser = new MnemonicParser().parse({
+      mnemonics: ['PUSH32 0xdeadbeef'],
+    });
+    expect(parser.length).toBe(33);
+  });
+
   it('should ignore comments', () => {
     [[' // xxx ']].map((mnemonics) => {
       const parser = new MnemonicParser().parse({
@@ -26,7 +33,7 @@ describe('MnemonicParser', () => {
     expect(Buffer.compare(parser, Buffer.from('6001', 'hex'))).toBe(0);
   });
 
-  it('should correctly parse from mnemonic to bytecode', () => {
+  it('should correctly parse script to bytecode', () => {
     // ADD opcode example from https://www.evm.codes/
     const script = `
     // Example 1
@@ -42,6 +49,7 @@ describe('MnemonicParser', () => {
     const parser = new MnemonicParser().parse({
       script: script,
     });
+
     expect(
       Buffer.compare(
         parser,

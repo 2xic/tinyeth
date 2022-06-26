@@ -8,12 +8,12 @@ export class AccessSets {
 
   private touchedStorageSlots: Record<string, Record<string, boolean>> = {};
 
-  public touchAddress({ address }: { address: string }) {
-    this.touchedAddresses[address] = true;
+  public touchAddress({ address }: { address: BigNumber }) {
+    this.touchedAddresses[address.toString(16)] = true;
   }
 
-  public isColdAddress({ address }: { address: string }): boolean {
-    return address in this.touchedAddresses;
+  public isColdAddress({ address }: { address: BigNumber }): boolean {
+    return !(address.toString(16) in this.touchedAddresses);
   }
 
   public touchStorageSlot({ address, key }: { address: string; key: string }) {

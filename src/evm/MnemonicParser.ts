@@ -8,14 +8,18 @@ export class MnemonicParser {
     if ('mnemonics' in options) {
       return this.convert(options);
     }
-    const mnemonics = options.script.split('\n');
+    const mnemonics = options.script
+      .split('\n')
+      .filter((item) => item.length)
+      .map((item) => item.trim());
+
     return this.convert({ mnemonics });
   }
 
   private convert({ mnemonics }: ConvertInterface) {
     let bytesCodes = Buffer.alloc(0);
     for (const mnemonic of mnemonics) {
-      const opcode_arguments = mnemonic.trim().split(' ');
+      const opcode_arguments = mnemonic.split(' ');
       const opcode = opcode_arguments[0];
       if (opcode.startsWith('//')) {
         continue;
@@ -26,20 +30,30 @@ export class MnemonicParser {
       if (foundOpcode === undefined) {
         throw new Error('Unknown mnemonic ' + opcode);
       }
-      const converted_arguments = opcode_arguments
-        .slice(1, opcodes[foundOpcode].length)
-        .map((item) =>
-          item.startsWith('0x')
-            ? getBufferFromHex(item).toString('hex')
-            : convertNumberToPadHex(item)
-        )
-        .join('');
+      let converted_arguments = Buffer.from(
+        opcode_arguments
+          .slice(1, opcodes[foundOpcode].length)
+          .map((item) =>
+            item.startsWith('0x')
+              ? getBufferFromHex(item).toString('hex')
+              : convertNumberToPadHex(item)
+          )
+          .join(''),
+        'hex'
+      );
+      const argumentsPadding = opcodes[foundOpcode].length - 1;
+      if (converted_arguments.length < argumentsPadding) {
+        converted_arguments = Buffer.concat([
+          converted_arguments,
+          Buffer.alloc(argumentsPadding - converted_arguments.length),
+        ]);
+      }
 
       const encodedOpcode = [foundOpcode];
       bytesCodes = Buffer.concat([
         bytesCodes,
         Buffer.from(encodedOpcode),
-        Buffer.from(converted_arguments, 'hex'),
+        converted_arguments,
       ]);
     }
     return bytesCodes;

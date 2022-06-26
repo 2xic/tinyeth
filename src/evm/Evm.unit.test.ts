@@ -1,7 +1,6 @@
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
-import { Evm } from './Evm';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './Wei';

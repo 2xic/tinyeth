@@ -105,7 +105,7 @@ export const opcodes: Record<number, OpCode> = {
   0x55: new OpCode({
     name: 'SSTORE',
     arguments: 1,
-    onExecute: ({ evm, stack, gasComputer, storage }): ExecutionResults => {
+    onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
       const key = stack.pop();
       const value = stack.pop();
       const gas = gasComputer.sstore({
@@ -122,7 +122,6 @@ export const opcodes: Record<number, OpCode> = {
         computedGas: gas.gasCost - gas.gasRefund,
       };
     },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
     gasCost: () => 0,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
@@ -166,6 +165,26 @@ export const opcodes: Record<number, OpCode> = {
       },
     gasCost: 3,
   }),
+  0x31: new OpCode({
+    name: 'BALANCE',
+    arguments: 1,
+    onExecute: ({ stack, gasComputer, accessSets }) => {
+      const address = stack.pop();
+      // TODO : add some proper account balancing
+      stack.push(new BigNumber(42));
+      const gasComputed = gasComputer.account({
+        address,
+      });
+      accessSets.touchAddress({
+        address,
+      });
+      return {
+        computedGas: gasComputed.gasCost,
+        setPc: false,
+      };
+    },
+    gasCost: 0,
+  }),
   0x34: new OpCode({
     name: 'CALLVALUE',
     arguments: 1,
@@ -196,7 +215,7 @@ export const opcodes: Record<number, OpCode> = {
   0x37: new OpCode({
     name: 'CALLDATACOPY',
     arguments: 1,
-    onExecute: ({ evm, stack, memory, context }) => {
+    onExecute: ({ stack, memory, context }) => {
       const dataOffset = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
@@ -219,7 +238,7 @@ export const opcodes: Record<number, OpCode> = {
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
     arguments: 1,
-    onExecute: ({ evm, stack, network }) => {
+    onExecute: ({ stack, network }) => {
       const stackItem = stack.pop();
       const addr = stackItem.toString(16);
       const contract = network.get(addr);
@@ -231,7 +250,7 @@ export const opcodes: Record<number, OpCode> = {
   0x52: new OpCode({
     name: 'MSTORE',
     arguments: 1,
-    onExecute: ({ evm, stack, memory }) => {
+    onExecute: ({ stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
       const value = stack.pop();
 
@@ -246,9 +265,16 @@ export const opcodes: Record<number, OpCode> = {
       for (let i = 0; i < 32; i++) {
         memory.memory[offset + i] = uint[i];
       }
+      const computedGas = gasComputer.memoryExpansion({
+        address: new BigNumber(offset + 32),
+      });
+
+      return {
+        computedGas: computedGas.gasCost,
+        setPc: false,
+      };
     },
-    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
-    gasCost: () => 1,
+    gasCost: () => 3,
   }),
   0x56: new OpCode({
     name: 'JUMP',
@@ -299,7 +325,7 @@ export const opcodes: Record<number, OpCode> = {
   0xf0: new OpCode({
     name: 'CREATE',
     arguments: 1,
-    onExecute: ({ evm, stack, memory, network }) => {
+    onExecute: ({ stack, memory, network }) => {
       const value = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();

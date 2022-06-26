@@ -1,8 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { AccessSets } from '../AccessSets';
+import { AccessSets } from './AccessSets';
 import { OutOfGasError } from '../errors/OutOfGasError';
 import { EvmKeyValueStorage } from '../EvmKeyValueStorage';
+import { GasComputeResults } from './GasComputer';
 
 @injectable()
 export class ComputeSstoreGas {
@@ -12,7 +13,12 @@ export class ComputeSstoreGas {
   ) {}
 
   // implementation of https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
-  public compute({ gasLeft, address, key, value }: SstoreContext): Results {
+  public compute({
+    gasLeft,
+    address,
+    key,
+    value,
+  }: SstoreContext): GasComputeResults {
     if (gasLeft < 2300) {
       throw new OutOfGasError();
     }
@@ -67,9 +73,4 @@ export interface SstoreContext {
   address: string;
   key: BigNumber;
   value: BigNumber;
-}
-
-export interface Results {
-  gasCost: number;
-  gasRefund: number;
 }
