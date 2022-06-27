@@ -17,7 +17,7 @@ import { injectable, inject } from 'inversify';
 export class KeyPair {
   constructor(@inject<string>('PRIVATE_KEY') public privatekey: string) {}
 
-  public getAddress({ publicKey }: { publicKey: string }) {
+  public getAddress({ publicKey }: { publicKey: string }): string {
     const publicKeyHash = keccak256(Buffer.from(publicKey, 'hex')).toString(
       'hex'
     );
@@ -30,7 +30,10 @@ export class KeyPair {
     return '0x' + address.toLowerCase();
   }
 
-  public getPublicKey(options?: { privateKey?: string; skipSlice?: boolean }) {
+  public getPublicKey(options?: {
+    privateKey?: string;
+    skipSlice?: boolean;
+  }): string {
     const inputPrivateKey = options?.privateKey
       ? options.privateKey
       : this.privatekey;

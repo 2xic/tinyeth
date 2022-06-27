@@ -48,6 +48,85 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 3,
   }),
+  0x4: new OpCode({
+    name: 'DIV',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(Math.floor(a / b));
+    },
+    gasCost: 5,
+  }),
+  0x5: new OpCode({
+    name: 'SDIV',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(Math.floor(a / b));
+    },
+    gasCost: 5,
+  }),
+  0x6: new OpCode({
+    name: 'MOD',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a % b);
+    },
+    gasCost: 5,
+  }),
+  0x7: new OpCode({
+    name: 'SMOD',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      throw new Error('Not implemented');
+    },
+    gasCost: 5,
+  }),
+  0x8: new OpCode({
+    name: 'ADDMOD',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop();
+      const b = stack.pop();
+      const c = stack.pop().toNumber();
+      const newLocal = a.plus(b).modulo(new BigNumber(2).pow(256));
+
+      stack.push(newLocal.toNumber() % c);
+    },
+    gasCost: 8,
+  }),
+  0x9: new OpCode({
+    name: 'MULMOD',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop();
+      const b = stack.pop();
+      const c = stack.pop();
+      const newLocal = a.multipliedBy(b);
+
+      stack.push(newLocal.mod(c));
+    },
+    gasCost: 8,
+  }),
+  0x0a: new OpCode({
+    name: 'EXP',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(Math.pow(a, b));
+
+      return {
+        setPc: false,
+        computedGas: 10 + (b.toString(2).length - 1) * 50,
+      };
+    },
+    gasCost: 0,
+  }),
   0x14: new OpCode({
     name: 'EQ',
     arguments: 1,

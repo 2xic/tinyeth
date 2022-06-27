@@ -1,3 +1,5 @@
+import fc from 'fast-check';
+import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { StringEncoderDecoder } from './StringEncoderDecoder';
 
 describe('StringEncoderDecoder', () => {
@@ -24,7 +26,7 @@ describe('StringEncoderDecoder', () => {
     });
 
     const decodedString = interactor.decode({
-      input: Buffer.from(`${encodedString.encoding}`, 'hex'),
+      input: getBufferFromHex(encodedString.encoding),
       fromIndex: 0,
     });
     expect(decodedString.decoding).toBe(input);
@@ -55,6 +57,22 @@ describe('StringEncoderDecoder', () => {
     });
     expect(encodedString.encoding).toBe(
       'b9014541414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141'
+    );
+  });
+
+  it('should correctly encode and decode', () => {
+    fc.assert(
+      fc.property(fc.string(), (a) => {
+        if (a.length <= 1) {
+          return true;
+        }
+        const encoder = interactor.encode({ input: a });
+        const decode = interactor.decode({
+          input: getBufferFromHex(encoder.encoding),
+          fromIndex: 0,
+        });
+        return decode.decoding === a;
+      })
     );
   });
 });

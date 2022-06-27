@@ -419,4 +419,141 @@ describe('evm', () => {
       [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1].toString()
     );
   });
+
+  it('should correctly execute DIV', () => {
+    // example from https://www.evm.codes/#04
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        // Example 1
+        PUSH1 10
+        PUSH1 10
+        DIV
+        
+        // Example 2
+        PUSH1 2
+        PUSH1 1
+        DIV
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.totalGasCost).toBe(21022);
+    expect(evm.stack.toString()).toBe([1, 0].toString());
+  });
+
+  it.skip('should correctly execute SDIV', () => {
+    // example from https://www.evm.codes/#05
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        // Example 1
+        PUSH1 10
+        PUSH1 10
+        SDIV
+        
+        // Example 2
+        PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE
+        SDIV
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.totalGasCost).toBe(21022);
+    expect(evm.stack.toString()).toBe([1, 2].toString());
+  });
+
+  it('should correctly execute MOD', () => {
+    // example from https://www.evm.codes/#06
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        // Example 1
+        PUSH1 3
+        PUSH1 10
+        MOD
+        
+        // Example 2
+        PUSH1 5
+        PUSH1 17
+        MOD
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.totalGasCost).toBe(21022);
+    expect(evm.stack.toString()).toBe([1, 2].toString());
+  });
+
+  it('should correctly execute MULMOD', () => {
+    // example from https://www.evm.codes/#09
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+      // Example 1
+      PUSH1 8
+      PUSH1 10
+      PUSH1 10
+      MULMOD
+      
+      // Example 2
+      PUSH1 12
+      PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      MULMOD
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.totalGasCost).toBe(21034);
+    expect(evm.stack.toString()).toBe([4, 9].toString());
+  });
+
+  it('should correctly execute EXP', () => {
+    // example from https://www.evm.codes/#0a
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+      // Example 1
+      PUSH1 2
+      PUSH1 10
+      EXP
+      
+      // Example 2
+      PUSH1 2
+      PUSH1 2
+      EXP
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.stack.toString()).toBe([100, 4].toString());
+    expect(evm.totalGasCost).toBe(21132);
+  });
 });
