@@ -30,6 +30,10 @@ export class Contract {
     return this.bytes.length;
   }
 
+  public get data() {
+    return this.bytes;
+  }
+
   public get address() {
     return this._address;
   }

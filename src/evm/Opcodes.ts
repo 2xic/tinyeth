@@ -1,11 +1,17 @@
 import BigNumber from 'bignumber.js';
 import { Uint } from '../rlp/types/Uint';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
+import { keccak256 } from '../utils/keccak256';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
+import { UnimplementedOpcode } from './errors/UnimplementedOpcode';
 import { Evm } from './Evm';
 import { ExecutionResults, OpCode } from './OpCode';
+
+// TODO: see if there is away around this.
+BigNumber.set({ EXPONENTIAL_AT: 1024 });
 
 const JUMP_DEST = 0x5b;
 
@@ -81,9 +87,6 @@ export const opcodes: Record<number, OpCode> = {
   0x7: new OpCode({
     name: 'SMOD',
     arguments: 1,
-    onExecute: ({ stack }) => {
-      throw new Error('Not implemented');
-    },
     gasCost: 5,
   }),
   0x8: new OpCode({
@@ -127,6 +130,36 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 0,
   }),
+  0x10: new OpCode({
+    name: 'LT',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(Number(a.isLessThan(b)));
+    },
+    gasCost: 3,
+  }),
+  0x11: new OpCode({
+    name: 'GT',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(Number(a.isGreaterThan(b)));
+    },
+    gasCost: 3,
+  }),
+  0x12: new OpCode({
+    name: 'SLT',
+    arguments: 1,
+    gasCost: 3,
+  }),
+  0x13: new OpCode({
+    name: 'SGT',
+    arguments: 1,
+    gasCost: 3,
+  }),
   0x14: new OpCode({
     name: 'EQ',
     arguments: 1,
@@ -148,6 +181,26 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 3,
   }),
+  0x16: new OpCode({
+    name: 'AND',
+    arguments: 1,
+    gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a & b);
+    },
+  }),
+  0x17: new OpCode({
+    name: 'OR',
+    arguments: 1,
+    gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = stack.pop().toNumber();
+      const b = stack.pop().toNumber();
+      stack.push(a | b);
+    },
+  }),
   0x18: new OpCode({
     name: 'XOR',
     arguments: 1,
@@ -158,91 +211,88 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 3,
   }),
-  0x39: new OpCode({
-    name: 'CODECOPY',
+  0x19: new OpCode({
+    name: 'NOT',
     arguments: 1,
-    onExecute: ({ evm, stack, memory }) => {
-      const destOffset = stack.pop().toNumber();
-      const offset = stack.pop().toNumber();
-      const size = stack.pop().toNumber();
-
-      for (let i = 0; i < size; i++) {
-        memory.memory[destOffset + i] = evm.program[offset + i];
-      }
-    },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
-    gasCost: () => 1,
-  }),
-  0x50: new OpCode({
-    name: 'POP',
-    arguments: 1,
+    gasCost: 3,
     onExecute: ({ stack }) => {
-      stack.pop();
+      const a = stack.pop().toNumber();
+      const b = new BigNumber(2).pow(256);
+      stack.push(b.plus(new BigNumber((~BigInt(a)).toString())));
     },
-    gasCost: 2,
   }),
-  0x55: new OpCode({
-    name: 'SSTORE',
+  0x1a: new OpCode({
+    name: 'BYTE',
     arguments: 1,
-    onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
-      const key = stack.pop();
-      const value = stack.pop();
-      const gas = gasComputer.sstore({
-        gasLeft: 10_000, //evm.gasLeft,
-        address: '0xdeadbeef',
-        key,
-        value,
-      });
+    gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = BigInt(stack.pop().toString());
+      const b = BigInt(stack.pop().toString());
+      stack.push(
+        new BigNumber(
+          (b >> (BigInt(248) - a * BigInt(8)) && BigInt(0xff)).toString()
+        )
+      );
+    },
+  }),
+  0x1b: new OpCode({
+    name: 'SHL',
+    arguments: 1,
+    gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = BigInt(stack.pop().toString());
+      const b = BigInt(stack.pop().toString());
+      const c = (b << a).toString();
 
-      storage.write({ key, value });
+      stack.push(new BigNumber(c).modulo(new BigNumber(2).pow(256)));
+    },
+  }),
+  0x1c: new OpCode({
+    name: 'SHR',
+    arguments: 1,
+    gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = BigInt(stack.pop().toString());
+      const b = BigInt(stack.pop().toString());
+      const c = (b >> a).toString();
+
+      stack.push(new BigNumber(c).modulo(new BigNumber(2).pow(256)));
+    },
+  }),
+  0x1d: new OpCode({
+    name: 'SAR',
+    arguments: 1,
+    gasCost: 3,
+    onExecute: () => {
+      // const a = BigInt(stack.pop().toString());
+      // const b = BigInt(stack.pop().toString());
+      // const c = (b >> a).toString();
+      // it's a arithmetic right shift.
+      throw new UnimplementedOpcode('SAR');
+    },
+  }),
+  0x20: new OpCode({
+    name: 'SHA3',
+    arguments: 1,
+    gasCost: 30,
+    onExecute: ({ stack, memory }) => {
+      const offset = stack.pop().toNumber();
+      const length = stack.pop().toNumber();
+      const data = memory.memory.slice(offset, offset + length);
+      const hash = getBufferFromHex(keccak256(data));
+      stack.push(new BigNumber(hash.toString('hex'), 16));
+
+      const computedGas = Math.floor((6 * (length + 31)) / 32);
       return {
+        computedGas,
         setPc: false,
-        // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
-        computedGas: gas.gasCost - gas.gasRefund,
       };
     },
-    gasCost: () => 0,
   }),
-  ...CreateOpCodeWIthVariableArgumentLength({
-    fromOpcode: 0x60,
-    toOpcode: 0x7f,
-    baseName: 'PUSH',
-    arguments: (index) => index + 1,
-    iteratedExecuteConstruction:
-      (index) =>
-      ({ evm, stack }) => {
-        const value = readEvmBuffer(evm, 1, index);
-        stack.push(value);
-      },
-    gasCost: 3,
-  }),
-  ...CreateOpCodeWIthVariableArgumentLength({
-    fromOpcode: 0x80,
-    toOpcode: 0x8f,
-    baseName: 'DUP',
+  0x30: new OpCode({
+    name: 'ADDRESS',
     arguments: 1,
-    iteratedExecuteConstruction:
-      (index) =>
-      ({ stack }) => {
-        if (index === 1) {
-          stack.push(stack.get(-1));
-        } else {
-          stack.push(stack.get(stack.length - index));
-        }
-      },
-    gasCost: 3,
-  }),
-  ...CreateOpCodeWIthVariableArgumentLength({
-    fromOpcode: 0x90,
-    toOpcode: 0x9f,
-    baseName: 'SWAP',
-    arguments: 1,
-    iteratedExecuteConstruction:
-      (index) =>
-      ({ stack }) => {
-        stack.swap(0, index);
-      },
-    gasCost: 3,
+    gasCost: 2,
   }),
   0x31: new OpCode({
     name: 'BALANCE',
@@ -263,6 +313,16 @@ export const opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: 0,
+  }),
+  0x32: new OpCode({
+    name: 'ORIGIN',
+    arguments: 1,
+    gasCost: 2,
+  }),
+  0x33: new OpCode({
+    name: 'CALLER',
+    arguments: 1,
+    gasCost: 2,
   }),
   0x34: new OpCode({
     name: 'CALLVALUE',
@@ -314,6 +374,26 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 2,
   }),
+  0x39: new OpCode({
+    name: 'CODECOPY',
+    arguments: 1,
+    onExecute: ({ evm, stack, memory }) => {
+      const destOffset = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const size = stack.pop().toNumber();
+
+      for (let i = 0; i < size; i++) {
+        memory.memory[destOffset + i] = evm.program[offset + i];
+      }
+    },
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
+    gasCost: () => 1,
+  }),
+  0x3a: new OpCode({
+    name: 'GASPRICE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
     arguments: 1,
@@ -325,6 +405,101 @@ export const opcodes: Record<number, OpCode> = {
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     gasCost: () => 1,
+  }),
+  0x3c: new OpCode({
+    name: 'EXTCODECOPY',
+    arguments: 1,
+    gasCost: () => 1,
+  }),
+  0x3d: new OpCode({
+    name: 'RETURNDATASIZE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x3e: new OpCode({
+    name: 'RETURNDATACOPY',
+    arguments: 1,
+    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
+    gasCost: () => 1,
+  }),
+  0x3f: new OpCode({
+    name: 'EXTCODEHASH',
+    arguments: 1,
+    onExecute: ({ stack, network }) => {
+      const address = stack.pop();
+      const contract = network.get(address.toString(16)).execute();
+      const data = keccak256(contract.data);
+
+      stack.push(new BigNumber(data.toString('hex'), 16));
+    },
+    // Has dynamic gas cost
+    gasCost: () => 1,
+  }),
+
+  // TODO opcodes from 0x40 to 0x50 are more network related
+  //      we should have some mocking for that in place
+  0x40: new OpCode({
+    // TODO: Implement some network mocking ?
+    //        We should just return a hash here.
+    name: 'BLOCKHASH',
+    arguments: 1,
+    gasCost: () => 20,
+  }),
+  0x41: new OpCode({
+    name: 'COINBASE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x42: new OpCode({
+    name: 'TIMESTAMP',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x43: new OpCode({
+    // Block number
+    name: 'NUMBER',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x44: new OpCode({
+    name: 'DIFFICULTY',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x45: new OpCode({
+    name: 'GASLIMIT',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x46: new OpCode({
+    name: 'CHAINID',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x47: new OpCode({
+    name: 'SELFBALANCE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x48: new OpCode({
+    name: 'BASEFEE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+
+  0x50: new OpCode({
+    name: 'POP',
+    arguments: 1,
+    onExecute: ({ stack }) => {
+      stack.pop();
+    },
+    gasCost: 2,
+  }),
+  0x51: new OpCode({
+    name: 'MLOAD',
+    arguments: 1,
+    // Todo this is dynamic
+    gasCost: () => 3,
   }),
   0x52: new OpCode({
     name: 'MSTORE',
@@ -354,6 +529,40 @@ export const opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 3,
+  }),
+  0x53: new OpCode({
+    name: 'MSTORE8',
+    arguments: 1,
+    // Todo this is dynamic
+    gasCost: () => 3,
+  }),
+  0x54: new OpCode({
+    name: 'SLOAD',
+    arguments: 1,
+    // Todo this is dynamic
+    gasCost: () => 3,
+  }),
+  0x55: new OpCode({
+    name: 'SSTORE',
+    arguments: 1,
+    onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
+      const key = stack.pop();
+      const value = stack.pop();
+      const gas = gasComputer.sstore({
+        gasLeft: 10_000, //evm.gasLeft,
+        address: '0xdeadbeef',
+        key,
+        value,
+      });
+
+      storage.write({ key, value });
+      return {
+        setPc: false,
+        // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
+        computedGas: gas.gasCost - gas.gasRefund,
+      };
+    },
+    gasCost: () => 0,
   }),
   0x56: new OpCode({
     name: 'JUMP',
@@ -393,6 +602,21 @@ export const opcodes: Record<number, OpCode> = {
     },
     gasCost: 10,
   }),
+  0x58: new OpCode({
+    name: 'PC',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x59: new OpCode({
+    name: 'MSIZE',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
+  0x5a: new OpCode({
+    name: 'GAS',
+    arguments: 1,
+    gasCost: () => 2,
+  }),
   0x5b: new OpCode({
     name: 'JUMPDEST',
     arguments: 1,
@@ -400,6 +624,57 @@ export const opcodes: Record<number, OpCode> = {
       // Just metadata
     },
     gasCost: 1,
+  }),
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x60,
+    toOpcode: 0x7f,
+    baseName: 'PUSH',
+    arguments: (index) => index + 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ evm, stack }) => {
+        const value = readEvmBuffer(evm, 1, index);
+        stack.push(value);
+      },
+    gasCost: 3,
+  }),
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x80,
+    toOpcode: 0x8f,
+    baseName: 'DUP',
+    arguments: 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ stack }) => {
+        if (index === 1) {
+          stack.push(stack.get(-1));
+        } else {
+          stack.push(stack.get(stack.length - index));
+        }
+      },
+    gasCost: 3,
+  }),
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0x90,
+    toOpcode: 0x9f,
+    baseName: 'SWAP',
+    arguments: 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ stack }) => {
+        stack.swap(0, index);
+      },
+    gasCost: 3,
+  }),
+  ...CreateOpCodeWIthVariableArgumentLength({
+    fromOpcode: 0xa0,
+    toOpcode: 0xa4,
+    baseName: 'LOG',
+    arguments: 1,
+    iteratedExecuteConstruction: (index) => () => {
+      throw new UnimplementedOpcode(`LOG${index}`);
+    },
+    gasCost: 3,
   }),
   0xf0: new OpCode({
     name: 'CREATE',
@@ -421,6 +696,18 @@ export const opcodes: Record<number, OpCode> = {
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 1,
   }),
+  0xf1: new OpCode({
+    name: 'CALL',
+    arguments: 1,
+    // TODo this is dynamic
+    gasCost: () => 2,
+  }),
+  0xf2: new OpCode({
+    name: 'CALLCODE',
+    arguments: 1,
+    // TODo this is dynamic
+    gasCost: () => 2,
+  }),
   0xf3: new OpCode({
     name: 'RETURN',
     arguments: 1,
@@ -434,6 +721,24 @@ export const opcodes: Record<number, OpCode> = {
     },
     // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
+  }),
+  0xf4: new OpCode({
+    name: 'DELEGATECALL',
+    arguments: 1,
+    // TODo this is dynamic
+    gasCost: () => 2,
+  }),
+  0xf5: new OpCode({
+    name: 'CREATE2',
+    arguments: 1,
+    // TODo this is dynamic
+    gasCost: () => 2,
+  }),
+  0xfa: new OpCode({
+    name: 'STATICCALL',
+    arguments: 1,
+    // TODo this is dynamic
+    gasCost: () => 2,
   }),
   0xfd: new OpCode({
     name: 'REVERT',
@@ -450,6 +755,18 @@ export const opcodes: Record<number, OpCode> = {
     },
     // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
+  }),
+  0xfe: new OpCode({
+    name: 'INVALID',
+    arguments: 1,
+    gasCost: () => 2,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    onExecute: () => {},
+  }),
+  0xff: new OpCode({
+    name: 'SELFDESTRUCT',
+    arguments: 1,
+    gasCost: () => 2,
   }),
 };
 

@@ -1,3 +1,4 @@
+import { UnimplementedOpcode } from './errors/UnimplementedOpcode';
 import { EvmContext } from './Evm';
 
 export class OpCode {
@@ -5,12 +6,15 @@ export class OpCode {
     private options: {
       name: string;
       arguments: number;
-      onExecute: (context: EvmContext) => ExecutionResults | void;
+      onExecute?: (context: EvmContext) => ExecutionResults | void;
       gasCost: number | (() => number);
     }
   ) {}
 
   public execute(context: EvmContext) {
+    if (!this.options.onExecute) {
+      throw new UnimplementedOpcode(this.mnemonic);
+    }
     return this.options.onExecute(context);
   }
 

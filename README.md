@@ -33,6 +33,7 @@ _Just something so I get a better understanding of the core parts of the protoco
   Currently supports:
     - Runs basic contracts
     - Converts mnemonic into bytecode.
+    - (todo) improved handling of the evms datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
     - (wip) gas cost/refund computation -> let's you see how much gas is used when executing contract.
     - (wip) you should be able to solve all these https://github.com/fvictorio/evm-puzzles puzzles with logic in this library, it's able to do up to level 8 currently.
     - (wip) improved support for the abi, make it "easy" to encode calldata.
