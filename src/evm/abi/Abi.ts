@@ -30,4 +30,8 @@ export class Abi {
 
     return `${functionEncoded}${dataEncoded}`;
   }
+
+  public encodeArguments(options: { arguments: AbiStruct }) {
+    return options.arguments.encoding;
+  }
 }

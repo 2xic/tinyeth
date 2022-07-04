@@ -6,6 +6,10 @@ _Just something so I get a better understanding of the core parts of the protoco
 
 ### Status
 - [ ] Add tests from https://github.com/ethereum/tests
+  - [x] ABI
+  - [x] RLP
+  - [ ] Transaction
+  - [ ] Trie
 
 - [ ] Network support (should be able to fetch a block from another node)
   - Wire/discovery protocol is more or less implemented. It's currently able to find neighbor nodes which is needed for the RLPx. [Discv4](https://github.com/ethereum/devp2p/blob/master/discv4.md#wire-protocol) is currently implemented. I know [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md) is out.

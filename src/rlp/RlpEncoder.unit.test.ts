@@ -322,4 +322,27 @@ describe('RlpEncoder', () => {
       'f882b8806161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161'
     );
   });
+
+  describe('https://github.com/ethereum/tests/blob/develop/RLPTests/rlptest.json', () => {
+    it('should correctly encode bytestring00', () => {
+      const encoding2 = new RlpEncoder().encode({
+        input: '\u0000',
+      });
+      expect(encoding2.slice(2)).toBe('00');
+    });
+
+    it('should correctly encode bytestring01', () => {
+      const encoding2 = new RlpEncoder().encode({
+        input: '\u0001',
+      });
+      expect(encoding2.slice(2)).toBe('01');
+    });
+
+    it('should correctly encode bytestring7F', () => {
+      const encoding2 = new RlpEncoder().encode({
+        input: '\u007F',
+      });
+      expect(encoding2.slice(2)).toBe('7f');
+    });
+  });
 });
