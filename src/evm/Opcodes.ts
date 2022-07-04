@@ -436,45 +436,70 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 1,
   }),
 
-  // TODO opcodes from 0x40 to 0x50 are more network related
-  //      we should have some mocking for that in place
   0x40: new OpCode({
-    // TODO: Implement some network mocking ?
-    //        We should just return a hash here.
     name: 'BLOCKHASH',
     arguments: 1,
     gasCost: () => 20,
+    onExecute: ({ network, stack }) => {
+      const height = stack.pop().toNumber();
+      const block = network.getBlock({ height });
+      stack.push(block.hash);
+    },
   }),
   0x41: new OpCode({
     name: 'COINBASE',
     arguments: 1,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.coinbase);
+    },
     gasCost: () => 2,
   }),
   0x42: new OpCode({
     name: 'TIMESTAMP',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.timeStamp.unix());
+    },
   }),
   0x43: new OpCode({
     // Block number
     name: 'NUMBER',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.height);
+    },
   }),
   0x44: new OpCode({
     name: 'DIFFICULTY',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.difficulty);
+    },
   }),
   0x45: new OpCode({
     name: 'GASLIMIT',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.gasLimit);
+    },
   }),
   0x46: new OpCode({
     name: 'CHAINID',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const block = network.block;
+      stack.push(block.chainId);
+    },
   }),
   0x47: new OpCode({
     name: 'SELFBALANCE',
@@ -670,10 +695,12 @@ export const opcodes: Record<number, OpCode> = {
     fromOpcode: 0xa0,
     toOpcode: 0xa4,
     baseName: 'LOG',
-    arguments: 1,
-    iteratedExecuteConstruction: (index) => () => {
-      throw new UnimplementedOpcode(`LOG${index}`);
+    arguments: (index) => index + 1,
+    iteratedExecuteConstruction: () => () => {
+      // This should not change the EVM state, but need to add gas adjustments
+      // It's used for events.
     },
+    // TODO: Implement gas
     gasCost: 3,
   }),
   0xf0: new OpCode({

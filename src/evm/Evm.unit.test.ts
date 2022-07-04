@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
@@ -337,5 +338,45 @@ describe('evm', () => {
       })
       .execute();
     expect(evm.totalGasCost).toBe(21023);
+  });
+
+  it('should correctly run block related opcodes', () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH1 42
+        BLOCKHASH
+        COINBASE
+        TIMESTAMP
+        NUMBER
+        DIFFICULTY
+        GASLIMIT
+        CHAINID
+       `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.alloc(0),
+      })
+      .execute();
+    expect(evm.stack.toString()).toBe(
+      [
+        new BigNumber(
+          '29045A592007D0C246EF02C2223570DA9522D0CF0F73282C79A1BC8F0BB2C238',
+          16
+        ),
+        new BigNumber(
+          '5B38Da6a701c568545dCfcB03FcB875f56beddC4'.toLocaleLowerCase(),
+          16
+        ),
+        1640991600,
+        42,
+        new BigNumber('10995000000000000'),
+        0xffffffffffff,
+        1,
+      ].toString()
+    );
   });
 });
