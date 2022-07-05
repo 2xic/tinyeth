@@ -43,4 +43,9 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (wip) improved support for the abi, make it "easy" to encode calldata.
 
 - [ ] Data structures like block, transactions, accounts, Merkle Patricia Trie, ethash(?), etc
-  
+
+- [ ] Play wargames with this implementation
+  - https://ethernaut.openzeppelin.com/
+  - https://www.damnvulnerabledefi.xyz/
+  - https://github.com/karmacoma-eth/pinball-ctf
+  - https://github.com/paradigm-operations/paradigm-ctf-2021
