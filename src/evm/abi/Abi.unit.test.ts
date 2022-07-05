@@ -60,6 +60,66 @@ describe('Abi', () => {
     );
   });
 
+  it('should correctly encode uint and uint32 array', () => {
+    expect(
+      new Abi().encodeArguments({
+        arguments: new AbiStruct([
+          new ArrayType([new UintType(0, 32)]),
+          new UintType(0),
+        ]),
+      })
+    ).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000'
+    );
+    expect(
+      new Abi().encodeArguments({
+        arguments: new AbiStruct([
+          new UintType(1),
+          new ArrayType([new UintType(1, 32)]),
+        ]),
+      })
+    ).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001'
+    );
+  });
+
+  it('should correctly encode empty arrayes', () => {
+    const encodeFunction = new Abi().encodeArguments({
+      arguments: new AbiStruct([
+        new ArrayType([]),
+        new ArrayType([]),
+        new ArrayType([]),
+      ]),
+    });
+    expect(encodeFunction).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it('should correctly encode uint32 array', () => {
+    const encodeFunction = new Abi().encodeArguments({
+      arguments: new AbiStruct([
+        new ArrayType([new UintType(1110, 32), new UintType(1929, 32)]),
+      ]),
+    });
+    expect(encodeFunction).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000004560000000000000000000000000000000000000000000000000000000000000789'
+    );
+  });
+
+  it('should correctly encode multiple parameters', () => {
+    const encodeFunction = new Abi().encodeArguments({
+      arguments: new AbiStruct([
+        new ArrayType([new UintType(1110, 32), new UintType(1929, 32)]),
+        new UintType(291, 256),
+        new UintType(4, 256),
+      ]),
+    });
+    expect(encodeFunction).toBe(
+      '000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000001230000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000004560000000000000000000000000000000000000000000000000000000000000789'
+    );
+  });
+
   describe('https://github.com/ethereum/tests/blob/develop/ABITests/basic_abi_tests.json', () => {
     it('should correctly encode SingleInteger', () => {
       const encodeFunction = new Abi().encodeArguments({
@@ -82,11 +142,23 @@ describe('Abi', () => {
       );
     });
 
+    it('should correctly encode first part of GithubWikiTest', () => {
+      const encodeFunction = new Abi().encodeArguments({
+        arguments: new AbiStruct([
+          new UintType(291),
+          new ArrayType([new UintType(1110, 32), new UintType(1929, 32)]),
+        ]),
+      });
+      expect(encodeFunction).toBe(
+        '00000000000000000000000000000000000000000000000000000000000001230000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000004560000000000000000000000000000000000000000000000000000000000000789'
+      );
+    });
+
     it('should correctly encode GithubWikiTest', () => {
       const encodeFunction = new Abi().encodeArguments({
         arguments: new AbiStruct([
           new UintType(291),
-          new ArrayType([1110, 1929]),
+          new ArrayType([new UintType(1110, 32), new UintType(1929, 32)]),
           new StringType('1234567890'),
           new StringType('Hello, world!'),
         ]),

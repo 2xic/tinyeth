@@ -6,10 +6,11 @@ export class AddressType {
   constructor(private address: string) {}
 
   public get value(): EncodingResults {
+    const encoding = getBufferFromHex(this.address)
+      .toString('hex')
+      .padStart(64, '0');
     return {
-      encoding: new StringEncoderDecoder().encode({
-        input: getBufferFromHex(this.address),
-      }).encoding,
+      encoding,
       length: 0,
     };
   }

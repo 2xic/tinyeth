@@ -1,3 +1,4 @@
+import { UintType } from '../evm';
 import { InputTypes } from './RlpEncoder';
 import { ArrayEncoderDecoder } from './types/ArrayEncoderDecoder';
 import { BooleanEncoderDecoder } from './types/BooleanEncoderDecoder';

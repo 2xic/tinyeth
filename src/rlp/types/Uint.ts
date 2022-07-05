@@ -3,12 +3,16 @@ import { EncodingResults } from './TypeEncoderDecoder';
 
 export class Uint {
   constructor(
-    private options: {
+    protected options: {
       input: BigNumber;
       n: number;
       type?: string;
     }
   ) {}
+
+  public get raw() {
+    return this.options.input;
+  }
 
   public get value() {
     return this.getByteArray({
@@ -23,7 +27,7 @@ export class Uint {
     return this.options.type;
   }
 
-  private getByteArray({
+  protected getByteArray({
     input,
     n,
   }: {
