@@ -60,17 +60,20 @@ describe('Abi', () => {
     );
   });
 
-  it('should correctly encode uint and uint32 array', () => {
+  it('should correctly encode uint32 array and uint ', () => {
     expect(
       new Abi().encodeArguments({
         arguments: new AbiStruct([
-          new ArrayType([new UintType(0, 32)]),
-          new UintType(0),
+          new ArrayType([new UintType(5, 32)]),
+          new UintType(2),
         ]),
       })
     ).toBe(
-      '0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000'
+      '0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000005'
     );
+  });
+
+  it('should correctly encode uint and uint32 array', () => {
     expect(
       new Abi().encodeArguments({
         arguments: new AbiStruct([
@@ -83,7 +86,16 @@ describe('Abi', () => {
     );
   });
 
-  it('should correctly encode empty arrayes', () => {
+  it('should correctly encode a empty array', () => {
+    const encodeFunction = new Abi().encodeArguments({
+      arguments: new AbiStruct([new ArrayType([])]),
+    });
+    expect(encodeFunction).toBe(
+      '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it('should correctly encode empty array`s', () => {
     const encodeFunction = new Abi().encodeArguments({
       arguments: new AbiStruct([
         new ArrayType([]),
@@ -159,7 +171,7 @@ describe('Abi', () => {
         arguments: new AbiStruct([
           new UintType(291),
           new ArrayType([new UintType(1110, 32), new UintType(1929, 32)]),
-          new StringType('1234567890'),
+          new StringType('1234567890', 10),
           new StringType('Hello, world!'),
         ]),
       });

@@ -19,4 +19,8 @@ export class AddressType {
     // This has to be dynamic.
     throw new Error('Not implemented');
   }
+
+  public get isDynamic(): boolean {
+    return false;
+  }
 }

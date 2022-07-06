@@ -49,4 +49,8 @@ export class Uint {
       encoding: Buffer.from(array).toString('hex'),
     };
   }
+
+  public get isDynamic(): boolean {
+    return false;
+  }
 }
