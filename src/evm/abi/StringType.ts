@@ -10,7 +10,7 @@ export class StringType {
 
   public get value(): EncodingResults {
     const lengthEncoding = this.length
-      ? new UintType(this.length).value.encoding
+      ? ''
       : new UintType(this.input.length).value.encoding;
     const encoding =
       lengthEncoding +

@@ -13,16 +13,14 @@ export class AbiStruct {
   ) {}
 
   public get value() {
-    //let index = this.struct[0] instanceof ArrayType ? 32 : 0;
     const parameterIndex: Record<number, string> = {};
     let itemIndex = 0;
 
     const mappedStruct = this.struct.map((item, index) => {
-      // console.log([item.value, item.isDynamic]);
       if (item.isDynamic) {
         const value = item.value.encoding;
         parameterIndex[index] = value;
-        // This is just a reference of 32 bits.
+        // This will just be reference of 32 bits.
         itemIndex += 32;
         return index;
       }
@@ -35,7 +33,8 @@ export class AbiStruct {
       if (typeof item == 'number') {
         const value = parameterIndex[item];
         mappedStruct[item] = convertNumberToPadHex(itemIndex).padStart(64, '0');
-        itemIndex += 32;
+        itemIndex += getBufferFromHex(parameterIndex[item]).length;
+
         mappedStruct.push(value);
       }
     }
