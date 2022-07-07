@@ -1,8 +1,7 @@
-import { StringEncoder } from '../../rlp/types/StringEncoder';
 import { EncodingResults } from '../../rlp/types/TypeEncoderDecoder';
-import { UintType } from './UintType';
+import { AbiUintType } from './AbiUintType';
 
-export class StringType {
+export class AbiStringType {
   constructor(
     private input: string,
     private length: number | undefined = undefined
@@ -11,7 +10,7 @@ export class StringType {
   public get value(): EncodingResults {
     const lengthEncoding = this.length
       ? ''
-      : new UintType(this.input.length).value.encoding;
+      : new AbiUintType(this.input.length).value.encoding;
     const encoding =
       lengthEncoding +
       [...this.input]

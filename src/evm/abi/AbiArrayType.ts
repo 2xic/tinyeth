@@ -1,11 +1,11 @@
 import { EncodingResults } from '../../rlp/types/TypeEncoderDecoder';
-import { UintType } from './UintType';
+import { AbiUintType } from './AbiUintType';
 
-export class ArrayType {
-  constructor(private values: Array<number | UintType>) {}
+export class AbiArrayType {
+  constructor(private values: Array<number | AbiUintType>) {}
 
   public get value(): EncodingResults {
-    const items = [new UintType(this.values.length), ...this.values];
+    const items = [new AbiUintType(this.values.length), ...this.values];
 
     if (items.length === 0) {
       return {
@@ -17,7 +17,7 @@ export class ArrayType {
     return {
       encoding: items
         .map((item) => {
-          if (item instanceof UintType) {
+          if (item instanceof AbiUintType) {
             return item.value.encoding;
           } else {
             throw Error('unknown');

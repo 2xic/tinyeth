@@ -1,25 +1,29 @@
 import BigNumber from 'bignumber.js';
-import { KeyPair } from '../signatures/KeyPair';
 import crypto from 'crypto';
-import { Evm } from './Evm';
+import { Evm, EvmContext, TxContext } from './Evm';
 import { Wei } from './Wei';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { keccak256 } from '../utils/keccak256';
+import { RlpEncoder } from '../rlp';
+import { createPrinter } from 'typescript';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 
 export class Contract {
   private _address: string;
 
-  // TODO : Wrong address construction here
-  //        see https://ethereum.stackexchange.com/a/101340
-  //            https://www.evm.codes/#f0
-  //        address = keccak256(rlp([sender_address,sender_nonce]))[12:]
   constructor(
     private bytes: Buffer,
     private _value: BigNumber,
-    private keyPair = new KeyPair(crypto.randomBytes(32).toString('hex'))
+    context: TxContext
   ) {
-    this._address = keyPair.getAddress({
-      publicKey: this.keyPair.getPublicKey(),
+    // https://ethereum.stackexchange.com/a/101340
+    // https://www.evm.codes/#f0
+    const rlp = getClassFromTestContainer(RlpEncoder);
+    const encoding = rlp.encode({
+      input: [context.sender || crypto.randomBytes(32), context.nonce],
     });
+    this._address =
+      '0x' + keccak256(getBufferFromHex(encoding)).slice(12).toString('hex');
   }
 
   public get value() {

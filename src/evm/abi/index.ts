@@ -1,3 +1,3 @@
-export * from './UintType';
+export * from './AbiUintType';
 export * from './Abi';
-export * from './AbiStruct';
+export * from './AbiStructEncoder';

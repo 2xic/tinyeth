@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Uint } from '../../rlp/types/Uint';
 
-export class UintType extends Uint {
+export class AbiUintType extends Uint {
   constructor(value: number | BigNumber | string, n = 256) {
     super({
       input: new BigNumber(value),

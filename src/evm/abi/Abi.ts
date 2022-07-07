@@ -1,6 +1,6 @@
 import { keccak256 } from '../../utils/keccak256';
 import { Uint } from '../../rlp/types/Uint';
-import { AbiStruct } from './AbiStruct';
+import { AbiStructEncoder } from './AbiStructEncoder';
 
 export class Abi {
   public encodeFunction(name: string): string {
@@ -9,7 +9,7 @@ export class Abi {
 
   public encodeFunctionWithSignature(
     name: string,
-    data: Uint | AbiStruct
+    data: Uint | AbiStructEncoder
   ): string {
     const functionEncoded = this.encodeFunction(name);
 
@@ -20,7 +20,7 @@ export class Abi {
 
   public simpleFunctionEncoding(options: {
     functionName: string;
-    arguments: AbiStruct | Uint;
+    arguments: AbiStructEncoder | Uint;
   }) {
     const functionCall = `${options.functionName}(${options.arguments.type})`;
 
@@ -31,7 +31,7 @@ export class Abi {
     return `${functionEncoded}${dataEncoded}`;
   }
 
-  public encodeArguments(options: { arguments: AbiStruct }) {
+  public encodeArguments(options: { arguments: AbiStructEncoder }) {
     return options.arguments.encoding;
   }
 }

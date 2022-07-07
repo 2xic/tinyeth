@@ -60,7 +60,7 @@ export class Evm {
     const { opcode, opcodeNumber } = this.loadOpcode();
     if (this.options?.debug) {
       // eslint-disable-next-line no-console
-      console.log(`Running 0x${opcodeNumber.toString(16)}`);
+      console.log(`Running ${opcodes[opcodeNumber].mnemonic}`);
     }
 
     const results = opcode.execute({
@@ -156,10 +156,11 @@ export class Evm {
   }
 }
 
-interface TxContext {
+export interface TxContext {
   value: Wei;
   data: Buffer;
   nonce: number;
+  sender?: string;
   /* 
     Todo 
     - Caller should be added here also.

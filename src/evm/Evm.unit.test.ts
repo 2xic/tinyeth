@@ -80,7 +80,7 @@ describe('evm', () => {
     evm.step();
 
     expect(
-      evm.memory.memory
+      evm.memory.raw
         .toString('hex')
         .startsWith(
           '6080604052348015600f57600080fd5b506004361060285760003560e01c8063037a417c14602d575b600080fd5b60336049565b6040518082815260200191505060405180910390f35b6000600190509056fea265627a7a7230582050d33093e20eb388eec760ca84ba30ec42dadbdeb8edf5cd8b261e89b8d4279264736f6c634300050a003200000000000000000000000000000000000000000000000000'
@@ -128,7 +128,7 @@ describe('evm', () => {
 
     evm.step();
 
-    expect(evm.memory.memory.slice(0, 32).toString('hex')).toBe(
+    expect(evm.memory.raw.slice(0, 32).toString('hex')).toBe(
       '0000000000000000000000000000000000000063ffffffff60005260046000f3'
     );
 
@@ -148,7 +148,7 @@ describe('evm', () => {
     expect(evm.stack.get(1).toString(16)).toBe('0');
     expect(evm.stack.get(2).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(3);
-    expect(evm.memory.memory.slice(0, 32).toString('hex')).toBe(
+    expect(evm.memory.raw.slice(0, 32).toString('hex')).toBe(
       '0000000000000000000000000000000000000063ffffffff60005260046000f3'
     );
 
@@ -188,7 +188,7 @@ describe('evm', () => {
 
     evm.step();
     expect(evm.stack.length).toBe(0);
-    expect(evm.memory.memory.filter((item) => item !== 0).length).toBe(0);
+    expect(evm.memory.raw.filter((item) => item !== 0).length).toBe(0);
 
     evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');

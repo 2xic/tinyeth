@@ -278,7 +278,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, memory }) => {
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
-      const data = memory.memory.slice(offset, offset + length);
+      const data = memory.read(offset, length);
       const hash = getBufferFromHex(keccak256(data));
       stack.push(new BigNumber(hash.toString('hex'), 16));
 
@@ -360,7 +360,7 @@ export const opcodes: Record<number, OpCode> = {
       const length = stack.pop().toNumber();
 
       for (let i = 0; i < length; i++) {
-        memory.memory[dataOffset + i] = context.data[offset + i];
+        memory.write(dataOffset + i, context.data[offset + i]);
       }
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -383,7 +383,7 @@ export const opcodes: Record<number, OpCode> = {
       const size = stack.pop().toNumber();
 
       for (let i = 0; i < size; i++) {
-        memory.memory[destOffset + i] = evm.program[offset + i];
+        memory.write(destOffset + i, evm.program[offset + i]);
       }
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
@@ -525,6 +525,11 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // Todo this is dynamic
     gasCost: () => 3,
+    onExecute: ({ memory, stack }) => {
+      const offset = stack.pop().toNumber();
+      const read = memory.read32(offset);
+      stack.push(new BigNumber(read.toString('hex'), 16));
+    },
   }),
   0x52: new OpCode({
     name: 'MSTORE',
@@ -542,7 +547,7 @@ export const opcodes: Record<number, OpCode> = {
       );
 
       for (let i = 0; i < 32; i++) {
-        memory.memory[offset + i] = uint[i];
+        memory.write(offset + i, uint[i]);
       }
       const computedGas = gasComputer.memoryExpansion({
         address: new BigNumber(offset + 32),
@@ -636,6 +641,9 @@ export const opcodes: Record<number, OpCode> = {
     name: 'MSIZE',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, memory }) => {
+      stack.push(memory.size);
+    },
   }),
   0x5a: new OpCode({
     name: 'GAS',
@@ -706,15 +714,16 @@ export const opcodes: Record<number, OpCode> = {
   0xf0: new OpCode({
     name: 'CREATE',
     arguments: 1,
-    onExecute: ({ stack, memory, network }) => {
+    onExecute: ({ stack, memory, network, context }) => {
       const value = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
 
-      const contractBytes = memory.memory.slice(offset, offset + length);
+      const contractBytes = memory.read(offset, length);
       const contract = new Contract(
         contractBytes,
-        new BigNumber(value)
+        new BigNumber(value),
+        context
       ).execute();
 
       network.register({ contract });
@@ -742,9 +751,7 @@ export const opcodes: Record<number, OpCode> = {
       const offset = stack.pop().toNumber();
       const size = stack.pop().toNumber();
 
-      evm.setCallingContextReturnData(
-        memory.memory.slice(offset, offset + size)
-      );
+      evm.setCallingContextReturnData(memory.read(offset, offset + size));
     },
     // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
@@ -774,9 +781,7 @@ export const opcodes: Record<number, OpCode> = {
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
 
-      evm.setCallingContextReturnData(
-        memory.memory.slice(offset, offset + length)
-      );
+      evm.setCallingContextReturnData(memory.read(offset, length));
 
       throw new Reverted('Reverted');
     },

@@ -1,15 +1,13 @@
-import { resolveModuleName } from 'typescript';
 import { Uint } from '../../rlp/types/Uint';
 import { convertNumberToPadHex } from '../../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { AddressType } from './AddressType';
-import { ArrayType } from './ArrayType';
-import { StringType } from './StringType';
-import { UintType } from './UintType';
+import { AbiAddressType } from './AbiAddressType';
+import { AbiArrayType } from './AbiArrayType';
+import { AbiStringType } from './AbiStringType';
 
-export class AbiStruct {
+export class AbiStructEncoder {
   constructor(
-    public struct: Array<Uint | ArrayType | StringType | AddressType>
+    public struct: Array<Uint | AbiArrayType | AbiStringType | AbiAddressType>
   ) {}
 
   public get value() {

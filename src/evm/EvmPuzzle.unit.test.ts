@@ -78,17 +78,23 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it('should be possible run puzzle 7 contract', () => {
+  it.skip('should be possible run puzzle 7 contract', () => {
     const contract = Buffer.from(
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
     );
     getClassFromTestContainer(Evm)
-      .boot(contract, {
-        nonce: 1,
-        value: new Wei(16),
-        data: Buffer.from('60016000526001601ff3', 'hex'),
-      })
+      .boot(
+        contract,
+        {
+          nonce: 1,
+          value: new Wei(16),
+          data: Buffer.from('60016000526001601ff3', 'hex'),
+        },
+        {
+          debug: true,
+        }
+      )
       .execute();
   });
 

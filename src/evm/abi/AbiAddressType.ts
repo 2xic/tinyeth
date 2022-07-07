@@ -1,8 +1,7 @@
-import { StringEncoderDecoder } from '../../rlp/types/StringEncoderDecoder';
 import { EncodingResults } from '../../rlp/types/TypeEncoderDecoder';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
-export class AddressType {
+export class AbiAddressType {
   constructor(private address: string) {}
 
   public get value(): EncodingResults {

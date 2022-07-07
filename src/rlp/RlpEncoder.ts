@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { UintType } from '../evm/abi/UintType';
+import { AbiUintType } from '../evm/abi/AbiUintType';
 import { EncodeToken } from './EncodeToken';
 
 @injectable()
@@ -19,5 +19,5 @@ export type Literal =
   | boolean
   | BigNumber
   | Uint8Array
-  | UintType
+  | AbiUintType
   | Array<Literal>;
