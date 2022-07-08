@@ -11,6 +11,7 @@ import { injectable } from 'inversify';
 import { GasComputer } from './gas/GasComputer';
 import { EvmKeyValueStorage } from './EvmKeyValueStorage';
 import { AccessSets } from './gas/AccessSets';
+import { Address } from './Address';
 
 @injectable()
 export class Evm {
@@ -25,13 +26,13 @@ export class Evm {
 
   private running = false;
   private gasCost = 0;
-  private gasLeft = 0;
+  private _gasLeft: BigNumber = new BigNumber(0);
 
   private _pc = 0;
   private _lastPc = -1;
   private _callingContextReturnData?: Buffer;
   public program: Buffer = Buffer.alloc(0);
-  private context?: TxContext;
+  private context!: TxContext;
   private options?: Options;
 
   public boot(program: Buffer, context: TxContext, options?: Options) {
@@ -41,6 +42,7 @@ export class Evm {
     this._pc = 0;
     this._lastPc = -1;
     this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
+    this._gasLeft = context.gasLimit.minus(this.gasCost);
     this.running = true;
     return this;
   }
@@ -75,6 +77,7 @@ export class Evm {
       context: this.context,
     });
     this.gasCost += opcode.gasCost;
+    this._gasLeft = this._gasLeft.minus(opcode.gasCost);
 
     let updatedPc = false;
     if (results) {
@@ -154,13 +157,19 @@ export class Evm {
   public get totalGasCost() {
     return this.gasCost;
   }
+
+  public get gasLeft() {
+    return this._gasLeft;
+  }
 }
 
 export interface TxContext {
   value: Wei;
   data: Buffer;
   nonce: number;
-  sender?: string;
+  sender: Address;
+  gasLimit: BigNumber;
+
   /* 
     Todo 
     - Caller should be added here also.

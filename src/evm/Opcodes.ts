@@ -49,9 +49,9 @@ export const opcodes: Record<number, OpCode> = {
     name: 'SUB',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a - b));
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(a.minus(b));
     },
     gasCost: 3,
   }),
@@ -294,6 +294,11 @@ export const opcodes: Record<number, OpCode> = {
     name: 'ADDRESS',
     arguments: 1,
     gasCost: 2,
+    onExecute: ({ stack, context }) => {
+      // Todo: this should be the last call, not the sender.
+      // I think we should add some call stack.
+      stack.push(context.sender.raw);
+    },
   }),
   0x31: new OpCode({
     name: 'BALANCE',
@@ -319,11 +324,18 @@ export const opcodes: Record<number, OpCode> = {
     name: 'ORIGIN',
     arguments: 1,
     gasCost: 2,
+    onExecute: ({ stack, context }) => {
+      stack.push(context.sender.raw);
+    },
   }),
   0x33: new OpCode({
     name: 'CALLER',
     arguments: 1,
     gasCost: 2,
+    onExecute: ({ stack, context }) => {
+      // Todo: this should be the last call, not the sender.
+      stack.push(context.sender.raw);
+    },
   }),
   0x34: new OpCode({
     name: 'CALLVALUE',
@@ -487,9 +499,8 @@ export const opcodes: Record<number, OpCode> = {
     name: 'GASLIMIT',
     arguments: 1,
     gasCost: () => 2,
-    onExecute: ({ stack, network }) => {
-      const block = network.block;
-      stack.push(new BigNumber(block.gasLimit));
+    onExecute: ({ stack, context }) => {
+      stack.push(new BigNumber(context.gasLimit));
     },
   }),
   0x46: new OpCode({
@@ -636,6 +647,9 @@ export const opcodes: Record<number, OpCode> = {
     name: 'PC',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, evm }) => {
+      stack.push(new BigNumber(evm.pc));
+    },
   }),
   0x59: new OpCode({
     name: 'MSIZE',
@@ -649,6 +663,9 @@ export const opcodes: Record<number, OpCode> = {
     name: 'GAS',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, evm }, gasOpcode) => {
+      stack.push(evm.gasLeft.minus(gasOpcode.gasCost));
+    },
   }),
   0x5b: new OpCode({
     name: 'JUMPDEST',

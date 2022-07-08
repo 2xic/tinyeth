@@ -1,12 +1,19 @@
+import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { Address } from './Address';
 import { Evm } from './Evm';
 import { Wei } from './Wei';
 
 describe('https://github.com/fvictorio/evm-puzzles', () => {
+  const sender = new Address();
+  const gasLimit = new BigNumber(0xffffff);
+
   it('should be possible to run puzzle 1 contract', () => {
     getClassFromTestContainer(Evm)
       .boot(Buffer.from('3456FDFDFDFDFDFD5B00', 'hex'), {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       })
@@ -18,6 +25,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(4),
         data: Buffer.from('', 'hex'),
       })
@@ -31,6 +40,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(4),
         data: Buffer.from('AAAAAAAA', 'hex'),
       })
@@ -44,6 +55,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(value),
         data: Buffer.from('', 'hex'),
       })
@@ -56,6 +69,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -68,6 +83,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from(
           '000000000000000000000000000000000000000000000000000000000000000a',
@@ -88,6 +105,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         contract,
         {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.from('60016000526001601ff3', 'hex'),
         },
@@ -106,6 +125,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })

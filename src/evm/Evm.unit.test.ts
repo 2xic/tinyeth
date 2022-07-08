@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { Address } from './Address';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
 import { ExposedEvm } from './ExposedEvm';
@@ -7,12 +8,17 @@ import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './Wei';
 
 describe('evm', () => {
+  const sender = new Address();
+  const gasLimit = new BigNumber(0xffffff);
+
   it('should step through a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     const evm = getClassFromTestContainer(ExposedEvm).boot(
       Buffer.from('6001600081905550', 'hex'),
       {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       }
@@ -49,6 +55,8 @@ describe('evm', () => {
       Buffer.from('6001600081905550', 'hex'),
       {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       }
@@ -70,6 +78,8 @@ describe('evm', () => {
         ),
         {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(0),
           data: Buffer.from('', 'hex'),
         }
@@ -96,6 +106,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(Buffer.from('600060006000F0', 'hex'), {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       })
@@ -112,6 +124,8 @@ describe('evm', () => {
       Buffer.from('6C63FFFFFFFF60005260046000F3600052600D60006000F0', 'hex'),
       {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
       }
@@ -173,6 +187,8 @@ describe('evm', () => {
       nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
+      sender,
+      gasLimit,
     });
     evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
@@ -240,6 +256,8 @@ describe('evm', () => {
       nonce: 1,
       value: new Wei(16),
       data: Buffer.from('', 'hex'),
+      sender,
+      gasLimit,
     });
     expect(() => evm.execute()).toThrow(Reverted);
     expect(evm.callingContextReturnData?.toString('hex')).toBe('ff01');
@@ -263,6 +281,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -277,6 +297,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -294,6 +316,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -307,6 +331,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -320,6 +346,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('0000', 'hex'),
       })
@@ -333,6 +361,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('0001', 'hex'),
       })
@@ -357,6 +387,8 @@ describe('evm', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.alloc(0),
       })
@@ -374,7 +406,7 @@ describe('evm', () => {
         1640991600,
         42,
         new BigNumber('10995000000000000'),
-        0xffffffffffff,
+        gasLimit,
         1,
       ].toString()
     );

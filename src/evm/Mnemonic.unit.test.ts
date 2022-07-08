@@ -1,3 +1,4 @@
+import { parse } from 'buffer-json';
 import { MnemonicParser } from './MnemonicParser';
 
 describe('MnemonicParser', () => {
@@ -24,6 +25,13 @@ describe('MnemonicParser', () => {
       });
       expect(Buffer.compare(parser, Buffer.from('', 'hex'))).toBe(0);
     });
+  });
+
+  it('should correctly encode a non hex number ', () => {
+    const parser = new MnemonicParser().parse({
+      mnemonics: ['PUSH3 21000'],
+    });
+    expect(Buffer.compare(parser, Buffer.from('62005208', 'hex'))).toBe(0);
   });
 
   it('should not ignore opcode if comment is after', () => {

@@ -1,9 +1,14 @@
+import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../../container/getClassFromTestContainer';
+import { Address } from '../Address';
 import { Evm } from '../Evm';
 import { MnemonicParser } from '../MnemonicParser';
 import { Wei } from '../Wei';
 
 describe('EvmGas', () => {
+  const sender = new Address();
+  const gasLimit = new BigNumber(0xffffff);
+
   describe('sstore', () => {
     it('should correctly compute the gas cost of SSTORE', () => {
       const mnemonicParser = new MnemonicParser();
@@ -19,6 +24,8 @@ describe('EvmGas', () => {
       const evm = getClassFromTestContainer(Evm)
         .boot(contract, {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.from('0001', 'hex'),
         })
@@ -40,6 +47,8 @@ describe('EvmGas', () => {
       const evm = getClassFromTestContainer(Evm)
         .boot(contract, {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.from('0001', 'hex'),
         })
@@ -48,6 +57,8 @@ describe('EvmGas', () => {
       evm
         .boot(contract, {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.from('0001', 'hex'),
         })
@@ -69,6 +80,8 @@ describe('EvmGas', () => {
     const evm = getClassFromTestContainer(Evm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.alloc(0),
       })
@@ -90,6 +103,8 @@ describe('EvmGas', () => {
       const evm = getClassFromTestContainer(Evm)
         .boot(contract, {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.alloc(0),
         })
@@ -113,6 +128,8 @@ describe('EvmGas', () => {
       const evm = getClassFromTestContainer(Evm)
         .boot(contract, {
           nonce: 1,
+          sender,
+          gasLimit,
           value: new Wei(16),
           data: Buffer.alloc(0),
         })

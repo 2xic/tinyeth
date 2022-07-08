@@ -44,8 +44,8 @@ export class MnemonicParser {
       const argumentsPadding = opcodes[foundOpcode].length - 1;
       if (converted_arguments.length < argumentsPadding) {
         converted_arguments = Buffer.concat([
-          converted_arguments,
           Buffer.alloc(argumentsPadding - converted_arguments.length),
+          converted_arguments,
         ]);
       }
 

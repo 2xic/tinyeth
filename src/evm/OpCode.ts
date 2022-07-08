@@ -6,7 +6,10 @@ export class OpCode {
     private options: {
       name: string;
       arguments: number;
-      onExecute?: (context: EvmContext) => ExecutionResults | void;
+      onExecute?: (
+        context: EvmContext,
+        opcode: OpCode
+      ) => ExecutionResults | void;
       gasCost: number | (() => number);
     }
   ) {}
@@ -15,7 +18,7 @@ export class OpCode {
     if (!this.options.onExecute) {
       throw new UnimplementedOpcode(this.mnemonic);
     }
-    return this.options.onExecute(context);
+    return this.options.onExecute(context, this);
   }
 
   public get length() {

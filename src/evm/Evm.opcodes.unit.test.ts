@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { Address } from './Address';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './Wei';
@@ -9,6 +10,9 @@ import { Wei } from './Wei';
     They have great examples :) 
 */
 describe('evm.codes', () => {
+  const sender = new Address();
+  const gasLimit = new BigNumber(0xffffff);
+
   it('should correctly execute SWAP16', () => {
     // example from https://www.evm.codes/#9f
     const mnemonicParser = new MnemonicParser();
@@ -40,6 +44,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -80,6 +86,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -109,6 +117,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -136,6 +146,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -163,6 +175,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -192,6 +206,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -219,6 +235,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -245,6 +263,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -271,6 +291,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -297,6 +319,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -323,6 +347,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -349,6 +375,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -375,6 +403,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -401,6 +431,8 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
@@ -413,6 +445,7 @@ describe('evm.codes', () => {
     name: string;
     script: string;
     gasCost: number | null;
+    gasLimit?: BigNumber;
     stack: Array<number | BigNumber>;
   }>([
     {
@@ -573,6 +606,65 @@ describe('evm.codes', () => {
       ],
     },
     */
+    {
+      name: 'CALLER',
+      script: `
+          CALLER
+      `,
+      gasCost: 21002,
+      stack: [sender.raw],
+    },
+    {
+      name: 'ORIGIN',
+      script: `
+          ORIGIN
+      `,
+      gasCost: 21002,
+      stack: [sender.raw],
+    },
+    {
+      name: 'ADDRESS',
+      script: `
+          ADDRESS
+      `,
+      gasCost: 21002,
+      stack: [sender.raw],
+    },
+    {
+      name: 'GAS',
+      script: `
+        GAS
+      `,
+      gasCost: 21002,
+      stack: [new BigNumber(0xffffffffadf5)],
+      gasLimit: new BigNumber(0xffffffffffff),
+    },
+    {
+      name: 'GAS',
+      script: `
+        GAS
+        PUSH3 21000 // Cost of the transaction
+        GASLIMIT // Gas that was given to the context
+        SUB
+        SUB // Result is the amount of gas used up to and including the GAS instruction
+      `,
+      gasCost: 21013,
+      stack: [2],
+      gasLimit: new BigNumber(0xffffffffffff),
+    },
+    {
+      name: 'PC',
+      script: `
+        PC       // Offset 0
+        PC       // Offset 1
+        JUMPDEST // Offest 2
+        PC       // Offset 3
+        PUSH1 1  // Offset 4
+        PC       // Offset 6 (previous instructions takes 2 bytes)
+      `,
+      gasCost: 21012,
+      stack: [0, 1, 3, 1, 6],
+    },
   ])('Test of opcodes $name', (options) => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -581,13 +673,15 @@ describe('evm.codes', () => {
     const evm = getClassFromTestContainer(ExposedEvm)
       .boot(contract, {
         nonce: 1,
+        sender,
+        gasLimit: options.gasLimit || gasLimit,
         value: new Wei(16),
         data: Buffer.from('', 'hex'),
       })
       .execute();
-    expect(evm.stack.toString()).toBe(options.stack.toString());
     if (options.gasCost !== null) {
       expect(evm.totalGasCost).toBe(options.gasCost);
     }
+    expect(evm.stack.toString()).toBe(options.stack.toString());
   });
 });
