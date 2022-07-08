@@ -7,7 +7,7 @@ import { AbiArrayType } from './AbiArrayType';
 import { AbiStringType } from './AbiStringType';
 import { AbiUintType } from './AbiUintType';
 
-describe('Abi', () => {
+describe('AbiEncoder', () => {
   it('should correctly encode a function', () => {
     // Reading https://noxx.substack.com/p/evm-deep-dives-the-path-to-shadowy?utm_source=url&s=r
     const encodeFunction = new Abi().encodeFunction;

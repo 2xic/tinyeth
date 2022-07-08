@@ -34,4 +34,8 @@ export class Abi {
   public encodeArguments(options: { arguments: AbiStructEncoder }) {
     return options.arguments.encoding;
   }
+
+  public decodeArguments({ encodeArguments }: { encodeArguments: string }) {
+    throw new Error('Method not implemented.');
+  }
 }
