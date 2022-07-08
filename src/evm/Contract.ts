@@ -7,6 +7,7 @@ import { keccak256 } from '../utils/keccak256';
 import { RlpEncoder } from '../rlp';
 import { createPrinter } from 'typescript';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
+import { Address } from './Address';
 
 export class Contract {
   private _address: string;
@@ -39,7 +40,7 @@ export class Contract {
   }
 
   public get address() {
-    return this._address;
+    return new Address(this._address);
   }
 
   public execute() {

@@ -28,15 +28,11 @@ export class Network {
   }
 
   public register({ contract }: { contract: Contract }) {
-    this._contracts[contract.address] = contract;
+    this._contracts[contract.address.toString()] = contract;
   }
 
-  public get(inputAddress: string): Contract {
-    let address = inputAddress;
-    if (!address.startsWith('0x')) {
-      address = `0x${address}`;
-    }
-    return this._contracts[address];
+  public get(inputAddress: Address): Contract {
+    return this._contracts[inputAddress.toString()];
   }
 
   public get contracts(): Contract[] {

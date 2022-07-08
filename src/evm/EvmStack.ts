@@ -6,7 +6,7 @@ import { StackUnderflow } from './errors/StackUnderflow';
 export class EvmStack {
   private stack: BigNumber[] = [];
 
-  public push(inputValue: BigNumber | number) {
+  public push(inputValue: BigNumber) {
     let value = inputValue;
     if (typeof value === 'number') {
       value = new BigNumber(value);

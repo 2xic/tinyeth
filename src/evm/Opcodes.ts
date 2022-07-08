@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { Uint } from '../rlp/types/Uint';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { keccak256 } from '../utils/keccak256';
+import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
 import { InvalidJump } from './errors/InvalidJump';
@@ -30,7 +31,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a + b);
+      stack.push(new BigNumber(a + b));
     },
     gasCost: 3,
   }),
@@ -40,7 +41,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a * b);
+      stack.push(new BigNumber(a * b));
     },
     gasCost: 5,
   }),
@@ -50,7 +51,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a - b);
+      stack.push(new BigNumber(a - b));
     },
     gasCost: 3,
   }),
@@ -60,7 +61,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(Math.floor(a / b));
+      stack.push(new BigNumber(Math.floor(a / b)));
     },
     gasCost: 5,
   }),
@@ -70,7 +71,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(Math.floor(a / b));
+      stack.push(new BigNumber(Math.floor(a / b)));
     },
     gasCost: 5,
   }),
@@ -80,7 +81,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a % b);
+      stack.push(new BigNumber(a % b));
     },
     gasCost: 5,
   }),
@@ -98,7 +99,7 @@ export const opcodes: Record<number, OpCode> = {
       const c = stack.pop().toNumber();
       const newLocal = a.plus(b).modulo(new BigNumber(2).pow(256));
 
-      stack.push(newLocal.toNumber() % c);
+      stack.push(new BigNumber(newLocal.toNumber() % c));
     },
     gasCost: 8,
   }),
@@ -121,7 +122,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(Math.pow(a, b));
+      stack.push(new BigNumber(Math.pow(a, b)));
 
       return {
         setPc: false,
@@ -136,7 +137,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop();
       const b = stack.pop();
-      stack.push(Number(a.isLessThan(b)));
+      stack.push(new BigNumber(Number(a.isLessThan(b))));
     },
     gasCost: 3,
   }),
@@ -146,7 +147,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop();
       const b = stack.pop();
-      stack.push(Number(a.isGreaterThan(b)));
+      stack.push(new BigNumber(Number(a.isGreaterThan(b))));
     },
     gasCost: 3,
   }),
@@ -167,7 +168,7 @@ export const opcodes: Record<number, OpCode> = {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
 
-      stack.push(Number(a === b));
+      stack.push(new BigNumber(Number(a === b)));
     },
     gasCost: 3,
   }),
@@ -177,7 +178,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
 
-      stack.push(Number(a === 0));
+      stack.push(new BigNumber(Number(a === 0)));
     },
     gasCost: 3,
   }),
@@ -188,7 +189,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a & b);
+      stack.push(new BigNumber(a & b));
     },
   }),
   0x17: new OpCode({
@@ -198,7 +199,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a | b);
+      stack.push(new BigNumber(a | b));
     },
   }),
   0x18: new OpCode({
@@ -207,7 +208,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop().toNumber();
       const b = stack.pop().toNumber();
-      stack.push(a ^ b);
+      stack.push(new BigNumber(a ^ b));
     },
     gasCost: 3,
   }),
@@ -328,7 +329,7 @@ export const opcodes: Record<number, OpCode> = {
     name: 'CALLVALUE',
     arguments: 1,
     onExecute: ({ stack, context }) => {
-      stack.push(context.value.value);
+      stack.push(new BigNumber(context.value.value));
     },
     gasCost: 2,
   }),
@@ -338,7 +339,7 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ context, stack }) => {
       const index = stack.pop().toNumber();
       stack.push(
-        parseInt(context.data.slice(index, index + 32).toString('hex'), 16)
+        new BigNumber(context.data.slice(index, index + 32).toString('hex'), 16)
       );
     },
     gasCost: () => 1,
@@ -347,7 +348,7 @@ export const opcodes: Record<number, OpCode> = {
     name: 'CALLDATASIZE',
     arguments: 1,
     onExecute: ({ stack, context }) => {
-      stack.push(context.data.length);
+      stack.push(new BigNumber(context.data.length));
     },
     gasCost: 3,
   }),
@@ -370,7 +371,7 @@ export const opcodes: Record<number, OpCode> = {
     name: 'CODESIZE',
     arguments: 1,
     onExecute: ({ evm, stack }) => {
-      stack.push(evm.program.length);
+      stack.push(new BigNumber(evm.program.length));
     },
     gasCost: 2,
   }),
@@ -399,9 +400,8 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const stackItem = stack.pop();
-      const addr = stackItem.toString(16);
-      const contract = network.get(addr);
-      stack.push(contract.length);
+      const contract = network.get(new Address(stackItem));
+      stack.push(new BigNumber(contract.length));
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     gasCost: () => 1,
@@ -427,7 +427,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const address = stack.pop();
-      const contract = network.get(address.toString(16)).execute();
+      const contract = network.get(new Address(address)).execute();
       const data = keccak256(contract.data);
 
       stack.push(new BigNumber(data.toString('hex'), 16));
@@ -461,7 +461,7 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
       const block = network.block;
-      stack.push(block.timeStamp.unix());
+      stack.push(new BigNumber(block.timeStamp.unix()));
     },
   }),
   0x43: new OpCode({
@@ -471,7 +471,7 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
       const block = network.block;
-      stack.push(block.height);
+      stack.push(new BigNumber(block.height));
     },
   }),
   0x44: new OpCode({
@@ -489,7 +489,7 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
       const block = network.block;
-      stack.push(block.gasLimit);
+      stack.push(new BigNumber(block.gasLimit));
     },
   }),
   0x46: new OpCode({
@@ -498,7 +498,7 @@ export const opcodes: Record<number, OpCode> = {
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
       const block = network.block;
-      stack.push(block.chainId);
+      stack.push(new BigNumber(block.chainId));
     },
   }),
   0x47: new OpCode({
@@ -642,7 +642,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, memory }) => {
-      stack.push(memory.size);
+      stack.push(new BigNumber(memory.size));
     },
   }),
   0x5a: new OpCode({
@@ -727,7 +727,7 @@ export const opcodes: Record<number, OpCode> = {
       ).execute();
 
       network.register({ contract });
-      stack.push(new BigNumber(contract.address, 16));
+      stack.push(contract.address.raw);
     },
     // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 1,
