@@ -7,9 +7,9 @@ import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
-import { UnimplementedOpcode } from './errors/UnimplementedOpcode';
 import { Evm } from './Evm';
 import { ExecutionResults, OpCode } from './OpCode';
+import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 // TODO: see if there is away around this.
 BigNumber.set({ EXPONENTIAL_AT: 1024 });
@@ -89,6 +89,14 @@ export const opcodes: Record<number, OpCode> = {
     name: 'SMOD',
     arguments: 1,
     gasCost: 5,
+    onExecute: ({ stack }) => {
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const results = new SignedUnsignedNumberConverter().convert(
+        new BigNumber(a.modulo(b))
+      );
+      stack.push(results);
+    },
   }),
   0x8: new OpCode({
     name: 'ADDMOD',
@@ -155,11 +163,21 @@ export const opcodes: Record<number, OpCode> = {
     name: 'SLT',
     arguments: 1,
     gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      stack.push(new BigNumber(Number(a.isLessThan(b))));
+    },
   }),
   0x13: new OpCode({
     name: 'SGT',
     arguments: 1,
     gasCost: 3,
+    onExecute: ({ stack }) => {
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      stack.push(new BigNumber(Number(a.isGreaterThan(b))));
+    },
   }),
   0x14: new OpCode({
     name: 'EQ',
@@ -264,12 +282,17 @@ export const opcodes: Record<number, OpCode> = {
     name: 'SAR',
     arguments: 1,
     gasCost: 3,
-    onExecute: () => {
-      // const a = BigInt(stack.pop().toString());
-      // const b = BigInt(stack.pop().toString());
-      // const c = (b >> a).toString();
-      // it's a arithmetic right shift.
-      throw new UnimplementedOpcode('SAR');
+    onExecute: ({ stack }) => {
+      const a = BigInt(
+        new SignedUnsignedNumberConverter().parse(stack.pop()).toString()
+      );
+      const b = BigInt(
+        new SignedUnsignedNumberConverter().parse(stack.pop()).toString()
+      );
+      const results = new SignedUnsignedNumberConverter().convert(
+        new BigNumber((b >> a).toString())
+      );
+      stack.push(results);
     },
   }),
   0x20: new OpCode({
@@ -574,12 +597,21 @@ export const opcodes: Record<number, OpCode> = {
   0x53: new OpCode({
     name: 'MSTORE8',
     arguments: 1,
+    onExecute: ({ stack, memory }) => {
+      const offset = stack.pop();
+      const value = stack.pop().toString(16).slice(-2);
+      memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
+    },
     // Todo this is dynamic
     gasCost: () => 3,
   }),
   0x54: new OpCode({
     name: 'SLOAD',
     arguments: 1,
+    onExecute: ({ stack, storage }) => {
+      const key = stack.pop();
+      stack.push(storage.read({ key }));
+    },
     // Todo this is dynamic
     gasCost: () => 3,
   }),

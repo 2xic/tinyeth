@@ -301,35 +301,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it.skip('should correctly execute SGT', () => {
-    const mnemonicParser = new MnemonicParser();
-    const contract = mnemonicParser.parse({
-      script: `
-      // Example 1
-      PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-      PUSH1 9
-      SGT
-      
-      // Example 2
-      PUSH1 10
-      PUSH1 10
-      SGT
-    `,
-    });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
-      })
-      .execute();
-    expect(evm.stack.toString()).toBe([1, 0].toString());
-    expect(evm.totalGasCost).toBe(21018);
-  });
-
-  it.skip('should correctly execute SLT', () => {
+  it('should correctly execute SLT', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -357,7 +329,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it.skip('should correctly execute SGT', () => {
+  it('should correctly execute SGT', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -447,6 +419,8 @@ describe('evm.codes', () => {
     gasCost: number | null;
     gasLimit?: BigNumber;
     stack: Array<number | BigNumber>;
+    memory?: string;
+    validation?: (evm: ExposedEvm) => void;
   }>([
     {
       name: 'NOT',
@@ -516,7 +490,6 @@ describe('evm.codes', () => {
       gasCost: 21018,
       stack: [1, new BigNumber('f', 16)],
     },
-    /*
     {
       name: 'SAR',
       script: `
@@ -539,7 +512,28 @@ describe('evm.codes', () => {
         ),
       ],
     },
-    */
+    {
+      name: 'SMOD',
+      script: `
+        // Example 1
+        PUSH1 3
+        PUSH1 10
+        SMOD
+        
+        // Example 2
+        PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD
+        PUSH32 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8
+        SMOD
+    `,
+      gasCost: 21022,
+      stack: [
+        1,
+        new BigNumber(
+          'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe',
+          16
+        ),
+      ],
+    },
     {
       name: 'SHA3',
       script: `
@@ -665,6 +659,43 @@ describe('evm.codes', () => {
       gasCost: 21012,
       stack: [0, 1, 3, 1, 6],
     },
+    {
+      name: 'MSTORE8',
+      script: `
+        // Example 1
+        PUSH2 0xFFFF
+        PUSH1 0
+        MSTORE8
+        
+        // Example 2
+        PUSH1 0xFF
+        PUSH1 1
+        MSTORE8      
+      `,
+      gasCost: null, // 21021,
+      stack: [],
+      memory:
+        'ffff000000000000000000000000000000000000000000000000000000000000',
+    },
+    {
+      name: 'SLOAD',
+      script: `
+        // Set up the state
+        PUSH1 46
+        PUSH1 0
+        SSTORE
+        
+        // Example 1
+        PUSH1 0
+        SLOAD
+        
+        // Example 2
+        PUSH1 1
+        SLOAD      
+      `,
+      gasCost: null, // 21021,
+      stack: [46, 0],
+    },
   ])('Test of opcodes $name', (options) => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -682,6 +713,12 @@ describe('evm.codes', () => {
     if (options.gasCost !== null) {
       expect(evm.totalGasCost).toBe(options.gasCost);
     }
+    if (options.memory) {
+      expect(evm.memory.raw.toString('hex')).toBe(options.memory);
+    }
     expect(evm.stack.toString()).toBe(options.stack.toString());
+    if (options.validation) {
+      options.validation(evm);
+    }
   });
 });

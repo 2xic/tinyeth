@@ -1,5 +1,10 @@
 # Eth vm
 
+## Two complements
+- https://www.cs.cornell.edu/~tomf/notes/cps104/twoscomp.html
+- https://ethereum.stackexchange.com/a/63071
+- https://ethereum.stackexchange.com/a/21205
+
 ## Docs
 
 - https://ethereum.github.io/yellowpaper/paper.pdf

@@ -1,4 +1,3 @@
-import { parse } from 'buffer-json';
 import { MnemonicParser } from './MnemonicParser';
 
 describe('MnemonicParser', () => {
