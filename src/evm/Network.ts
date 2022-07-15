@@ -23,12 +23,20 @@ export class Network {
       gasLimit: 0xffffffffffff,
       difficulty: new BigNumber(10995000000000000),
       chainId: 1,
+      gasPrice: 222,
+      baseFee: 1024,
     });
     this._currentBlock = this._blocks[42];
   }
 
   public register({ contract }: { contract: Contract }) {
-    this._contracts[contract.address.toString()] = contract;
+    const address = contract.address.toString();
+    if (address in this._contracts) {
+      return false;
+    } else {
+      this._contracts[address] = contract;
+      return true;
+    }
   }
 
   public get(inputAddress: Address): Contract {

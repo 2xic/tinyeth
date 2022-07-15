@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { statistics } from 'fast-check';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
 import { Address } from './Address';
 import { ExposedEvm } from './ExposedEvm';
@@ -413,15 +414,97 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it.each<{
-    name: string;
-    script: string;
-    gasCost: number | null;
-    gasLimit?: BigNumber;
-    stack: Array<number | BigNumber>;
-    memory?: string;
-    validation?: (evm: ExposedEvm) => void;
-  }>([
+  it('should correctly run DELEGATECALL', () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+      // Create a contract that creates an exception if first slot of storage is 0
+      PUSH17 0x67600054600757FE5B60005260086018F3
+      PUSH1 0
+      MSTORE
+      PUSH1 17
+      PUSH1 15
+      PUSH1 0
+      CREATE
+      
+      // Call with storage slot 0 = 0, returns 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      DUP5
+      PUSH2 0xFFFF
+      DELEGATECALL   
+    `,
+    });
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot(contract, {
+        nonce: 1,
+        sender,
+        gasLimit,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+      })
+      .execute();
+    expect(evm.memory.raw.length).toBe(32);
+  });
+
+  const evmTestCases: Array<EvmTestCaseOptions> = [
+    // TODO : Fix -> There is a bug in the contract deployment logic */
+    /*
+    {
+      name: 'EXTCODEHASH',
+      script: `
+            // Creates a constructor that creates a contract with 4 FF as code
+            PUSH13 0x63FFFFFFFF60005260046000F3
+            PUSH1 0
+            MSTORE
+
+            // Create the contract with the constructor code above
+            PUSH1 13
+            PUSH1 0
+            PUSH1 0
+            CREATE // Puts the new contract address on the stack
+
+            // Get the hash
+            EXTCODEHASH
+        `,
+      gasCost: 53121,
+      stack: [
+        new BigNumber(
+          'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+          16
+        ),
+      ],
+    },
+    */
+    {
+      name: 'CALLDATALOAD',
+      script: `
+        // Example 1
+        PUSH1 0
+        CALLDATALOAD
+        
+        // Example 2
+        PUSH1 31
+        CALLDATALOAD
+    `,
+      gasCost: null,
+      calldata: Buffer.from(
+        'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+        'hex'
+      ),
+      stack: [
+        new BigNumber(
+          'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+          16
+        ),
+        new BigNumber(
+          'ff00000000000000000000000000000000000000000000000000000000000000',
+          16
+        ),
+      ],
+    },
     {
       name: 'NOT',
       script: `
@@ -569,37 +652,9 @@ describe('evm.codes', () => {
           MSIZE // Now size is 3 words
         `,
 
-      gasCost: null, // TODO IMplement 21031,
+      gasCost: null, // TODO implement 21031,
       stack: [0, 0x20, 0x60],
     },
-    /** TODO: Fix -> There is a bug in the contract deployment logic */
-    /*
-    {
-      name: 'EXTCODEHASH',
-      script: `
-            // Creates a constructor that creates a contract with 4 FF as code
-            PUSH13 0x63FFFFFFFF60005260046000F3
-            PUSH1 0
-            MSTORE
-
-            // Create the contract with the constructor code above
-            PUSH1 13
-            PUSH1 0
-            PUSH1 0
-            CREATE // Puts the new contract address on the stack
-
-            // Get the hash
-            EXTCODEHASH
-        `,
-      gasCost: 53121,
-      stack: [
-        new BigNumber(
-          'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
-          16
-        ),
-      ],
-    },
-    */
     {
       name: 'CALLER',
       script: `
@@ -696,29 +751,415 @@ describe('evm.codes', () => {
       gasCost: null, // 21021,
       stack: [46, 0],
     },
-  ])('Test of opcodes $name', (options) => {
-    const mnemonicParser = new MnemonicParser();
-    const contract = mnemonicParser.parse({
-      script: options.script,
-    });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit: options.gasLimit || gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
-      })
-      .execute();
-    if (options.gasCost !== null) {
-      expect(evm.totalGasCost).toBe(options.gasCost);
+    {
+      name: 'CALL',
+      script: `
+        // Create a contract that creates an exception if first word of calldata is 0
+        PUSH17 0x67600035600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+
+        // Call with no parameters, return 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP6
+        PUSH2 0xFFFF
+        CALL
+
+        // Call with non 0 calldata, returns success
+        PUSH1 0
+        PUSH1 0
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        DUP7
+        PUSH2 0xFFFF
+        CALL
+      `,
+      gasCost: null,
+      stack: null,
+      validation: (evm) => {
+        const stack = evm.stack;
+        const network = evm.network;
+        const contract = !!network.contracts.find(
+          (item) =>
+            item.address.toString() === new Address(evm.stack.get(0)).toString()
+        );
+        expect(contract).toBe(true);
+        expect(stack.pop().isEqualTo(1)).toBe(true);
+        expect(stack.pop().isEqualTo(0)).toBe(true);
+      },
+    },
+    {
+      name: 'RETURNDATACOPY',
+      script: `    
+          // Creates a constructor that creates a contract wich returns 32 FF
+          PUSH32 0x7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          PUSH1 0
+          MSTORE
+          PUSH32 0xFF6000527FFF60005260206000F3000000000000000000000000000000000000
+          PUSH1 32
+          MSTORE
+          PUSH32 0x000000000060205260296000F300000000000000000000000000000000000000
+          PUSH1 64
+          MSTORE
+
+          // Create the contract with the constructor code above
+          PUSH1 77
+          PUSH1 0
+          PUSH1 0
+          CREATE // Puts the new contract address on the stack
+
+          // Call the deployed contract
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          DUP5
+          PUSH4 0xFFFFFFFF
+          STATICCALL
+
+          // Clear the stack
+          POP
+          POP
+
+          // Clear the memory
+          PUSH1 0
+          PUSH1 0
+          MSTORE
+          PUSH1 0
+          PUSH1 32
+          MSTORE
+          PUSH1 0
+          PUSH1 64
+          MSTORE
+
+          // Example 1
+          PUSH1 32
+          PUSH1 0
+          PUSH1 0
+          RETURNDATACOPY
+
+          // Example 2
+          PUSH1 1
+          PUSH1 31
+          PUSH1 32
+          RETURNDATACOPY
+          `,
+      gasCost: null, // 21021,
+      stack: [],
+      memory:
+        'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    },
+    {
+      name: 'RETURNDATASIZE',
+      script: `    
+        // Creates a constructor that creates a contract wich returns 32 FF
+        PUSH32 0x7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH1 0
+        MSTORE
+        PUSH32 0xFF6000527FFF60005260206000F3000000000000000000000000000000000000
+        PUSH1 32
+        MSTORE
+        PUSH32 0x000000000060205260296000F300000000000000000000000000000000000000
+        PUSH1 64
+        MSTORE
+        
+        // Create the contract with the constructor code above
+        PUSH1 77
+        PUSH1 0
+        PUSH1 0
+        CREATE // Puts the new contract address on the stack
+        
+        // Call the deployed contract
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP5
+        PUSH4 0xFFFFFFFF
+        STATICCALL
+        
+        // Now we should have our return data size of 32
+        RETURNDATASIZE         
+      `,
+      gasCost: null, // 21021,
+      stack: null,
+      validation: (evm) => {
+        const stack = evm.stack;
+        const network = evm.network;
+        expect(stack.pop().isEqualTo(0x20)).toBe(true);
+        expect(stack.pop().isEqualTo(1)).toBe(true);
+        const contract = !!network.contracts.find(
+          (item) =>
+            item.address.toString() === new Address(evm.stack.pop()).toString()
+        );
+        expect(contract).toBe(true);
+      },
+    },
+    {
+      name: 'EXTCODECOPY',
+      script: `    
+        // Creates a constructor that creates a contract with 32 FF as code
+        PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH1 0
+        MSTORE
+        PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+        PUSH1 32
+        MSTORE
+        
+        // Create the contract with the constructor code above
+        PUSH1 41
+        PUSH1 0
+        PUSH1 0
+        CREATE // Puts the new contract address on the stack
+        
+        // Clear the memory for the examples
+        PUSH1 0
+        PUSH1 0
+        MSTORE
+        PUSH1 0
+        PUSH1 32
+        MSTORE
+        
+        // Example 1
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        DUP4
+        EXTCODECOPY
+        
+        // Example 2
+        PUSH1 8
+        PUSH1 31
+        PUSH1 0
+        DUP4
+        EXTCODECOPY       
+      `,
+      gasCost: null, // 21021,
+      stack: null,
+      memory:
+        'ff00000000000000ffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000',
+      validation: (evm) => {
+        const network = evm.network;
+        const contract = !!network.contracts.find(
+          (item) =>
+            item.address.toString() === new Address(evm.stack.pop()).toString()
+        );
+        expect(contract).toBe(true);
+      },
+    },
+    {
+      name: 'GAS',
+      script: `
+        SELFBALANCE
+      `,
+      gasCost: 21005,
+      stack: [42],
+    },
+    {
+      name: 'DELEGATECALL',
+      script: `
+        // Create a contract that creates an exception if first slot of storage is 0
+        PUSH17 0x67600054600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+        
+        // Call with storage slot 0 = 0, returns 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP5
+        PUSH2 0xFFFF
+        DELEGATECALL
+        
+        // Set first slot in the current contract
+        PUSH1 1
+        PUSH1 0
+        SSTORE
+        
+        // Call with storage slot 0 != 0, returns 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 32
+        PUSH1 0
+        DUP6
+        PUSH2 0xFFFF
+        DELEGATECALL
+      `,
+      gasCost: null,
+      only: true,
+      memory:
+        '00000000000000000000000000000067600054600757fe5b60005260086018f3',
+      stack: null,
+      validation: (evm) => {
+        const stack = evm.stack;
+        const network = evm.network;
+        expect(stack.pop().isEqualTo(1)).toBe(true);
+        expect(stack.pop().isEqualTo(0)).toBe(true);
+        const contract = !!network.contracts.find(
+          (item) =>
+            item.address.toString() === new Address(evm.stack.pop()).toString()
+        );
+        expect(contract).toBe(true);
+      },
+    },
+    {
+      name: 'CREATE2',
+      script: `
+        // Create an account with 0 wei and no code
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        CREATE2
+        
+        // Cannot recreate with the same parameters, because it generates the same address
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        CREATE2
+        
+        // Create an account with 9 wei and no code
+        PUSH1 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 9
+        CREATE2
+        
+        // Create an account with 0 wei and 4 FF as code
+        PUSH13 0x63FFFFFFFF60005260046000F3
+        PUSH1 0
+        MSTORE
+        PUSH1 2
+        PUSH1 13
+        PUSH1 0
+        PUSH1 0
+        CREATE2      
+      `,
+      gasCost: null, // TODO
+      stack: null,
+      sender: new Address('9bbfed6889322e016e0a02ee459d306fc19545d8'),
+      validation: (evm) => {
+        const stack = evm.stack;
+        const network = evm.network;
+        expect(stack.length).toBe(4);
+        expect(network.contracts.length).toBe(3);
+      },
+    },
+    {
+      name: 'CALLCODE',
+      script: `
+        // Create a contract that creates an exception if first slot of storage is 0
+        PUSH17 0x67600054600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+        
+        // Call with storage slot 0 = 0, returns 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP6
+        PUSH2 0xFFFF
+        CALLCODE
+        
+        // Set first slot in the current contract
+        PUSH1 1
+        PUSH1 0
+        SSTORE
+        
+        // Call with storage slot 0 != 0, returns 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        DUP7
+        PUSH2 0xFFFF
+        CALLCODE
+      `,
+      gasCost: null,
+      memory:
+        '00000000000000000000000000000067600054600757fe5b60005260086018f3',
+      stack: null,
+      validation: (evm) => {
+        const stack = evm.stack;
+        const network = evm.network;
+        expect(stack.pop().isEqualTo(1)).toBe(true);
+        expect(stack.pop().isEqualTo(0)).toBe(true);
+        const contract = !!network.contracts.find(
+          (item) =>
+            item.address.toString() === new Address(evm.stack.pop()).toString()
+        );
+        expect(contract).toBe(true);
+      },
+    },
+  ];
+
+  const singleCase: EvmTestCaseOptions[] = evmTestCases.filter(
+    (item) => item.only
+  );
+
+  it.each<EvmTestCaseOptions>(singleCase.length ? singleCase : evmTestCases)(
+    'Test of opcodes $name',
+    (options) => {
+      const mnemonicParser = new MnemonicParser();
+      const contract = mnemonicParser.parse({
+        script: options.script,
+      });
+      const evm = getClassFromTestContainer(ExposedEvm)
+        .boot(contract, {
+          nonce: 1,
+          sender: options.sender || sender,
+          gasLimit: options.gasLimit || gasLimit,
+          value: new Wei(16),
+          data: options.calldata || Buffer.from('', 'hex'),
+        })
+        .execute();
+      if (options.gasCost !== null) {
+        expect(evm.totalGasCost).toBe(options.gasCost);
+      }
+      if (options.memory) {
+        expect(evm.memory.raw.toString('hex')).toBe(options.memory);
+      }
+      if (options.stack) {
+        expect(evm.stack.toString()).toBe(options.stack.toString());
+      }
+      if (options.validation) {
+        options.validation(evm);
+      }
     }
-    if (options.memory) {
-      expect(evm.memory.raw.toString('hex')).toBe(options.memory);
-    }
-    expect(evm.stack.toString()).toBe(options.stack.toString());
-    if (options.validation) {
-      options.validation(evm);
-    }
-  });
+  );
 });
+
+interface EvmTestCaseOptions {
+  name: string;
+  script: string;
+  gasCost: number | null;
+  calldata?: Buffer;
+  gasLimit?: BigNumber;
+  stack: Array<number | Address | BigNumber> | null;
+  memory?: string;
+  sender?: Address;
+  validation?: (evm: ExposedEvm) => void;
+  only?: boolean;
+}

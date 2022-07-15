@@ -13,12 +13,15 @@ export class EvmMockBlock {
       coinbase: Address;
       difficulty: BigNumber;
       gasLimit: number;
+      gasPrice: number;
       chainId: number;
+      baseFee: number;
     }
   ) {}
 
   public get hash(): BigNumber {
-    return new BigNumber(this.options.blockHash, 16);
+    const value = this.options.blockHash.toLowerCase().trim();
+    return new BigNumber(value, 16);
   }
 
   public get coinbase(): BigNumber {
@@ -43,5 +46,13 @@ export class EvmMockBlock {
 
   public get chainId() {
     return this.options.chainId;
+  }
+
+  public get baseFee() {
+    return this.options.baseFee;
+  }
+
+  public get gasPrice() {
+    return this.options.gasPrice;
   }
 }

@@ -24,4 +24,10 @@ export class EvmKeyValueStorage {
     // Should check the original storage.
     return this.read({ key }).isEqualTo(0);
   }
+
+  public forEach(callback: (key: BigNumber, value: BigNumber) => void) {
+    return Object.entries(this.storage).map((item) => {
+      callback(new BigNumber(item[0]), item[1]);
+    });
+  }
 }

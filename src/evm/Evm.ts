@@ -12,16 +12,18 @@ import { GasComputer } from './gas/GasComputer';
 import { EvmKeyValueStorage } from './EvmKeyValueStorage';
 import { AccessSets } from './gas/AccessSets';
 import { Address } from './Address';
+import { EvmSubContext } from './EvmSubContext';
 
 @injectable()
 export class Evm {
   constructor(
     protected stack: EvmStack,
     protected network: Network,
-    protected memory: EvmMemory,
-    protected storage: EvmKeyValueStorage,
+    public memory: EvmMemory,
+    public storage: EvmKeyValueStorage,
     protected gasComputer: GasComputer,
-    protected accessSets: AccessSets
+    protected accessSets: AccessSets,
+    protected subContext: EvmSubContext
   ) {}
 
   private running = false;
@@ -44,6 +46,9 @@ export class Evm {
     this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
     this._gasLeft = context.gasLimit.minus(this.gasCost);
     this.running = true;
+    if (this.options?.debug) {
+      console.log(JSON.stringify(context));
+    }
     return this;
   }
 
@@ -75,6 +80,7 @@ export class Evm {
       accessSets: this.accessSets,
       byteIndex: this.pc,
       context: this.context,
+      subContext: this.subContext,
     });
     this.gasCost += opcode.gasCost;
     this._gasLeft = this._gasLeft.minus(opcode.gasCost);
@@ -89,6 +95,11 @@ export class Evm {
 
     if (!updatedPc) {
       this.setPc(this._pc + opcode.length);
+    }
+
+    if (this.options?.debug) {
+      console.log(this.memory.raw.toString('hex') || 'empty memory');
+      console.log(this.stack.toString() || []);
     }
 
     return true;
@@ -187,6 +198,7 @@ export interface EvmContext {
   gasComputer: GasComputer;
   byteIndex: number;
   context: TxContext;
+  subContext: EvmSubContext;
 }
 
 interface Options {

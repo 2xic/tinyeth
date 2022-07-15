@@ -2,6 +2,7 @@
     "recommendations": [
         "firsttris.vscode-jest-runner",
         "dbaeumer.vscode-eslint",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "Gruntfuggly.todo-tree"
     ]
 }

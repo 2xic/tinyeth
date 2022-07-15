@@ -382,6 +382,8 @@ describe('evm', () => {
         DIFFICULTY
         GASLIMIT
         CHAINID
+        GASPRICE
+        BASEFEE
        `,
     });
     const evm = getClassFromTestContainer(ExposedEvm)
@@ -408,7 +410,33 @@ describe('evm', () => {
         new BigNumber('10995000000000000'),
         gasLimit,
         1,
+        222,
+        1024,
       ].toString()
     );
+  });
+
+  it('should correctly revert', () => {
+    getClassFromTestContainer(ExposedEvm)
+      .boot(Buffer.from('600035600757FE5B', 'hex'), {
+        nonce: 1,
+        sender,
+        gasLimit,
+        value: new Wei(16),
+        data: Buffer.from('0001', 'hex'),
+      })
+      .execute();
+
+    expect(() =>
+      getClassFromTestContainer(ExposedEvm)
+        .boot(Buffer.from('600035600757FE5B', 'hex'), {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('', 'hex'),
+        })
+        .execute()
+    ).toThrowError(Reverted);
   });
 });

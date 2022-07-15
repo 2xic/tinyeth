@@ -53,6 +53,7 @@ import { AccessSets } from '../evm/gas/AccessSets';
 import { EvmKeyValueStorage } from '../evm/EvmKeyValueStorage';
 import { MemoryExpansionGas } from '../evm/gas/MemoyExspansionGas';
 import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
+import { EvmSubContext } from '../evm/EvmSubContext';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -135,7 +136,7 @@ export class CoreContainer {
     container.bind(MessageQueue).toSelf();
     container.bind(GetRandomBytesInteractor).toSelf();
 
-    //    container.bind(Evm).toSelf();
+    container.bind(EvmSubContext).toSelf();
     container.bind(EvmStack).toSelf();
     container.bind(Network).toSelf();
     container.bind(EvmMemory).toSelf();

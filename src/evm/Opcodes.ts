@@ -1,10 +1,13 @@
 import BigNumber from 'bignumber.js';
+import { bigInt, memo } from 'fast-check';
 import { Uint } from '../rlp/types/Uint';
+import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { keccak256 } from '../utils/keccak256';
 import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
+import { UnimplementedOpcode } from './errors';
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
@@ -318,7 +321,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 2,
     onExecute: ({ stack, context }) => {
-      // Todo: this should be the last call, not the sender.
+      // TODO: this should be the last call, not the sender.
       // I think we should add some call stack.
       stack.push(context.sender.raw);
     },
@@ -356,7 +359,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 2,
     onExecute: ({ stack, context }) => {
-      // Todo: this should be the last call, not the sender.
+      // TODO: this should be the last call, not the sender.
       stack.push(context.sender.raw);
     },
   }),
@@ -374,7 +377,13 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ context, stack }) => {
       const index = stack.pop().toNumber();
       stack.push(
-        new BigNumber(context.data.slice(index, index + 32).toString('hex'), 16)
+        new BigNumber(
+          context.data
+            .slice(index, index + 32)
+            .toString('hex')
+            .padEnd(64, '0'),
+          16
+        )
       );
     },
     gasCost: () => 1,
@@ -399,7 +408,7 @@ export const opcodes: Record<number, OpCode> = {
         memory.write(dataOffset + i, context.data[offset + i]);
       }
     },
-    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
     gasCost: () => 1,
   }),
   0x38: new OpCode({
@@ -429,6 +438,10 @@ export const opcodes: Record<number, OpCode> = {
     name: 'GASPRICE',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const gasPrice = network.block.gasPrice;
+      stack.push(new BigNumber(gasPrice));
+    },
   }),
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
@@ -438,23 +451,67 @@ export const opcodes: Record<number, OpCode> = {
       const contract = network.get(new Address(stackItem));
       stack.push(new BigNumber(contract.length));
     },
-    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     gasCost: () => 1,
   }),
   0x3c: new OpCode({
     name: 'EXTCODECOPY',
     arguments: 1,
+    // TODO, this is dynamic
     gasCost: () => 1,
+    onExecute: ({ stack, network, memory }) => {
+      const address = stack.pop();
+      const destOffset = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const size = stack.pop().toNumber();
+      const contract = network.get(new Address(address));
+      const contractData = contract.data;
+      let written = 0;
+      contractData.slice(offset, offset + size).forEach((item, index) => {
+        memory.write(destOffset + index, item);
+        written++;
+      });
+      const delta = size - written;
+      for (let i = 0; i < delta; i++) {
+        memory.write(destOffset + written++, 0);
+      }
+    },
   }),
   0x3d: new OpCode({
     name: 'RETURNDATASIZE',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, subContext }) => {
+      const lastData = subContext.last.returnData;
+
+      if (lastData && lastData.length) {
+        stack.push(new BigNumber(lastData.length));
+      } else {
+        throw new Error('Invalid - I think');
+      }
+    },
   }),
   0x3e: new OpCode({
     name: 'RETURNDATACOPY',
     arguments: 1,
-    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
+    onExecute: ({ stack, memory, subContext }) => {
+      const destOffset = stack.pop();
+      const offset = stack.pop();
+      const length = stack.pop();
+      const lastData = subContext.last.returnData?.slice(
+        offset.toNumber(),
+        offset.plus(length).toNumber()
+      );
+
+      if (lastData && lastData.length) {
+        lastData.forEach((item, index) => {
+          memory.write(destOffset.toNumber() + index, item);
+        });
+      } else {
+        throw new Error('Invalid - I think');
+      }
+    },
     gasCost: () => 1,
   }),
   0x3f: new OpCode({
@@ -462,7 +519,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const address = stack.pop();
-      const contract = network.get(new Address(address)).execute();
+      const contract = network.get(new Address(address)).execute({});
       const data = keccak256(contract.data);
 
       stack.push(new BigNumber(data.toString('hex'), 16));
@@ -470,7 +527,6 @@ export const opcodes: Record<number, OpCode> = {
     // Has dynamic gas cost
     gasCost: () => 1,
   }),
-
   0x40: new OpCode({
     name: 'BLOCKHASH',
     arguments: 1,
@@ -478,6 +534,8 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ network, stack }) => {
       const height = stack.pop().toNumber();
       const block = network.getBlock({ height });
+      console.log(height, block);
+      console.log(block.hash);
       stack.push(block.hash);
     },
   }),
@@ -538,14 +596,23 @@ export const opcodes: Record<number, OpCode> = {
   0x47: new OpCode({
     name: 'SELFBALANCE',
     arguments: 1,
-    gasCost: () => 2,
+    gasCost: () => 5,
+    onExecute: ({ stack, context }) => {
+      // eslint-disable-next-line prettier/prettier
+      const address = context.sender;
+      // TODO : add some proper account balancing
+      stack.push(new BigNumber(42));
+    },
   }),
   0x48: new OpCode({
     name: 'BASEFEE',
     arguments: 1,
     gasCost: () => 2,
+    onExecute: ({ stack, network }) => {
+      const baseFee = network.block.baseFee;
+      stack.push(new BigNumber(baseFee));
+    },
   }),
-
   0x50: new OpCode({
     name: 'POP',
     arguments: 1,
@@ -557,7 +624,7 @@ export const opcodes: Record<number, OpCode> = {
   0x51: new OpCode({
     name: 'MLOAD',
     arguments: 1,
-    // Todo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 3,
     onExecute: ({ memory, stack }) => {
       const offset = stack.pop().toNumber();
@@ -602,7 +669,7 @@ export const opcodes: Record<number, OpCode> = {
       const value = stack.pop().toString(16).slice(-2);
       memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
     },
-    // Todo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 3,
   }),
   0x54: new OpCode({
@@ -612,7 +679,7 @@ export const opcodes: Record<number, OpCode> = {
       const key = stack.pop();
       stack.push(storage.read({ key }));
     },
-    // Todo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 3,
   }),
   0x55: new OpCode({
@@ -661,7 +728,7 @@ export const opcodes: Record<number, OpCode> = {
       const pc = stack.pop().toNumber();
       const condition = stack.pop();
 
-      if (condition.isEqualTo(1)) {
+      if (!condition.isEqualTo(0)) {
         const opcode = evm.program[pc] == JUMP_DEST;
         if (!opcode) {
           throw new InvalidJump();
@@ -773,25 +840,91 @@ export const opcodes: Record<number, OpCode> = {
         contractBytes,
         new BigNumber(value),
         context
-      ).execute();
+      ).execute({});
 
       network.register({ contract });
       stack.push(contract.address.raw);
     },
-    // Todo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 1,
   }),
   0xf1: new OpCode({
     name: 'CALL',
     arguments: 1,
-    // TODo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 2,
+    onExecute: ({ stack, network, memory, subContext }) => {
+      const gas = stack.pop();
+      const address = stack.pop();
+      const value = stack.pop();
+      const argsOffset = stack.pop();
+
+      const argsSize = stack.pop();
+      const retOffset = stack.pop();
+      const retSize = stack.pop();
+
+      try {
+        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
+        const contract = network.get(new Address(address));
+        contract.execute({
+          data,
+        });
+        subContext.addSubContext({
+          returnData: contract.returnData,
+        });
+        stack.push(new BigNumber(1));
+      } catch (err) {
+        if (err instanceof Reverted) {
+          stack.push(new BigNumber(0));
+        } else {
+          throw err;
+        }
+      }
+    },
   }),
   0xf2: new OpCode({
     name: 'CALLCODE',
     arguments: 1,
-    // TODo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 2,
+    onExecute: ({ stack, network, memory, subContext, evm }) => {
+      const gas = stack.pop();
+      const address = stack.pop();
+      const value = stack.pop();
+      const argsOffset = stack.pop();
+
+      const argsSize = stack.pop();
+      const retOffset = stack.pop();
+      const retSize = stack.pop();
+
+      try {
+        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
+        const contract = network.get(new Address(address));
+        contract.execute({
+          data,
+          evm,
+        });
+        subContext.addSubContext({
+          returnData: contract.returnData,
+        });
+        if (subContext.last.returnData?.length) {
+          subContext.last.returnData
+            .slice(0, retSize.toNumber())
+            .forEach((item, index) => {
+              memory.write(retOffset.toNumber() + index, item);
+            });
+        } else {
+          throw new Error('Expected return data in subcontext');
+        }
+        stack.push(new BigNumber(1));
+      } catch (err) {
+        if (err instanceof Reverted) {
+          stack.push(new BigNumber(0));
+        } else {
+          throw err;
+        }
+      }
+    },
   }),
   0xf3: new OpCode({
     name: 'RETURN',
@@ -802,26 +935,112 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.setCallingContextReturnData(memory.read(offset, offset + size));
     },
-    // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
   }),
   0xf4: new OpCode({
     name: 'DELEGATECALL',
     arguments: 1,
-    // TODo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 2,
+    onExecute: ({ stack, subContext, network, memory, evm }) => {
+      const gas = stack.pop();
+      const address = stack.pop();
+      const argsOffset = stack.pop();
+
+      const argsSize = stack.pop();
+      const retOffset = stack.pop();
+      const retSize = stack.pop();
+
+      try {
+        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
+        const contract = network.get(new Address(address));
+        contract.execute({
+          data,
+          evm,
+        });
+        subContext.addSubContext({
+          returnData: contract.returnData,
+        });
+        stack.push(new BigNumber(1));
+        if (subContext.last.returnData?.length) {
+          subContext.last.returnData
+            .slice(0, retSize.toNumber())
+            .forEach((item, index) => {
+              memory.write(retOffset.toNumber() + index, item);
+            });
+        } else {
+          throw new Error('Expected return data in subcontext');
+        }
+      } catch (err) {
+        if (err instanceof Reverted) {
+          stack.push(new BigNumber(0));
+        } else {
+          throw err;
+        }
+      }
+    },
   }),
   0xf5: new OpCode({
     name: 'CREATE2',
     arguments: 1,
-    // TODo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 2,
+    onExecute: ({ stack, memory, network, context }) => {
+      const value = stack.pop().toNumber();
+      const offset = stack.pop().toNumber();
+      const length = stack.pop().toNumber();
+      const saltValue = convertNumberToPadHex(stack.pop().toString(16));
+      const salt = Buffer.from(saltValue, 'hex');
+
+      const contractBytes = memory.read(offset, length);
+      const contract = new Contract(
+        contractBytes,
+        new BigNumber(value),
+        context,
+        salt
+      ).execute({});
+
+      const success = network.register({ contract });
+      if (success) {
+        stack.push(contract.address.raw);
+      } else {
+        stack.push(new BigNumber(0));
+      }
+    },
   }),
   0xfa: new OpCode({
     name: 'STATICCALL',
     arguments: 1,
-    // TODo this is dynamic
+    // TODO this is dynamic
     gasCost: () => 2,
+    onExecute: ({ stack, memory, network, subContext }) => {
+      const gas = stack.pop();
+      const address = stack.pop();
+      const argsOffset = stack.pop();
+
+      const argsSize = stack.pop();
+      const retOffset = stack.pop();
+      const retSize = stack.pop();
+
+      try {
+        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
+        const contract = network.get(new Address(address));
+        contract.execute({
+          data,
+        });
+        subContext.addSubContext({
+          returnData: contract.returnData,
+        });
+        stack.push(new BigNumber(1));
+      } catch (err) {
+        if (err instanceof Reverted) {
+          stack.push(new BigNumber(0));
+        } else {
+          throw err;
+        }
+      }
+    },
   }),
   0xfd: new OpCode({
     name: 'REVERT',
@@ -832,9 +1051,9 @@ export const opcodes: Record<number, OpCode> = {
 
       evm.setCallingContextReturnData(memory.read(offset, length));
 
-      throw new Reverted('Reverted');
+      throw new Reverted('Ran Reverted opcode');
     },
-    // TOdo implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
+    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,
   }),
   0xfe: new OpCode({
@@ -842,11 +1061,14 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: () => 2,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    onExecute: () => {},
+    onExecute: () => {
+      throw new Reverted('Ran INVALID opcode');
+    },
   }),
   0xff: new OpCode({
     name: 'SELFDESTRUCT',
     arguments: 1,
+    // TODO, this is dynamic
     gasCost: () => 2,
   }),
 };
