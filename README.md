@@ -37,14 +37,31 @@ _Just something so I get a better understanding of the core parts of the protoco
   Currently supports:
     - Runs basic contracts
     - Converts mnemonic into bytecode.
-    - (todo) improved handling of the evms datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
+    - Most opcodes are more or less implemented.
+    - Support for the ABI, should be possible to encode calldata for most structs.
+    - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
     - (wip) gas cost/refund computation -> let's you see how much gas is used when executing contract.
-    - (wip) you should be able to solve all these https://github.com/fvictorio/evm-puzzles puzzles with logic in this library, it's able to do up to level 8 currently.
-    - (wip) improved support for the abi, make it "easy" to encode calldata.
+        - There are only a few dynamic opcodes missing here.
 
-- [ ] Data structures like block, transactions, accounts, Merkle Patricia Trie, ethash(?), etc
+- [ ] Data structures
+    - Blocks
+        - https://github.com/ethereum/go-ethereum/blob/4766b1107fadcd5f31c96b0744a2a788c6e4a01c/core/types/block_test.go#L35
+    - Transactions (done)
+    - Accounts
+    - Merkle Patricia Trie
+    - Ethhash ? 
+
+- [ ] Tiny solidity compiler ? 
+    - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
+        - No optimizer.
+    - https://docs.soliditylang.org/en/v0.8.15/grammar.html
+
+- [ ] RPC ? 
+    - Not sure if this is necessary.
 
 - [ ] Play wargames with this implementation
+  - https://github.com/fvictorio/evm-puzzles
+    - Currently on level 8
   - https://ethernaut.openzeppelin.com/
   - https://www.damnvulnerabledefi.xyz/
   - https://github.com/karmacoma-eth/pinball-ctf
