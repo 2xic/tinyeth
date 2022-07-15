@@ -1,5 +1,5 @@
 import { UnimplementedOpcode } from './errors/UnimplementedOpcode';
-import { EvmContext } from './Evm';
+import { EvmContextWithSelfReference } from './interfaceEvm';
 
 export class OpCode {
   constructor(
@@ -7,14 +7,14 @@ export class OpCode {
       name: string;
       arguments: number;
       onExecute?: (
-        context: EvmContext,
+        context: EvmContextWithSelfReference,
         opcode: OpCode
       ) => ExecutionResults | void;
       gasCost: number | (() => number);
     }
   ) {}
 
-  public execute(context: EvmContext) {
+  public execute(context: EvmContextWithSelfReference) {
     if (!this.options.onExecute) {
       throw new UnimplementedOpcode(this.mnemonic);
     }

@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { bigInt, memo } from 'fast-check';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
@@ -7,7 +6,6 @@ import { keccak256 } from '../utils/keccak256';
 import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
-import { UnimplementedOpcode } from './errors';
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
@@ -329,10 +327,16 @@ export const opcodes: Record<number, OpCode> = {
   0x31: new OpCode({
     name: 'BALANCE',
     arguments: 1,
-    onExecute: ({ stack, gasComputer, accessSets }) => {
+    onExecute: ({
+      stack,
+      gasComputer,
+      accessSets,
+      evmAccountState,
+      context,
+    }) => {
       const address = stack.pop();
-      // TODO : add some proper account balancing
-      stack.push(new BigNumber(42));
+      stack.push(evmAccountState.getBalance({ address: context.sender }));
+
       const gasComputed = gasComputer.account({
         address,
       });
@@ -519,7 +523,7 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const address = stack.pop();
-      const contract = network.get(new Address(address)).execute({});
+      const contract = network.get(new Address(address)); //.execute({});
       const data = keccak256(contract.data);
 
       stack.push(new BigNumber(data.toString('hex'), 16));
@@ -534,8 +538,6 @@ export const opcodes: Record<number, OpCode> = {
     onExecute: ({ network, stack }) => {
       const height = stack.pop().toNumber();
       const block = network.getBlock({ height });
-      console.log(height, block);
-      console.log(block.hash);
       stack.push(block.hash);
     },
   }),
@@ -597,11 +599,8 @@ export const opcodes: Record<number, OpCode> = {
     name: 'SELFBALANCE',
     arguments: 1,
     gasCost: () => 5,
-    onExecute: ({ stack, context }) => {
-      // eslint-disable-next-line prettier/prettier
-      const address = context.sender;
-      // TODO : add some proper account balancing
-      stack.push(new BigNumber(42));
+    onExecute: ({ stack, context, evmAccountState }) => {
+      stack.push(evmAccountState.getBalance({ address: context.sender }));
     },
   }),
   0x48: new OpCode({
@@ -830,17 +829,29 @@ export const opcodes: Record<number, OpCode> = {
   0xf0: new OpCode({
     name: 'CREATE',
     arguments: 1,
-    onExecute: ({ stack, memory, network, context }) => {
+    onExecute: ({
+      stack,
+      memory,
+      network,
+      context,
+      evmSubContextCall,
+      evmContext,
+    }) => {
       const value = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
 
       const contractBytes = memory.read(offset, length);
-      const contract = new Contract(
-        contractBytes,
-        new BigNumber(value),
-        context
-      ).execute({});
+
+      const forkedEvm = evmSubContextCall.fork({
+        txContext: context,
+        evmContext: evmContext,
+      });
+      const contract = new Contract({
+        program: contractBytes,
+        value: new BigNumber(value),
+        context,
+      }).execute(forkedEvm);
 
       network.register({ contract });
       stack.push(contract.address.raw);
@@ -853,9 +864,9 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, network, memory, subContext }) => {
+    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
-      const address = stack.pop();
+      const address = new Address(stack.pop());
       const value = stack.pop();
       const argsOffset = stack.pop();
 
@@ -863,23 +874,18 @@ export const opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      try {
-        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
-        const contract = network.get(new Address(address));
-        contract.execute({
-          data,
-        });
-        subContext.addSubContext({
-          returnData: contract.returnData,
-        });
-        stack.push(new BigNumber(1));
-      } catch (err) {
-        if (err instanceof Reverted) {
-          stack.push(new BigNumber(0));
-        } else {
-          throw err;
-        }
-      }
+      evmSubContextCall.createSubContext({
+        evmContext,
+        optionsSubContext: {
+          gas,
+          address,
+          argsOffset,
+          value,
+          argsSize,
+          retOffset,
+          retSize,
+        },
+      });
     },
   }),
   0xf2: new OpCode({
@@ -887,9 +893,9 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, network, memory, subContext, evm }) => {
+    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
-      const address = stack.pop();
+      const address = new Address(stack.pop());
       const value = stack.pop();
       const argsOffset = stack.pop();
 
@@ -897,33 +903,18 @@ export const opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      try {
-        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
-        const contract = network.get(new Address(address));
-        contract.execute({
-          data,
-          evm,
-        });
-        subContext.addSubContext({
-          returnData: contract.returnData,
-        });
-        if (subContext.last.returnData?.length) {
-          subContext.last.returnData
-            .slice(0, retSize.toNumber())
-            .forEach((item, index) => {
-              memory.write(retOffset.toNumber() + index, item);
-            });
-        } else {
-          throw new Error('Expected return data in subcontext');
-        }
-        stack.push(new BigNumber(1));
-      } catch (err) {
-        if (err instanceof Reverted) {
-          stack.push(new BigNumber(0));
-        } else {
-          throw err;
-        }
-      }
+      evmSubContextCall.createSubContext({
+        evmContext,
+        optionsSubContext: {
+          gas,
+          address,
+          argsOffset,
+          value,
+          argsSize,
+          retOffset,
+          retSize,
+        },
+      });
     },
   }),
   0xf3: new OpCode({
@@ -943,42 +934,26 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, subContext, network, memory, evm }) => {
+    onExecute: ({ stack, evmContext, evmSubContextCall }) => {
       const gas = stack.pop();
-      const address = stack.pop();
+      const address = new Address(stack.pop());
       const argsOffset = stack.pop();
 
       const argsSize = stack.pop();
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      try {
-        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
-        const contract = network.get(new Address(address));
-        contract.execute({
-          data,
-          evm,
-        });
-        subContext.addSubContext({
-          returnData: contract.returnData,
-        });
-        stack.push(new BigNumber(1));
-        if (subContext.last.returnData?.length) {
-          subContext.last.returnData
-            .slice(0, retSize.toNumber())
-            .forEach((item, index) => {
-              memory.write(retOffset.toNumber() + index, item);
-            });
-        } else {
-          throw new Error('Expected return data in subcontext');
-        }
-      } catch (err) {
-        if (err instanceof Reverted) {
-          stack.push(new BigNumber(0));
-        } else {
-          throw err;
-        }
-      }
+      evmSubContextCall.createSubContext({
+        evmContext,
+        optionsSubContext: {
+          gas,
+          address,
+          argsOffset,
+          argsSize,
+          retOffset,
+          retSize,
+        },
+      });
     },
   }),
   0xf5: new OpCode({
@@ -986,7 +961,14 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, memory, network, context }) => {
+    onExecute: ({
+      stack,
+      memory,
+      network,
+      context,
+      evmSubContextCall,
+      evmContext,
+    }) => {
       const value = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
@@ -994,12 +976,16 @@ export const opcodes: Record<number, OpCode> = {
       const salt = Buffer.from(saltValue, 'hex');
 
       const contractBytes = memory.read(offset, length);
-      const contract = new Contract(
-        contractBytes,
-        new BigNumber(value),
+      const forkedEvm = evmSubContextCall.fork({
+        txContext: context,
+        evmContext: evmContext,
+      });
+      const contract = new Contract({
+        program: contractBytes,
+        value: new BigNumber(value),
         context,
-        salt
-      ).execute({});
+        salt,
+      }).execute(forkedEvm);
 
       const success = network.register({ contract });
       if (success) {
@@ -1014,32 +1000,26 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, memory, network, subContext }) => {
+    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
-      const address = stack.pop();
+      const address = new Address(stack.pop());
       const argsOffset = stack.pop();
 
       const argsSize = stack.pop();
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      try {
-        const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
-        const contract = network.get(new Address(address));
-        contract.execute({
-          data,
-        });
-        subContext.addSubContext({
-          returnData: contract.returnData,
-        });
-        stack.push(new BigNumber(1));
-      } catch (err) {
-        if (err instanceof Reverted) {
-          stack.push(new BigNumber(0));
-        } else {
-          throw err;
-        }
-      }
+      evmSubContextCall.createSubContext({
+        evmContext,
+        optionsSubContext: {
+          gas,
+          address,
+          argsOffset,
+          argsSize,
+          retOffset,
+          retSize,
+        },
+      });
     },
   }),
   0xfd: new OpCode({

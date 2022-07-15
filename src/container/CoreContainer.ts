@@ -54,6 +54,8 @@ import { EvmKeyValueStorage } from '../evm/EvmKeyValueStorage';
 import { MemoryExpansionGas } from '../evm/gas/MemoyExspansionGas';
 import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 import { EvmSubContext } from '../evm/EvmSubContext';
+import { EvmSubContextCall } from '../evm/EvmSubContextCall';
+import { EvmAccountState } from '../evm/EvmAccountState';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -136,7 +138,6 @@ export class CoreContainer {
     container.bind(MessageQueue).toSelf();
     container.bind(GetRandomBytesInteractor).toSelf();
 
-    container.bind(EvmSubContext).toSelf();
     container.bind(EvmStack).toSelf();
     container.bind(Network).toSelf();
     container.bind(EvmMemory).toSelf();
@@ -146,6 +147,9 @@ export class CoreContainer {
     container.bind(EvmKeyValueStorage).toSelf();
     container.bind(MemoryExpansionGas).toSelf();
     container.bind(AccountAccessGas).toSelf();
+    container.bind(EvmSubContextCall).toSelf();
+    container.bind(EvmSubContext).toSelf();
+    container.bind(EvmAccountState).toSelf();
 
     container.bind(Logger).toSelf();
 

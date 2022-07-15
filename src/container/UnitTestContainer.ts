@@ -7,6 +7,7 @@ import { ContainerOptions, CoreContainer } from './CoreContainer';
 import { ExposedFrameCommunication } from '../network/auth/frameing/ExposedFrameCommunication';
 import { ExposedEvm } from '../evm/ExposedEvm';
 import { Evm } from '../evm/Evm';
+import { InterfaceEvm } from '../evm/interfaceEvm';
 
 export class UnitTestContainer extends CoreContainer {
   public create(options?: ContainerOptions) {
@@ -17,6 +18,8 @@ export class UnitTestContainer extends CoreContainer {
     container.bind(FrameCommunication).to(ExposedFrameCommunication);
     container.bind(ExposedEvm).toSelf();
     container.bind(Evm).toSelf();
+
+    container.bind(InterfaceEvm).to(ExposedEvm);
 
     return container;
   }

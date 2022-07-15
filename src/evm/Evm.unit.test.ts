@@ -1,8 +1,9 @@
 import BigNumber from 'bignumber.js';
-import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { UnitTestContainer } from '../container/UnitTestContainer';
 import { Address } from './Address';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
+import { EvmAccountState } from './EvmAccountState';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './Wei';
@@ -11,18 +12,29 @@ describe('evm', () => {
   const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 
+  let evm: ExposedEvm;
+
+  beforeEach(() => {
+    const container = new UnitTestContainer().create();
+    evm = container.get(ExposedEvm);
+    container.get(EvmAccountState).registerBalance({
+      address: sender,
+      balance: new BigNumber(42),
+    });
+  });
+
   it('should step through a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
-    const evm = getClassFromTestContainer(ExposedEvm).boot(
-      Buffer.from('6001600081905550', 'hex'),
-      {
+    evm.boot({
+      program: Buffer.from('6001600081905550', 'hex'),
+      context: {
         nonce: 1,
         sender,
         gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
-      }
-    );
+      },
+    });
     evm.step();
     expect(evm.stack.toString()).toBe([0x1].toString());
 
@@ -51,16 +63,16 @@ describe('evm', () => {
 
   it('should execute a simple contract', () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
-    const evm = getClassFromTestContainer(ExposedEvm).boot(
-      Buffer.from('6001600081905550', 'hex'),
-      {
+    evm.boot({
+      program: Buffer.from('6001600081905550', 'hex'),
+      context: {
         nonce: 1,
         sender,
         gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
-      }
-    );
+      },
+    });
     evm.execute();
 
     expect(evm.step()).toBe(false);
@@ -68,48 +80,17 @@ describe('evm', () => {
     expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0x1);
   });
 
-  it('should be able to run a basic contract', () => {
-    // example from https://medium.com/@eiki1212/explaining-ethereum-contract-abi-evm-bytecode-6afa6e917c3b
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(
-        Buffer.from(
-          '6080604052348015600f57600080fd5b5060878061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063037a417c14602d575b600080fd5b60336049565b6040518082815260200191505060405180910390f35b6000600190509056fea265627a7a7230582050d33093e20eb388eec760ca84ba30ec42dadbdeb8edf5cd8b261e89b8d4279264736f6c634300050a0032',
-          'hex'
-        ),
-        {
+  it('should correctly run simple CREATE opcode contract', () => {
+    evm
+      .boot({
+        program: Buffer.from('600060006000F0', 'hex'),
+        context: {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(0),
+          value: new Wei(8),
           data: Buffer.from('', 'hex'),
-        }
-      )
-      .execute({
-        stopAtOpcode: 0x39,
-      });
-    evm.step();
-
-    expect(
-      evm.memory.raw
-        .toString('hex')
-        .startsWith(
-          '6080604052348015600f57600080fd5b506004361060285760003560e01c8063037a417c14602d575b600080fd5b60336049565b6040518082815260200191505060405180910390f35b6000600190509056fea265627a7a7230582050d33093e20eb388eec760ca84ba30ec42dadbdeb8edf5cd8b261e89b8d4279264736f6c634300050a003200000000000000000000000000000000000000000000000000'
-        )
-    ).toBe(true);
-
-    evm.execute();
-
-    expect(evm.callingContextReturnData).toBeTruthy();
-  });
-
-  it('should correctly run simple CREATE opcode contract', () => {
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(Buffer.from('600060006000F0', 'hex'), {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(8),
-        data: Buffer.from('', 'hex'),
+        },
       })
       .execute();
     const contracts = evm.network.contracts;
@@ -120,16 +101,19 @@ describe('evm', () => {
 
   it('should correctly run complicated CREATE opcode', () => {
     // https://www.evm.codes/playground?callValue=9&unit=Wei&codeType=Mnemonic&code='%2F%2F%20Createznzccount%20withq%20weiznd%204%20FFzs%20codev3qx63FFFFFFFF60005260046000F3~0yMSTORE~13~0~0yCREATE%20'~v%20z%20ay%5CnvyPUSH1q%200%01qvyz~_
-    const evm = getClassFromTestContainer(ExposedEvm).boot(
-      Buffer.from('6C63FFFFFFFF60005260046000F3600052600D60006000F0', 'hex'),
-      {
+    evm.boot({
+      program: Buffer.from(
+        '6C63FFFFFFFF60005260046000F3600052600D60006000F0',
+        'hex'
+      ),
+      context: {
         nonce: 1,
         sender,
         gasLimit,
         value: new Wei(8),
         data: Buffer.from('', 'hex'),
-      }
-    );
+      },
+    });
     evm.step();
     expect(evm.stack.length).toBe(1);
     expect(evm.stack.get(0).toString(16)).toBe(
@@ -183,12 +167,15 @@ describe('evm', () => {
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
     );
-    const evm = getClassFromTestContainer(ExposedEvm).boot(contract, {
-      nonce: 1,
-      value: new Wei(16),
-      data: Buffer.from('', 'hex'),
-      sender,
-      gasLimit,
+    evm.boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+        sender,
+        gasLimit,
+      },
     });
     evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
@@ -252,12 +239,15 @@ describe('evm', () => {
       '7FFF0100000000000000000000000000000000000000000000000000000000000060005260026000FD',
       'hex'
     );
-    const evm = getClassFromTestContainer(ExposedEvm).boot(contract, {
-      nonce: 1,
-      value: new Wei(16),
-      data: Buffer.from('', 'hex'),
-      sender,
-      gasLimit,
+    evm.boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        value: new Wei(16),
+        data: Buffer.from('', 'hex'),
+        sender,
+        gasLimit,
+      },
     });
     expect(() => evm.execute()).toThrow(Reverted);
     expect(evm.callingContextReturnData?.toString('hex')).toBe('ff01');
@@ -278,13 +268,16 @@ describe('evm', () => {
       '3B', // EXTCODESIZE
     ].join('');
     const contract = Buffer.from(code, 'hex');
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('', 'hex'),
+        },
       })
       .execute();
     expect(evm.stack).toHaveLength(1);
@@ -294,13 +287,16 @@ describe('evm', () => {
   it('should correctly run swap 1', () => {
     const code = ['6001', '6001', '6002', '90'].join('');
     const contract = Buffer.from(code, 'hex');
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('', 'hex'),
+        },
       })
       .execute();
     expect(evm.stack.pop().toString()).toBe('1');
@@ -313,13 +309,16 @@ describe('evm', () => {
       ''
     );
     const contract = Buffer.from(code, 'hex');
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('', 'hex'),
+        },
       })
       .execute();
     expect(evm.stack.toString()).toBe([1, 0, 0, 0, 0, 2].toString());
@@ -328,13 +327,16 @@ describe('evm', () => {
   it('should correctly compute the gas cost of simple transactions', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('', 'hex'),
+        },
       })
       .execute();
     expect(evm.totalGasCost).toBe(21003);
@@ -343,13 +345,16 @@ describe('evm', () => {
   it('should correctly compute the gas cost of simple transactions with zero data', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('0000', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('0000', 'hex'),
+        },
       })
       .execute();
     expect(evm.totalGasCost).toBe(21011);
@@ -358,13 +363,16 @@ describe('evm', () => {
   it('should correctly compute the gas cost of simple transactions with non zero data', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('0001', 'hex'),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.from('0001', 'hex'),
+        },
       })
       .execute();
     expect(evm.totalGasCost).toBe(21023);
@@ -386,13 +394,16 @@ describe('evm', () => {
         BASEFEE
        `,
     });
-    const evm = getClassFromTestContainer(ExposedEvm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.alloc(0),
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.alloc(0),
+        },
       })
       .execute();
     expect(evm.stack.toString()).toBe(
@@ -417,24 +428,30 @@ describe('evm', () => {
   });
 
   it('should correctly revert', () => {
-    getClassFromTestContainer(ExposedEvm)
-      .boot(Buffer.from('600035600757FE5B', 'hex'), {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.from('0001', 'hex'),
-      })
-      .execute();
-
-    expect(() =>
-      getClassFromTestContainer(ExposedEvm)
-        .boot(Buffer.from('600035600757FE5B', 'hex'), {
+    evm
+      .boot({
+        program: Buffer.from('600035600757FE5B', 'hex'),
+        context: {
           nonce: 1,
           sender,
           gasLimit,
           value: new Wei(16),
-          data: Buffer.from('', 'hex'),
+          data: Buffer.from('0001', 'hex'),
+        },
+      })
+      .execute();
+
+    expect(() =>
+      evm
+        .boot({
+          program: Buffer.from('600035600757FE5B', 'hex'),
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.from('', 'hex'),
+          },
         })
         .execute()
     ).toThrowError(Reverted);

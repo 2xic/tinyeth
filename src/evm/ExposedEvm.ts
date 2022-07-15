@@ -1,15 +1,19 @@
 import { injectable } from 'inversify';
+import { Logger } from '../utils/Logger';
 import { Evm } from './Evm';
+import { EvmAccountState } from './EvmAccountState';
 import { EvmKeyValueStorage } from './EvmKeyValueStorage';
 import { EvmMemory } from './EvmMemory';
 import { EvmStack } from './EvmStack';
 import { EvmSubContext } from './EvmSubContext';
+import { EvmSubContextCall } from './EvmSubContextCall';
 import { AccessSets } from './gas/AccessSets';
 import { GasComputer } from './gas/GasComputer';
+import { InterfaceEvm } from './interfaceEvm';
 import { Network } from './Network';
 
 @injectable()
-export class ExposedEvm extends Evm {
+export class ExposedEvm extends Evm implements InterfaceEvm {
   constructor(
     public stack: EvmStack,
     public network: Network,
@@ -17,18 +21,22 @@ export class ExposedEvm extends Evm {
     public storage: EvmKeyValueStorage,
     public gasComputer: GasComputer,
     public accessSets: AccessSets,
-    public subContext: EvmSubContext
+    public subContext: EvmSubContext,
+    public subContextExecutor: EvmSubContextCall,
+    public evmAccountState: EvmAccountState,
+    public logger: Logger
   ) {
-    super(stack, network, memory, storage, gasComputer, accessSets, subContext);
-  }
-
-  // TODO: this should be a fork call
-  public copy(evm: Evm) {
-    evm.memory.raw.forEach((item, index) => {
-      this.memory.write(index, item);
-    });
-    evm.storage.forEach((key, value) => {
-      this.storage.write({ key, value });
-    });
+    super(
+      stack,
+      network,
+      memory,
+      storage,
+      gasComputer,
+      accessSets,
+      subContext,
+      subContextExecutor,
+      evmAccountState,
+      logger
+    );
   }
 }

@@ -13,17 +13,24 @@ import { EvmKeyValueStorage } from './EvmKeyValueStorage';
 import { AccessSets } from './gas/AccessSets';
 import { Address } from './Address';
 import { EvmSubContext } from './EvmSubContext';
+import { EvmSubContextCall } from './EvmSubContextCall';
+import { Logger } from '../utils/Logger';
+import { EvmAccountState } from './EvmAccountState';
+import { DebugOptions, EvmBootOptions, EvmContext } from './interfaceEvm';
 
 @injectable()
 export class Evm {
   constructor(
     protected stack: EvmStack,
     protected network: Network,
-    public memory: EvmMemory,
-    public storage: EvmKeyValueStorage,
+    protected memory: EvmMemory,
+    protected storage: EvmKeyValueStorage,
     protected gasComputer: GasComputer,
     protected accessSets: AccessSets,
-    protected subContext: EvmSubContext
+    protected subContext: EvmSubContext,
+    protected evmSubContextCall: EvmSubContextCall,
+    protected evmAccountState: EvmAccountState,
+    protected logger: Logger
   ) {}
 
   private running = false;
@@ -35,9 +42,9 @@ export class Evm {
   private _callingContextReturnData?: Buffer;
   public program: Buffer = Buffer.alloc(0);
   private context!: TxContext;
-  private options?: Options;
+  private options?: DebugOptions;
 
-  public boot(program: Buffer, context: TxContext, options?: Options) {
+  public boot({ program, context, options }: EvmBootOptions) {
     this.program = program;
     this.context = context;
     this.options = options;
@@ -46,9 +53,9 @@ export class Evm {
     this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
     this._gasLeft = context.gasLimit.minus(this.gasCost);
     this.running = true;
-    if (this.options?.debug) {
-      console.log(JSON.stringify(context));
-    }
+
+    this.logger.log(JSON.stringify(context));
+
     return this;
   }
 
@@ -65,12 +72,8 @@ export class Evm {
     }
 
     const { opcode, opcodeNumber } = this.loadOpcode();
-    if (this.options?.debug) {
-      // eslint-disable-next-line no-console
-      console.log(`Running ${opcodes[opcodeNumber].mnemonic}`);
-    }
-
-    const results = opcode.execute({
+    this.logger.log(`Running ${opcodes[opcodeNumber].mnemonic}`);
+    const evmContext: EvmContext = {
       evm: this,
       stack: this.stack,
       network: this.network,
@@ -81,6 +84,12 @@ export class Evm {
       byteIndex: this.pc,
       context: this.context,
       subContext: this.subContext,
+      evmSubContextCall: this.evmSubContextCall,
+      evmAccountState: this.evmAccountState,
+    };
+    const results = opcode.execute({
+      ...evmContext,
+      evmContext,
     });
     this.gasCost += opcode.gasCost;
     this._gasLeft = this._gasLeft.minus(opcode.gasCost);
@@ -98,8 +107,8 @@ export class Evm {
     }
 
     if (this.options?.debug) {
-      console.log(this.memory.raw.toString('hex') || 'empty memory');
-      console.log(this.stack.toString() || []);
+      this.logger.log(this.memory.raw.toString('hex') || 'empty memory');
+      this.logger.log(this.stack.toString() || []);
     }
 
     return true;
@@ -186,21 +195,4 @@ export interface TxContext {
     - Caller should be added here also.
       This affect the access sets for instance.
   */
-}
-
-export interface EvmContext {
-  evm: Evm;
-  stack: EvmStack;
-  network: Network;
-  memory: EvmMemory;
-  storage: EvmKeyValueStorage;
-  accessSets: AccessSets;
-  gasComputer: GasComputer;
-  byteIndex: number;
-  context: TxContext;
-  subContext: EvmSubContext;
-}
-
-interface Options {
-  debug: boolean;
 }

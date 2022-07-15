@@ -1,35 +1,36 @@
 import BigNumber from 'bignumber.js';
 import crypto from 'crypto';
-import { Evm, TxContext } from './Evm';
-import { Wei } from './Wei';
+import { TxContext } from './Evm';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
 import { keccak256 } from '../utils/keccak256';
 import { RlpEncoder } from '../rlp';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { Address } from './Address';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
-import { EvmMemory } from './EvmMemory';
-import { ExposedEvm } from './ExposedEvm';
-import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
+import { ForkedEvm } from './EvmSubContextCall';
 
 export class Contract {
   private _address: string;
   private _returnData?: Buffer;
 
   constructor(
-    private bytes: Buffer,
-    private _value: BigNumber,
-    private context: TxContext,
-    private salt?: Buffer // private evm?: Evm
+    private options: {
+      program: Buffer;
+      value: BigNumber;
+      context: TxContext;
+      salt?: Buffer;
+    }
   ) {
+    const { context, program, salt } = options;
+
     // https://ethereum.stackexchange.com/a/101340
     // https://www.evm.codes/#f0
     const rlp = getClassFromTestContainer(RlpEncoder);
     const encoding = rlp.encode({
       input: [context.sender.raw || crypto.randomBytes(32), context.nonce],
     });
-    if (this.salt) {
-      const dataHash = keccak256(bytes);
+    if (salt) {
+      const dataHash = keccak256(program);
       const address = keccak256(
         getBufferFromHex(
           `0xff${convertNumberToPadHex(
@@ -45,51 +46,29 @@ export class Contract {
   }
 
   public get value() {
-    return this._value;
+    return this.options.value;
   }
 
   public get length() {
-    return this.bytes.length;
+    return this.options.program.length;
   }
 
   public get data() {
-    return this.bytes;
+    return this.options.program;
   }
 
   public get address() {
     return new Address(this._address);
   }
 
-  public execute(
-    options: Partial<TxContext> & {
-      evm?: Evm;
-    }
-  ) {
-    // This should be done in another way -> Redo this in a better way.
-    // The result of this execution will also effect the previous context, so we need to be able to continue in same context.
-    // by having it in a different container this is not the case.
-    // I think that all access sets done in this new contract also will affect the ones in the current context.
-    const data = options.data || Buffer.from('');
-    const evm = getClassFromTestContainer(ExposedEvm);
-    if (options.evm) {
-      evm.copy(options.evm);
-    }
-    evm
-      .boot(
-        this.bytes,
-        {
-          value: new Wei(this.value.toNumber()),
-          data,
-          nonce: 0,
-          sender: this.context.sender,
-          gasLimit: this.context.gasLimit,
-        },
-        { debug: false }
-      )
-      .execute();
-    if (evm.callingContextReturnData) {
-      this._returnData = evm.callingContextReturnData;
-      this.bytes = evm.callingContextReturnData;
+  public execute(options: ForkedEvm) {
+    const results = options.executor({
+      program: this.options.program,
+    });
+
+    if (results.callingContextReturnData) {
+      this._returnData = results.callingContextReturnData;
+      this.options.program = results.callingContextReturnData;
     }
 
     return this;

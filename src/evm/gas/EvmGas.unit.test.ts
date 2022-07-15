@@ -22,12 +22,15 @@ describe('EvmGas', () => {
             `,
       });
       const evm = getClassFromTestContainer(Evm)
-        .boot(contract, {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(16),
-          data: Buffer.from('0001', 'hex'),
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.from('0001', 'hex'),
+          },
         })
         .execute();
       expect(evm.totalGasCost).toBe(43126);
@@ -45,22 +48,28 @@ describe('EvmGas', () => {
             `,
       });
       const evm = getClassFromTestContainer(Evm)
-        .boot(contract, {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(16),
-          data: Buffer.from('0001', 'hex'),
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.from('0001', 'hex'),
+          },
         })
         .execute();
       // memory is on now hot!
       evm
-        .boot(contract, {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(16),
-          data: Buffer.from('0001', 'hex'),
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.from('0001', 'hex'),
+          },
         })
         .execute();
       expect(evm.totalGasCost).toBe(23226);
@@ -78,12 +87,15 @@ describe('EvmGas', () => {
           `,
     });
     const evm = getClassFromTestContainer(Evm)
-      .boot(contract, {
-        nonce: 1,
-        sender,
-        gasLimit,
-        value: new Wei(16),
-        data: Buffer.alloc(0),
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: Buffer.alloc(0),
+        },
       })
       .execute();
     expect(evm.totalGasCost).toBe(21012);
@@ -101,12 +113,15 @@ describe('EvmGas', () => {
       });
 
       const evm = getClassFromTestContainer(Evm)
-        .boot(contract, {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(16),
-          data: Buffer.alloc(0),
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.alloc(0),
+          },
         })
         .execute();
       expect(evm.totalGasCost).toBe(23603);
@@ -126,12 +141,15 @@ describe('EvmGas', () => {
       });
 
       const evm = getClassFromTestContainer(Evm)
-        .boot(contract, {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(16),
-          data: Buffer.alloc(0),
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(16),
+            data: Buffer.alloc(0),
+          },
         })
         .execute();
       expect(evm.totalGasCost).toBe(23706);
