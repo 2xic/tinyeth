@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
 export class AbiStructDecoder {
@@ -6,11 +7,11 @@ export class AbiStructDecoder {
     types,
   }: {
     encoding: string;
-    types: Array<'ARRAY'>;
+    types: Array<'ARRAY' | 'UINT' | 'ADDRESS' | 'BYTES' | 'DYNAMIC_BYTES'>;
   }) {
-    const results: unknown[] = [];
+    const results: Array<BigNumber | string | Array<unknown>> = [];
     const buffer = getBufferFromHex(encoding);
-    const index = 0;
+    let index = 0;
     for (const type of types) {
       if (type === 'ARRAY') {
         let location = parseInt(
@@ -29,6 +30,36 @@ export class AbiStructDecoder {
         }
 
         results.push(array);
+        index += 32;
+      } else if (type === 'UINT' || type === 'ADDRESS') {
+        results.push(
+          new BigNumber(buffer.slice(index, index + 32).toString('hex'), 16)
+        );
+        index += 32;
+      } else if (type === 'BYTES') {
+        results.push(
+          Buffer.from(
+            buffer.slice(index, index + 32).filter((item) => item !== 0)
+          )
+            .toString('ascii')
+            .trim()
+        );
+        index += 32;
+      } else if (type === 'DYNAMIC_BYTES') {
+        const location = parseInt(
+          buffer.slice(index, index + 32).toString('hex'),
+          16
+        );
+        const size = parseInt(
+          buffer.slice(location, location + 32).toString('hex'),
+          16
+        );
+        const delta = 32 + (size % 32 == 0 ? 0 : 32);
+        const data = buffer
+          .slice(location + 32, location + Math.max(delta, 32))
+          .filter((item) => item !== 0);
+        results.push(Buffer.from(data).toString('ascii'));
+        index += 32;
       } else {
         throw new Error('not implemented');
       }
