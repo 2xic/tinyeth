@@ -1,4 +1,5 @@
 import { GetRlpxPingPacketEncoded } from './RlpxPingPacketEncoder';
+import { describe, it, expect } from '../../../getActiveTestMetadata';
 
 describe('RlpxPingPacketEncoder', () => {
   it('should encode correctly', () => {

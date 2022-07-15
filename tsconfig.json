@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
     "outDir": "./dist",
     "types": [
       "jest",
       "node",
-      "reflect-metadata"
+      "reflect-metadata",
+      "bun-types"
     ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

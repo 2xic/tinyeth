@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { FindNodePacketEncodeDecode } from './FindNodePacketEncodeDecode';
 import { PongPacket, PongPacketEncodeDecode } from './PongPacketEncodeDecode';
 import { WireMessageDecoder, WirePacketTypes } from './WireMessageDecoder';
+import { describe, it, expect } from '../../getActiveTestMetadata';
 
 describe('Wire', () => {
   let container: Container;

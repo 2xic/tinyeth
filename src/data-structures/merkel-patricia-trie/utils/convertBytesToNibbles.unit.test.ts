@@ -1,4 +1,5 @@
 import { convertBytesToNibbles } from './convertBytesToNibbles';
+import { describe, it, expect } from '../../../getActiveTestMetadata';
 
 describe('convertBytesToNibbles', () => {
   it('should correctly encode nibble', () => {

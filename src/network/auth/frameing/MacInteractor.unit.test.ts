@@ -1,4 +1,5 @@
 import { MacInteractor } from './MacInteractor';
+import { describe, it, expect } from '../../../getActiveTestMetadata';
 
 describe('MacInteractor', () => {
   const macSecret = Buffer.from(

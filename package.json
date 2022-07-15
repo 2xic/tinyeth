@@ -12,6 +12,8 @@
     "build": "tsc --incremental",
     "test-watch": "npm run build && jest --watch",
     "test": "npm run unit",
+    "vitest": "vitest run",
+    "bun-test": "bun wiptest",
     "unit": "npm run build && jest",
     "int": "npm run build && jest -c jest.config.int.js",
     "lint": "npx eslint ./ --fix",
@@ -34,7 +36,8 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.1.0",
-    "prettier": "^2.6.1"
+    "prettier": "^2.6.1",
+    "vitest": "^0.18.0"
   },
   "dependencies": {
     "@types/bn.js": "^5.1.0",
@@ -48,6 +51,7 @@
     "bignumber.js": "^9.0.2",
     "bn.js": "^5.2.0",
     "buffer-json": "^2.0.0",
+    "bun-types": "^0.1.4",
     "core-util-is": "^1.0.3",
     "dayjs": "^1.11.2",
     "ecies-geth": "^1.6.4",

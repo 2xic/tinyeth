@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { StringEncoderDecoder } from './StringEncoderDecoder';
+import { describe, it, expect } from '../../getActiveTestMetadata';
 
 describe('StringEncoderDecoder', () => {
   const interactor = new StringEncoderDecoder();

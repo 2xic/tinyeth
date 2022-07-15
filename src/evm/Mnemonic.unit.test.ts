@@ -1,4 +1,5 @@
 import { MnemonicParser } from './MnemonicParser';
+import { describe, it, expect } from '../getActiveTestMetadata';
 
 describe('MnemonicParser', () => {
   it('should correctly parse from mnemonic to bytecode', () => {

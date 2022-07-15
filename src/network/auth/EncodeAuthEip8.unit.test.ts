@@ -4,6 +4,7 @@ import { RlpEncoder } from '../../rlp/RlpEncoder';
 import { MockNonceGenerator } from '../nonce-generator/MockNonceGenerator';
 import { NonceGenerator } from '../nonce-generator/NonceGenerator';
 import { EncodeAuthEip8 } from './EncodeAuthEip8';
+import { describe, it, expect } from '../../getActiveTestMetadata';
 
 describe('EncodeAuthEip8', () => {
   let container: Container;

@@ -3,6 +3,7 @@ import { UnitTestContainer } from '../../../container/UnitTestContainer';
 import { cleanString } from '../../../utils';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import { RlpxHelloPacketEncoderDecoder } from './RlpxHelloPacketEncoderDecoder';
+import { describe, it, expect } from '../../../getActiveTestMetadata';
 
 describe('RlpxHelloMessage', () => {
   let helloPacketEncoderDecoder: RlpxHelloPacketEncoderDecoder;
