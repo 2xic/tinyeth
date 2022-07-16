@@ -1,7 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { Address } from './Address';
 import { Evm } from './Evm';
+import { ExposedEvm } from './ExposedEvm';
 import { Wei } from './Wei';
 
 describe('https://github.com/fvictorio/evm-puzzles', () => {
@@ -113,7 +115,40 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it.skip('should be possible run puzzle 7 contract', () => {
+  it('should have correct contract 7 state', () => {
+    const contract = Buffer.from(
+      '36600080373660006000F03B600114601357FD5B00',
+      'hex'
+    );
+    const evm = getClassFromTestContainer(ExposedEvm)
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(16),
+          data: getBufferFromHex('60016000526001601ff3'),
+        },
+        options: {
+          debug: true,
+        },
+      })
+      .execute({
+        stopAtPc: 0x0c,
+      });
+    expect(evm.stack.length).toBe(1);
+    expect(evm.stack.get(0).toNumber()).toBe(1);
+
+    evm.execute({
+      stopAtPc: 0x11,
+    });
+    expect(evm.stack.length).toBe(2);
+    expect(evm.stack.pop().toNumber()).toBe(0x13);
+    expect(evm.stack.pop().toNumber()).toBe(0x1);
+  });
+
+  it('should be possible run puzzle 7 contract', () => {
     const contract = Buffer.from(
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
@@ -126,7 +161,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
           sender,
           gasLimit,
           value: new Wei(16),
-          data: Buffer.from('60016000526001601ff3', 'hex'),
+          data: getBufferFromHex('60016000526001601ff3'),
         },
         options: {
           debug: true,
@@ -135,7 +170,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       .execute();
   });
 
-  it.skip('should be possible run puzzle 8 contract', () => {
+  it('should be possible run puzzle 8 contract', () => {
     const contract = Buffer.from(
       '36600080373660006000F0600080808080945AF1600014601B57FD5B00',
       'hex'
@@ -148,7 +183,48 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
           sender,
           gasLimit,
           value: new Wei(16),
-          data: Buffer.from('', 'hex'),
+          data: Buffer.from('60056000526001601ff3', 'hex'),
+        },
+      })
+      .execute();
+  });
+
+  it('should be possible run puzzle 9 contract', () => {
+    const contract = Buffer.from(
+      '36600310600957FDFD5B343602600814601457FD5B00',
+      'hex'
+    );
+    getClassFromTestContainer(Evm)
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(2),
+          data: getBufferFromHex('0xffffffff'),
+        },
+      })
+      .execute();
+  });
+
+  it('should be possible run puzzle 10 contract', () => {
+    const contract = Buffer.from(
+      '38349011600857FD5B3661000390061534600A0157FDFDFDFD5B00',
+      'hex'
+    );
+    // calldata length > value
+    // calldata % 3 == 0
+    // callValue + 0a == pc
+    getClassFromTestContainer(Evm)
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(15),
+          data: getBufferFromHex('0x100000'),
         },
       })
       .execute();

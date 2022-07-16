@@ -710,7 +710,7 @@ export const opcodes: Record<number, OpCode> = {
       const pc = stack.pop().toNumber();
       const opcode = evm.program[pc] == JUMP_DEST;
       if (!opcode) {
-        throw new InvalidJump();
+        throw new InvalidJump(`Invalid jump location 0x${pc.toString(16)}`);
       }
       evm.setPc(pc);
       return {
@@ -728,9 +728,10 @@ export const opcodes: Record<number, OpCode> = {
       const condition = stack.pop();
 
       if (!condition.isEqualTo(0)) {
+        // TODO: This check should be moved to a separate file.
         const opcode = evm.program[pc] == JUMP_DEST;
         if (!opcode) {
-          throw new InvalidJump();
+          throw new InvalidJump(`Invalid jump location 0x${pc.toString(16)}`);
         }
         evm.setPc(pc);
         return {
@@ -844,7 +845,10 @@ export const opcodes: Record<number, OpCode> = {
       const contractBytes = memory.read(offset, length);
 
       const forkedEvm = evmSubContextCall.fork({
-        txContext: context,
+        txContext: {
+          ...context,
+          data: Buffer.alloc(0),
+        },
         evmContext: evmContext,
       });
       const contract = new Contract({
@@ -924,7 +928,9 @@ export const opcodes: Record<number, OpCode> = {
       const offset = stack.pop().toNumber();
       const size = stack.pop().toNumber();
 
-      evm.setCallingContextReturnData(memory.read(offset, offset + size));
+      evm.setCallingContextReturnData(
+        memory.read(offset, offset + size).slice(0, size)
+      );
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,

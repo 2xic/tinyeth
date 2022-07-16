@@ -12,6 +12,7 @@ import { ForkedEvm } from './EvmSubContextCall';
 export class Contract {
   private _address: string;
   private _returnData?: Buffer;
+  private _isDeployed?: boolean;
 
   constructor(
     private options: {
@@ -66,9 +67,12 @@ export class Contract {
       program: this.options.program,
     });
 
-    if (results.callingContextReturnData) {
-      this._returnData = results.callingContextReturnData;
-      this.options.program = results.callingContextReturnData;
+    const callResults = results.callingContextReturnData;
+
+    if (callResults && !this._isDeployed) {
+      this._returnData = callResults;
+      this.options.program = callResults || Buffer.alloc(0);
+      this._isDeployed = true;
     }
 
     return this;

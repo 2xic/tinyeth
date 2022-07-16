@@ -1,6 +1,6 @@
 import { EvmStack } from './EvmStack';
 import { InvalidPc } from './errors/InvalidPc';
-import { OpCode } from './OpCode';
+import { ExecutionResults, OpCode } from './OpCode';
 import { opcodes } from './Opcodes';
 import { Wei } from './Wei';
 import { Network } from './Network';
@@ -17,6 +17,7 @@ import { EvmSubContextCall } from './EvmSubContextCall';
 import { Logger } from '../utils/Logger';
 import { EvmAccountState } from './EvmAccountState';
 import { DebugOptions, EvmBootOptions, EvmContext } from './interfaceEvm';
+import { EvmErrorTrace } from './EvmErrorTrace';
 
 @injectable()
 export class Evm {
@@ -30,6 +31,7 @@ export class Evm {
     protected subContext: EvmSubContext,
     protected evmSubContextCall: EvmSubContextCall,
     protected evmAccountState: EvmAccountState,
+    protected evmErrorTrace: EvmErrorTrace,
     protected logger: Logger
   ) {}
 
@@ -87,10 +89,19 @@ export class Evm {
       evmSubContextCall: this.evmSubContextCall,
       evmAccountState: this.evmAccountState,
     };
-    const results = opcode.execute({
-      ...evmContext,
-      evmContext,
-    });
+    let results: ExecutionResults | void;
+    try {
+      results = opcode.execute({
+        ...evmContext,
+        evmContext,
+      });
+    } catch (err) {
+      this.evmErrorTrace.printState({
+        evmContext,
+      });
+      throw err;
+    }
+
     this.gasCost += opcode.gasCost;
     this._gasLeft = this._gasLeft.minus(opcode.gasCost);
 
@@ -114,10 +125,12 @@ export class Evm {
     return true;
   }
 
-  public execute(options?: { stopAtOpcode?: number }) {
+  public execute(options?: { stopAtOpcode?: number; stopAtPc?: number }) {
     while (this.isRunning) {
       this.step();
       if (options?.stopAtOpcode == this.currentOpcodeNumber) {
+        break;
+      } else if (options?.stopAtPc === this.pc) {
         break;
       }
     }

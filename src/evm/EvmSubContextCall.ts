@@ -3,6 +3,7 @@ import { injectable } from 'inversify';
 import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
 import { Address } from './Address';
 import { Reverted } from './errors/Reverted';
+import { StackUnderflow } from './errors/StackUnderflow';
 import { TxContext } from './Evm';
 import { EvmContext, InterfaceEvm } from './interfaceEvm';
 import { Wei } from './Wei';
@@ -51,7 +52,7 @@ export class EvmSubContextCall {
         throw new Error('Expected return data in sub-context');
       }
     } catch (err) {
-      if (err instanceof Reverted) {
+      if (err instanceof Reverted || err instanceof StackUnderflow) {
         stack.push(new BigNumber(0));
       } else {
         throw err;

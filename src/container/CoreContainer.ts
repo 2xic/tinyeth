@@ -56,6 +56,7 @@ import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 import { EvmSubContext } from '../evm/EvmSubContext';
 import { EvmSubContextCall } from '../evm/EvmSubContextCall';
 import { EvmAccountState } from '../evm/EvmAccountState';
+import { EvmErrorTrace } from '../evm/EvmErrorTrace';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -150,6 +151,7 @@ export class CoreContainer {
     container.bind(EvmSubContextCall).toSelf();
     container.bind(EvmSubContext).toSelf();
     container.bind(EvmAccountState).toSelf();
+    container.bind(EvmErrorTrace).toSelf();
 
     container.bind(Logger).toSelf();
 
