@@ -9,13 +9,12 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
+import { isValidJump } from './evmJumpCheck';
 import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 // TODO: see if there is away around this.
 BigNumber.set({ EXPONENTIAL_AT: 1024 });
-
-const JUMP_DEST = 0x5b;
 
 export const opcodes: Record<number, OpCode> = {
   0x0: new OpCode({
@@ -708,10 +707,12 @@ export const opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ evm, stack }) => {
       const pc = stack.pop().toNumber();
-      const opcode = evm.program[pc] == JUMP_DEST;
-      if (!opcode) {
-        throw new InvalidJump(`Invalid jump location 0x${pc.toString(16)}`);
-      }
+      const opCodeAtPc = evm.program[pc];
+      isValidJump({
+        pc,
+        opCodeAtPc,
+      });
+
       evm.setPc(pc);
       return {
         setPc: true,
@@ -728,11 +729,12 @@ export const opcodes: Record<number, OpCode> = {
       const condition = stack.pop();
 
       if (!condition.isEqualTo(0)) {
-        // TODO: This check should be moved to a separate file.
-        const opcode = evm.program[pc] == JUMP_DEST;
-        if (!opcode) {
-          throw new InvalidJump(`Invalid jump location 0x${pc.toString(16)}`);
-        }
+        const opCodeAtPc = evm.program[pc];
+        isValidJump({
+          pc,
+          opCodeAtPc,
+        });
+
         evm.setPc(pc);
         return {
           setPc: true,

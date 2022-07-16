@@ -61,7 +61,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -106,7 +106,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -140,7 +140,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -172,7 +172,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -204,7 +204,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -238,7 +238,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -270,7 +270,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -301,7 +301,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -332,7 +332,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -363,7 +363,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -394,7 +394,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -425,7 +425,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -456,7 +456,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -495,7 +495,7 @@ describe('evm.codes', () => {
           nonce: 1,
           sender,
           gasLimit,
-          value: new Wei(16),
+          value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
         },
       })
@@ -1187,7 +1187,7 @@ describe('evm.codes', () => {
             nonce: 1,
             sender: options.sender || sender,
             gasLimit: options.gasLimit || gasLimit,
-            value: new Wei(16),
+            value: new Wei(new BigNumber(16)),
             data: options.calldata || Buffer.from('', 'hex'),
           },
         })

@@ -61,7 +61,7 @@ _Just something so I get a better understanding of the core parts of the protoco
 
 - [ ] Play wargames with this implementation
   - https://github.com/fvictorio/evm-puzzles
-    - Currently on level 8
+    - Completed
   - https://ethernaut.openzeppelin.com/
   - https://www.damnvulnerabledefi.xyz/
   - https://github.com/karmacoma-eth/pinball-ctf

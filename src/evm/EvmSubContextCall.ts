@@ -28,7 +28,7 @@ export class EvmSubContextCall {
       const forkedEvm = this.fork({
         evmContext,
         txContext: {
-          value: new Wei(value?.toNumber() || 0),
+          value: new Wei(new BigNumber(value?.toNumber() || 0)),
           data,
           nonce: 0, // context.nonce,
           sender: context.sender,
