@@ -101,4 +101,11 @@ export class ReadOutRlp {
     }
     return item;
   }
+  public get done() {
+    if (Array.isArray(this.rlp)) {
+      return this.rlp.length <= this.index;
+    } else {
+      throw new Error('Expected response to be rlp');
+    }
+  }
 }

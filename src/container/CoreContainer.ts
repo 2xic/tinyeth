@@ -57,6 +57,7 @@ import { EvmSubContext } from '../evm/EvmSubContext';
 import { EvmSubContextCall } from '../evm/EvmSubContextCall';
 import { EvmAccountState } from '../evm/EvmAccountState';
 import { EvmErrorTrace } from '../evm/EvmErrorTrace';
+import { BlockLoader } from '../blocks/BlockLoader';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -154,6 +155,8 @@ export class CoreContainer {
     container.bind(EvmErrorTrace).toSelf();
 
     container.bind(Logger).toSelf();
+
+    container.bind(BlockLoader).toSelf();
 
     return container;
   }
