@@ -5,43 +5,43 @@ import path from 'path';
 import fs from 'fs';
 
 (async () => {
-  if (fs.existsSync('dump.json')) {
-    console.log('please remove old dump before running')
-  } else {
-    const container = new ProductionContainer()
-      .create({
-        privateKey:
-          '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
-        ephemeralPrivateKey:
-          '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
-        loggingEnabled: true,
-        debugMode: true,
-      })
-    const node = container
-      .get(Peer);
+  const container = new ProductionContainer()
+    .create({
+      privateKey:
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
+      ephemeralPrivateKey:
+        '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
+      loggingEnabled: true,
+      debugMode: true,
+    })
+  const node = container
+    .get(Peer);
 
-    let nodes: PeerConnectionOptions[] =
-      JSON.parse(fs.readFileSync('nodes.json').toString('ascii'))
-    nodes = nodes.filter((item) => 0 < item.port );
+  let nodes: PeerConnectionOptions[] =
+    JSON.parse(fs.readFileSync('nodes.json').toString('ascii'))
+  nodes = nodes.filter((item) => 0 < item.port );
 
-    await node.connect(
-      nodes[Math.floor((nodes.length - 1) * Math.random())]
-    );
+  node.on('disconnect', () => {
+    process.exit(0)
+  })
 
-    await node.sendMessage({
-      type: MessageType.AUTH_EIP_8,
-    });
+  await node.connect(
+    nodes[Math.floor((nodes.length - 1) * Math.random())]
+  );
 
-    exitHook(() => {
-      /*(container.get(CommunicationState) as DebugCommunicationState).dump({
-        path: path.resolve(__dirname, 'dump.json')
-      })*/
-    });
+  await node.sendMessage({
+    type: MessageType.AUTH_EIP_8,
+  });
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      await sleep(100);
-    }
+  exitHook(() => {
+    (container.get(CommunicationState) as DebugCommunicationState).dump({
+      path: path.resolve(__dirname, `dumps/${Date.now()}.json`)
+    })
+  });
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    await sleep(100);
   }
 })();
 

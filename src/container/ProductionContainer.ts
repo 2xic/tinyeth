@@ -4,6 +4,7 @@ import { ContainerOptions, CoreContainer } from './CoreContainer';
 import net from 'net';
 import { CryptoNonceGenerator } from '../network/nonce-generator/CryptoNonceGenerator';
 import { FrameCommunication } from '../network/auth/frameing/FrameCommunication';
+import { NodeServer } from '../network';
 
 export class ProductionContainer extends CoreContainer {
   public create(options?: ContainerOptions) {
@@ -14,6 +15,8 @@ export class ProductionContainer extends CoreContainer {
       .toConstantValue(new net.Socket() as AbstractSocket);
     container.bind(NonceGenerator).to(CryptoNonceGenerator);
     container.bind(FrameCommunication).toSelf();
+
+    container.bind(NodeServer).toSelf();
 
     return container;
   }

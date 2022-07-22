@@ -4,7 +4,7 @@ import { Logger } from '../../utils/Logger';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { Auth8Eip } from '../auth/AuthEip8';
 import { Rlpx } from '../Rlpx';
-import { RlpxHelloMessageEncoder } from './packet-types/RlpxHelloMessageEncoder';
+import { SimpleRplxHelloMessageEncoder } from './packet-types/RlpxHelloMessageEncoder';
 import { RlpxMessageEncoder } from './RlpxMessageEncoder';
 import {
   RlpxMessageDecoder,
@@ -14,6 +14,8 @@ import { MessageState, PeerConnectionState } from './PeerConnectionState';
 import { MyEmitter } from './MyEmitter';
 import { HEADER_SIZE, MessageQueue } from './MessageQueue';
 import { ParsedHelloPacket } from './packet-types/RlpxHelloPacketEncoderDecoder';
+import { NodeId } from './NodeId';
+import { sleep } from '../utils/sleep';
 
 /**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
@@ -34,7 +36,9 @@ export class CommunicationState extends MyEmitter<{
     private rlpxMessageEncoder: RlpxMessageEncoder,
     private rlpxMessageDecoder: RlpxMessageDecoder,
     private peerConnection: PeerConnectionState,
-    private messageQueue: MessageQueue
+    private messageQueue: MessageQueue,
+    private nodeId: NodeId,
+    private simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder
   ) {
     super();
   }
@@ -77,6 +81,7 @@ export class CommunicationState extends MyEmitter<{
     parseOnly = false
   ) {
     await (async () => {
+      this.logger.log(`Got message ${message}`);
       if (this.peerConnection.state === MessageState.AUTH) {
         this.logger.log('[Received AUTH8 message]');
         const results = await this.peerConnection.parseAuth({ message });
@@ -86,12 +91,10 @@ export class CommunicationState extends MyEmitter<{
 
         await this.peerConnection.parseAck({ message });
         this.logger.log('[Sending an hello message]');
+        //   await new Promise((resolve) => setTimeout(resolve, 3000));
         const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
           RlpxPacketTypes.HELLO,
-          RlpxHelloMessageEncoder({
-            publicKey: this.keyPair.getPublicKey(),
-            listenPort: 0,
-          })
+          this.simpleRplxHelloMessageEncoder.simpleRlpxHelloMessageEncoder()
         );
         this.messageQueue.setLimit({
           size: HEADER_SIZE,
@@ -99,6 +102,7 @@ export class CommunicationState extends MyEmitter<{
 
         callback(encodedMessage);
       } else if (this.peerConnection.state === MessageState.PACKETS) {
+        this.logger.log('Packet ? ');
         await this.parsePacket({
           message,
           callback,
@@ -131,6 +135,7 @@ export class CommunicationState extends MyEmitter<{
       const options = this.rlpxMessageDecoder.decode({
         packet: body,
       });
+      this.logger.log(`parsed : ${JSON.stringify(options)}`);
       if (!parseOnly) {
         if (options.packet === RlpxPacketTypes.HELLO) {
           this.logger.log('[Got a hello :)]');
@@ -143,6 +148,10 @@ export class CommunicationState extends MyEmitter<{
             RlpxPacketTypes.PONG
           );
           callback(encodedMessage);
+
+          // TODO: remove this, it should not be executed,
+          await sleep(100);
+          this.emit('pong', null);
         } else if (options.packet == RlpxPacketTypes.PONG) {
           this.logger.log('[Got a pong]');
           this.emit('pong', null);

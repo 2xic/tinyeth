@@ -4,6 +4,8 @@ import { cleanString } from '../../../utils';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import { RlpxHelloPacketEncoderDecoder } from './RlpxHelloPacketEncoderDecoder';
 import { describe, it, expect } from '../../../getActiveTestMetadata';
+//import { RlpxHelloMessageEncoder } from './RlpxHelloMessageEncoder';
+import { NodeId } from '../NodeId';
 
 describe('RlpxHelloMessage', () => {
   let helloPacketEncoderDecoder: RlpxHelloPacketEncoderDecoder;

@@ -10,6 +10,8 @@ export class MessageQueue {
   private limit?: number = undefined;
   private _isReady = false;
 
+  private index?: number;
+
   public add(data: Buffer) {
     if (!this.limit) {
       // First message should always contain the length
@@ -26,14 +28,14 @@ export class MessageQueue {
     } else if (this.limit <= this.data.length) {
       const limit = this.limit === 0 ? this.data.length : this.limit;
       const oldBatch = this.data.slice(0, limit);
+      this.logger.log(`read ${this.data.toString('hex')}`);
       this.data = this.data.slice(limit);
       return oldBatch;
     } else {
       /*
       this.logger.log(
         `Waiting on more data (limit : ${this.limit}, data: ${this.data.length}) `
-      );
-      */
+      );*/
       return Buffer.alloc(0);
     }
   }

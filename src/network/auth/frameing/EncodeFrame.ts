@@ -4,12 +4,16 @@ import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import crypto from 'crypto';
 import { createAes256CtrDecipher } from './createAes256CtrDecipher';
 import { MacInteractor } from './MacInteractor';
+import { LogData } from 'typescript-logging';
+import { Logger } from '../../../utils/Logger';
 
 @injectable()
 export class EncodeFrame {
   private _egressAes?: crypto.Decipher;
 
   private _egressMac?: MacInteractor;
+
+  constructor(private logger: Logger) {}
 
   public setup({
     aesKey,
@@ -25,6 +29,9 @@ export class EncodeFrame {
   public encodeHeader({ message }: { message: Buffer }) {
     const size = message.length;
     const buf = Buffer.allocUnsafe(3);
+    if (size > Math.pow(2, 16)) {
+      throw new Error('out of range');
+    }
     buf.writeIntBE(size, 0, 3);
 
     // [capability-id, context-id]
@@ -37,6 +44,13 @@ export class EncodeFrame {
 
     const headerPadding = Buffer.concat([header, padding]);
 
+    this.logger.log([
+      'header padding',
+      headerPadding.length,
+      header.length,
+      padding.length,
+    ]);
+
     const encrypted = this.egressAes.update(headerPadding);
     this.egressMac.header({ packet: encrypted });
     return Buffer.concat([encrypted, this.egressMac.slicedHash]);
@@ -47,6 +61,13 @@ export class EncodeFrame {
     const body = Buffer.concat([message, padding]);
     const encrypted = this.egressAes.update(body);
     this.egressMac.body({ packet: encrypted });
+
+    this.logger.log([
+      'body padding',
+      body.length,
+      message.length,
+      padding.length,
+    ]);
 
     return Buffer.concat([encrypted, this.egressMac.slicedHash]);
   }

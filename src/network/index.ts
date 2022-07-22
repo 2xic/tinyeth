@@ -4,3 +4,4 @@ export * from './utils/getRandomPeer';
 export * from './NodeServer';
 export * from './rlpx';
 export * from './wire';
+export * from './utils/sleep';

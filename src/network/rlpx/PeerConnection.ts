@@ -7,7 +7,10 @@ import { MyEmitter } from './MyEmitter';
 import { MessageQueue } from './MessageQueue';
 
 @injectable()
-export class PeerConnection extends MyEmitter<{ packet: null }> {
+export class PeerConnection extends MyEmitter<{
+  packet: null;
+  disconnect: null;
+}> {
   private isConnected = true;
   private isReading = false;
 
@@ -31,6 +34,7 @@ export class PeerConnection extends MyEmitter<{ packet: null }> {
     this.socket.on('close', () => {
       this.logger.log('Connection closed');
       this.socket.destroy();
+      this.emit('disconnect', null);
     });
 
     this.socket.on('data', async (data) => {
@@ -44,7 +48,7 @@ export class PeerConnection extends MyEmitter<{ packet: null }> {
       this.logger.log(reason);
       this.socket.destroy();
       this.isConnected = false;
-      process.exit(0);
+      this.emit('disconnect', null);
     });
 
     setInterval(async () => {
@@ -67,11 +71,15 @@ export class PeerConnection extends MyEmitter<{ packet: null }> {
       }
     }, 100);
 
+    this.socket.setTimeout(10_000);
+
     await new Promise<void>((resolve) => {
       this.socket.connect(options.port, options.address, () => {
         resolve();
       });
     });
+
+    this.logger.log('Connected');
 
     return this.socket;
   }
@@ -89,6 +97,7 @@ export class PeerConnection extends MyEmitter<{ packet: null }> {
             }
           });
         });
+        this.logger.log('Sent :)');
       } else {
         this.logger.log('Trying to write on disconnected socket...');
       }

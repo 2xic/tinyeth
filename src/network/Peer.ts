@@ -8,16 +8,21 @@ import {
 } from './rlpx/CommunicationState';
 import { PeerConnection } from './rlpx/PeerConnection';
 import { SendStatusMessage } from './rlpx/eth/SendStatusMessage';
+import { MyEmitter } from './rlpx/MyEmitter';
+import { sleep } from './utils/sleep';
+import { isPropertyAccessExpression } from 'typescript';
 
 @injectable()
-export class Peer {
+export class Peer extends MyEmitter<{ disconnect: null }> {
   constructor(
     private keyPair: KeyPair,
     private logger: Logger,
     private communicationState: CommunicationState,
     private peerConnection: PeerConnection,
     private statusMessage: SendStatusMessage
-  ) {}
+  ) {
+    super();
+  }
 
   public messageSent = 0;
   public messageReceived = 0;
@@ -26,13 +31,22 @@ export class Peer {
   private waitingOnMessage = false;
   private sentStatus = false;
   private protocolVersion?: number;
+  private sentFirstPing = false;
+  private countPing = 0;
 
   public async connect(options: PeerConnectionOptions) {
+    this.logger.log('Trying to connect :)');
+    this.peerConnection.on('disconnect', () => {
+      this.emit('disconnect', null);
+    });
+
     const socket = await this.peerConnection.connect(options);
+    console.log((socket as any).localPort);
 
     socket.on('error', (err) => {
       this.logger.log('Error');
       this.logger.log(err);
+      this.emit('disconnect', null);
     });
     socket.on('drain', () => {
       this.logger.log('drain');
@@ -42,6 +56,7 @@ export class Peer {
     });
     socket.on('timeout', () => {
       this.logger.log('timeout');
+      this.emit('disconnect', null);
     });
     socket.on('end', () => {
       this.logger.log('end');
@@ -51,27 +66,41 @@ export class Peer {
       if (this.ping) {
         clearInterval(this.ping);
       }
+      this.emit('disconnect', null);
+      process.exit(0);
     });
 
     this.communicationState.on('hello', (hello) => {
-      this.logger.log('Hello was sent - starting ping interval');
+      this.logger.log('Hello was received - starting ping interval');
       this.protocolVersion = hello.protocolVersion;
+      /*
       this.ping = setInterval(async () => {
         if (!this.waitingOnMessage) {
-          this.waitingOnMessage = true;
-          await this.sendMessage({ type: MessageType.PING });
+          if (!this.sentFirstPing || this.countPing % 10 == 0) {
+            this.waitingOnMessage = true;
+            await this.sendMessage({ type: MessageType.PING });
+            this.sentFirstPing = true;
+            this.countPing++;
+          }
         }
-      }, 1500);
+      }, 5_00);
+      */
     });
 
     this.communicationState.on('pong', async () => {
       if (!this.sentStatus && this.protocolVersion) {
         this.sentStatus = true;
-        this.logger.log('Trying to send a status message ... ');
+        await sleep(3_000);
+        this.logger.log(
+          'Trying to send a status message ... (skipping for now) '
+        );
+        process.exit(0);
+        /*
         const statusMessage = this.statusMessage.sendStatus({
           version: this.protocolVersion,
         });
         await this.peerConnection.sendMessage(statusMessage);
+        */
       }
     });
 

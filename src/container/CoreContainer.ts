@@ -58,6 +58,10 @@ import { EvmSubContextCall } from '../evm/EvmSubContextCall';
 import { EvmAccountState } from '../evm/EvmAccountState';
 import { EvmErrorTrace } from '../evm/EvmErrorTrace';
 import { BlockLoader } from '../blocks/BlockLoader';
+import { NodeId } from '../network/rlpx/NodeId';
+import { SimpleRplxHelloMessageEncoder } from '../network/rlpx/packet-types/RlpxHelloMessageEncoder';
+import { ChainInformation } from '../network/ChainInformation';
+import { ForkId } from '../network/rlpx/eth/ForkId';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -85,6 +89,7 @@ export class CoreContainer {
     container
       .bind('IS_LOGGING_ENABLED')
       .toConstantValue(options?.loggingEnabled);
+    container.bind('USE_TESTNET').toConstantValue(options?.useTestnet);
 
     container.bind(NodeManager).toSelf();
     container.bind(NodeCommunication).toSelf();
@@ -102,6 +107,11 @@ export class CoreContainer {
 
     container.bind(KeyPair).toSelf();
     container.bind(Signatures).toSelf();
+
+    container.bind(NodeId).toSelf();
+    container.bind(SimpleRplxHelloMessageEncoder).toSelf();
+    container.bind(ChainInformation).toSelf();
+    container.bind(ForkId).toSelf();
 
     container.bind(DecodeAuthEip8).toSelf();
     container.bind(EncodeAuthEip8).toSelf();
@@ -168,4 +178,5 @@ export interface ContainerOptions {
   deterministicRandomness?: boolean;
   loggingEnabled?: boolean;
   debugMode?: boolean;
+  useTestnet?: boolean;
 }

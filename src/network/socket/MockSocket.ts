@@ -40,4 +40,6 @@ export class MockSocket implements AbstractSocket {
     callback();
     return;
   }
+
+  public setTimeout(): void {}
 }

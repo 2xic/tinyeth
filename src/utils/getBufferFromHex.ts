@@ -1,4 +1,6 @@
-export function getBufferFromHex(inputHash: string | Buffer): Buffer {
+import { convertNumberToPadHex } from './convertNumberToPadHex';
+
+export function getBufferFromHex(inputHash: string | Buffer | number): Buffer {
   if (
     inputHash ===
     '\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000'
@@ -6,7 +8,9 @@ export function getBufferFromHex(inputHash: string | Buffer): Buffer {
     return Buffer.alloc(32);
   }
 
-  if (typeof inputHash === 'string') {
+  if (typeof inputHash === 'number') {
+    return Buffer.from(convertNumberToPadHex(inputHash), 'hex');
+  } else if (typeof inputHash === 'string') {
     const isEscaped = JSON.stringify(inputHash).includes('\\u');
     if (isEscaped) {
       return Buffer.from(inputHash);
@@ -20,8 +24,6 @@ export function getBufferFromHex(inputHash: string | Buffer): Buffer {
     }
 
     return Buffer.from(hash, 'hex');
-  } else if (typeof inputHash === 'number') {
-    return Buffer.from([inputHash]);
   }
   return inputHash;
 }

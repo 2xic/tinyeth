@@ -32,4 +32,6 @@ export abstract class AbstractSocket {
     message: Buffer,
     callback: (error?: Buffer) => void
   ): void;
+
+  public abstract setTimeout(arg0: number): void;
 }

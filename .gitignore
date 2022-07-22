@@ -11,3 +11,6 @@ dump_*.json
 nodes.json
 dump copy.json
 scripts/*.json
+scripts/dumps/*.json
+geth-data
+*.key

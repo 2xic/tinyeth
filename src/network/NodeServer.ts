@@ -8,12 +8,12 @@ export class NodeServer {
 
   private _server?: net.Server;
 
-  private PORT_NUMBER = 3000;
+  private PORT_NUMBER = 30303;
 
   private isRunning?: boolean;
 
   public start() {
-    if (!this.isRunning) {
+    if (this.isRunning) {
       throw new Error('Server is already running');
     }
     this._server = net.createServer();

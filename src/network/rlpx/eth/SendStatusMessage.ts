@@ -4,45 +4,41 @@ import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import { Messages } from './Messages';
 import { convertNumberToPadHex } from '../../../utils/convertNumberToPadHex';
 import { FrameCommunication } from '../../auth/frameing/FrameCommunication';
+import { SnappyCompress } from '../SnappyCompress';
+import { ChainInformation } from '../../ChainInformation';
+import { ForkId } from './ForkId';
+import { RlpxMessageEncoder } from '../RlpxMessageEncoder';
 
 @injectable()
 export class SendStatusMessage {
   constructor(
     private rlpEncoder: RlpEncoder,
-    private frameCommunication: FrameCommunication
+    private frameCommunication: FrameCommunication,
+    private chainInformation: ChainInformation,
+    private forkId: ForkId,
+    private rlpxMessageEncoder: RlpxMessageEncoder
   ) {}
 
   public sendStatus({ version }: { version: number }) {
     // https://github.com/ethereum/devp2p/blob/master/caps/eth.md#getblockheaders-0x03
 
     // [version: P, networkid: P, td: P, blockhash: B_32, genesis: B_32, forkid]
+    console.log(version);
+    const payload = [
+      67,
+      Number(this.chainInformation.chainInformation.chainId),
+      this.chainInformation.chainInformation.difficulty,
+      getBufferFromHex(this.chainInformation.chainInformation.bestBlockHash),
+      getBufferFromHex(this.chainInformation.chainInformation.genesisHash),
+      // fork hash hardcoded.
+      getBufferFromHex(this.forkId.calculate({})),
+    ];
 
-    const payload = this.rlpEncoder.encode({
-      input: [
-        version,
-        1,
-        getBufferFromHex(convertNumberToPadHex(17179869184)),
-        // Genesis block
-        getBufferFromHex(
-          'd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3'
-        ),
-        getBufferFromHex(
-          'd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3'
-        ),
-      ],
+    const message = this.rlpxMessageEncoder.encodeStatusMessage({
+      code: Messages.STATUS,
+      payload,
     });
 
-    const message = Buffer.concat([
-      getBufferFromHex(
-        this.rlpEncoder.encode({
-          input: Messages.STATUS,
-        })
-      ),
-      getBufferFromHex(payload),
-    ]);
-
-    return this.frameCommunication.encode({
-      message,
-    });
+    return message;
   }
 }
