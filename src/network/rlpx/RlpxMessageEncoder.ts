@@ -4,7 +4,6 @@ import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Logger } from '../../utils/Logger';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
 import { EthMessageType } from './CommunicationState';
-import { Messages } from './eth/Messages';
 import { RlpxPacketTypes } from './packet-types/RlpxMessageDecoder';
 import { SnappyCompress } from './SnappyCompress';
 

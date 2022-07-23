@@ -1,10 +1,7 @@
 import { injectable } from 'inversify';
 import { RlpEncoder } from '../../../rlp';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
-import { Messages } from './Messages';
-import { convertNumberToPadHex } from '../../../utils/convertNumberToPadHex';
 import { FrameCommunication } from '../../auth/frameing/FrameCommunication';
-import { SnappyCompress } from '../SnappyCompress';
 import { ChainInformation } from '../../ChainInformation';
 import { ForkId } from './ForkId';
 import { RlpxMessageEncoder } from '../RlpxMessageEncoder';
@@ -19,8 +16,6 @@ export class SendStatusMessage {
     private forkId: ForkId,
     private rlpxMessageEncoder: RlpxMessageEncoder
   ) {}
-
-  public parse() {}
 
   public sendStatus() {
     // https://github.com/ethereum/devp2p/blob/master/caps/eth.md#getblockheaders-0x03

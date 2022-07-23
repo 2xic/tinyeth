@@ -5,7 +5,6 @@ import { AbstractSocket } from '../socket/AbstractSocket';
 import { CommunicationState } from './CommunicationState';
 import { MyEmitter } from './MyEmitter';
 import { MessageQueue } from './MessageQueue';
-import { sleep } from '../utils/sleep';
 
 @injectable()
 export class PeerConnection extends MyEmitter<{

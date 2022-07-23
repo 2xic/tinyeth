@@ -11,10 +11,11 @@ _Just something so I get a better understanding of the core parts of the protoco
   - [ ] Transaction
   - [ ] Trie
 
-- [ ] Network support (should be able to fetch a block from another node)
+- [x] Network support (should be able to fetch a block from another node). The implementation is currently a bit rough (it does not behave like a "nice" node), but it does have the capabilities to become "nice". 
   - Wire/discovery protocol is more or less implemented. It's currently able to find neighbor nodes which is needed for the RLPx. [Discv4](https://github.com/ethereum/devp2p/blob/master/discv4.md#wire-protocol) is currently implemented. I know [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md) is out.
   - [RLPx](https://github.com/ethereum/devp2p/blob/master/rlpx.md) is able to do the initial handshake, and send messages. Need some stability improvements, but it's getting there.
-  - (soon/wip) Capabilities for RPLx. I.e [ETH](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#eth62-2015) is the last step to be able to fetch a block :) 
+  - Capabilities for RPLx. I.e [ETH](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#eth62-2015) is the last step to be able to fetch a block :) 
+    - It's now able to fetch a block :')
 
 - [x] Implement encoding and decoding of RLP
 
@@ -32,12 +33,12 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (todo) Implement EIP 1559
     - (todo) Add some tracking of the nonce to make things user friendly.
 
-- [ ] (put aside to finish networking first) Implement the EVM (i.e should be able to run a simple contract based on the bytecode / mnemonic)
+- [ ] Implement the EVM (i.e should be able to run a simple contract based on the bytecode / mnemonic)
 
   Currently supports:
-    - Runs basic contracts
-    - Converts mnemonic into bytecode.
-    - Most opcodes are more or less implemented.
+    - Most opcodes are more or less implemented (still some gas cost missing)
+      - In other words, it's able to run most contracts.
+    - Converts mnemonic into bytecode to make it easy to debug.
     - Support for the ABI, should be possible to encode calldata for most structs.
     - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
     - (wip) gas cost/refund computation -> let's you see how much gas is used when executing contract.

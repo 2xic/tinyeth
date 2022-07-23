@@ -194,8 +194,17 @@ Done some more work on the EVM over the last few days. Because I Wanted a small 
 
 Working on fixing up some bugs in the implementation of some opcodes, making the evm closer to the real thing (implementing the gas logic), and just in general improved mailability of the evm logic (i.e made it easier to construct op codes with same logic, but different argument lengths / index -> swap / push / dup etc).
 
+### Day x + ????
+Okay, so I have forgotten to update the status here. Before moving back to the rplx / networking stuff I worked a lot on the EVM. The evm is more or less implemented now, and only needs some adjustment regarding the calculation of the GAS. At least I think that is the case, there could be some unknown bugs.
 
+I also worked some more on the ABI, and it is starting to take shape.
 
+The last two days (friday and today) I worked more on the networking stuff, and now things are looking quite good.
+TinyETH is able to fetch block headers, but still does not behave like a "nice" node should. However, it does understand both the RPLX, and the ETH capability protocols quite well. It should just preform some routines better.
 
+- The way the last few bugs were solved was by running a custom GETH, and figure out why some of the messages were not parsed correctly. 
+- Thank you to Geth for allowing me to run it with a custom testnet which made this super simple :') 
+- Wireshark also helped a bit, and is a great tool when working with netwroking stuff. Thank you to wireshark also.
 
+So the main goal for the networking is actually achieved, since the goal never was to have a production client, I might take some more breaks from the networking stuff again, and focus more on the EVM and play some more CTF.
 

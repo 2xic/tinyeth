@@ -4,7 +4,6 @@ import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import crypto from 'crypto';
 import { createAes256CtrDecipher } from './createAes256CtrDecipher';
 import { MacInteractor } from './MacInteractor';
-import { LogData } from 'typescript-logging';
 import { Logger } from '../../../utils/Logger';
 
 @injectable()

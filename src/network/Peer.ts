@@ -5,13 +5,11 @@ import {
   CommunicationState,
   EthMessageType,
   MessageOptions,
-  RplxMessageType,
 } from './rlpx/CommunicationState';
 import { PeerConnection } from './rlpx/PeerConnection';
 import { SendStatusMessage } from './rlpx/eth/SendStatusMessage';
 import { MyEmitter } from './rlpx/MyEmitter';
 import { sleep } from './utils/sleep';
-import { isPropertyAccessExpression } from 'typescript';
 
 @injectable()
 export class Peer extends MyEmitter<{ disconnect: null }> {
@@ -42,7 +40,6 @@ export class Peer extends MyEmitter<{ disconnect: null }> {
     });
 
     const socket = await this.peerConnection.connect(options);
-    console.log((socket as any).localPort);
 
     socket.on('error', (err) => {
       this.logger.log('Error');

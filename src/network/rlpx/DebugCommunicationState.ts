@@ -13,9 +13,7 @@ import { RlpxMessageDecoder } from './packet-types/RlpxMessageDecoder';
 import { PeerConnectionState } from './PeerConnectionState';
 import { MessageQueue } from './MessageQueue';
 import { NodeId } from './NodeId';
-import { SimpleDecodingResults } from '../../rlp/types/TypeEncoderDecoder';
 import { SimpleRplxHelloMessageEncoder } from './packet-types/RlpxHelloMessageEncoder';
-import { SendStatusMessage } from './eth/SendStatusMessage';
 import { SendEthMessage } from './eth/SendEthMessage';
 
 @injectable()

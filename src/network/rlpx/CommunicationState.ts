@@ -16,9 +16,6 @@ import { HEADER_SIZE, MessageQueue } from './MessageQueue';
 import { ParsedHelloPacket } from './packet-types/RlpxHelloPacketEncoderDecoder';
 import { NodeId } from './NodeId';
 import { sleep } from '../utils/sleep';
-import { SendStatusMessage } from './eth/SendStatusMessage';
-import { RlpDecoder } from '../../rlp';
-import { SNappyDecompress as SnappyDecompress } from './SnappyCompress';
 import { SendEthMessage } from './eth/SendEthMessage';
 
 /**=>

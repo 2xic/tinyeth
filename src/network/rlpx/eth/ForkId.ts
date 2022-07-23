@@ -2,7 +2,6 @@ import { injectable } from 'inversify';
 import { ChainInformation } from '../../ChainInformation';
 import crc32 from 'crc-32';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
-import { resetConfigureGlobal } from 'fast-check';
 import { SignedUnsignedNumberConverter } from '../../../evm/SignedUnsignedNumberConverter';
 import BigNumber from 'bignumber.js';
 import { RlpEncoder } from '../../../rlp';

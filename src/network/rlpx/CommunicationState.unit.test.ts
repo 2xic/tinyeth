@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
   TODO (reenable): 
   - We have tests for state replay + test vectors, disabling this for a short while refactoring

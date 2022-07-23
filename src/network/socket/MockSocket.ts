@@ -41,5 +41,6 @@ export class MockSocket implements AbstractSocket {
     return;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public setTimeout(): void {}
 }

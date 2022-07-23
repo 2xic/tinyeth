@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { injectable } from 'inversify';
 import { RlpDecoder } from '../../../rlp/RlpDecoder';
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
@@ -6,13 +7,15 @@ import { RlpxMessageEncoder } from '../RlpxMessageEncoder';
 import { SNappyDecompress as SnappyDecompress } from '../SnappyCompress';
 import { SendStatusMessage } from './SendStatusMessage';
 import crypto from 'crypto';
+import { Logger } from '../../../utils/Logger';
 
 @injectable()
 export class SendEthMessage {
   constructor(
     private sendStatusMessage: SendStatusMessage,
     private rlpDecoder: RlpDecoder,
-    private rlpxMessageEncoder: RlpxMessageEncoder
+    private rlpxMessageEncoder: RlpxMessageEncoder,
+    private logger: Logger
   ) {}
 
   public sendStatus() {
@@ -51,7 +54,7 @@ export class SendEthMessage {
     return message;
   }
 
-  public parseBlockResponse(packetPayload: Buffer): { requestId: any } {
+  public parseBlockResponse(packetPayload: Buffer): { requestId: Buffer } {
     const data = this.rlpDecoder.decode({
       input: this.snappyRetry(packetPayload).toString('hex'),
     });
@@ -59,7 +62,7 @@ export class SendEthMessage {
       throw new Error('expected block request to be rlp array');
     }
 
-    console.log(data);
+    this.logger.log(data);
 
     return {
       requestId: getBufferFromHex(data[0].toString()),

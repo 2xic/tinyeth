@@ -1,5 +1,4 @@
 import { getBufferFromHex } from '../../../utils/getBufferFromHex';
-import os from 'os';
 import { assertEqual } from '../../../utils/enforce';
 import { ChainInformation } from '../../ChainInformation';
 import { NodeId } from '../NodeId';

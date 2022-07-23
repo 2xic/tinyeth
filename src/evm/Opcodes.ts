@@ -6,7 +6,6 @@ import { keccak256 } from '../utils/keccak256';
 import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
-import { InvalidJump } from './errors/InvalidJump';
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
