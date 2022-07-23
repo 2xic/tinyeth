@@ -20,6 +20,7 @@ export class ChainInformation {
         ],
         listenPort: 0,
         difficulty: 17179869184, //1,
+        nextForkBlock: '0x118c30',
         genesisHash:
           'd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3',
         bestBlockHash:
@@ -35,6 +36,8 @@ export class ChainInformation {
           ['snap', 1],
         ],
         listenPort: 0,
+        nextForkBlock: '0x118c30',
+
         difficulty: 17179869184,
         genesisHash:
           'd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3',
@@ -53,4 +56,5 @@ interface ChainInformationFields {
   difficulty: number;
   genesisHash: string;
   bestBlockHash: string;
+  nextForkBlock: string;
 }

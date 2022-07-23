@@ -62,6 +62,7 @@ import { NodeId } from '../network/rlpx/NodeId';
 import { SimpleRplxHelloMessageEncoder } from '../network/rlpx/packet-types/RlpxHelloMessageEncoder';
 import { ChainInformation } from '../network/ChainInformation';
 import { ForkId } from '../network/rlpx/eth/ForkId';
+import { SendEthMessage } from '../network/rlpx/eth/SendEthMessage';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -112,6 +113,7 @@ export class CoreContainer {
     container.bind(SimpleRplxHelloMessageEncoder).toSelf();
     container.bind(ChainInformation).toSelf();
     container.bind(ForkId).toSelf();
+    container.bind(SendEthMessage).toSelf();
 
     container.bind(DecodeAuthEip8).toSelf();
     container.bind(EncodeAuthEip8).toSelf();

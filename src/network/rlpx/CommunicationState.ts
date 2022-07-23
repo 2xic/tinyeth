@@ -19,6 +19,7 @@ import { sleep } from '../utils/sleep';
 import { SendStatusMessage } from './eth/SendStatusMessage';
 import { RlpDecoder } from '../../rlp';
 import { SNappyDecompress as SnappyDecompress } from './SnappyCompress';
+import { SendEthMessage } from './eth/SendEthMessage';
 
 /**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
@@ -28,6 +29,10 @@ import { SNappyDecompress as SnappyDecompress } from './SnappyCompress';
 export class CommunicationState extends MyEmitter<{
   hello: ParsedHelloPacket;
   sendStatus: null;
+  sendBlockHeaders: {
+    requestId: Buffer;
+  };
+  requestBlockHeaders: null;
   pong: null;
   disconnect: string;
 }> {
@@ -43,7 +48,7 @@ export class CommunicationState extends MyEmitter<{
     private messageQueue: MessageQueue,
     private nodeId: NodeId,
     private simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder,
-    private statusMessage: SendStatusMessage
+    private sendEthMessage: SendEthMessage
   ) {
     super();
   }
@@ -84,8 +89,21 @@ export class CommunicationState extends MyEmitter<{
       }
     } else {
       if (EthMessageType.STATUS === message.ethType) {
-        const statusMessage = this.statusMessage.sendStatus();
+        const statusMessage = this.sendEthMessage.sendStatus();
         callback(statusMessage);
+      } else if (
+        message.requestId &&
+        EthMessageType.SEND_BLOCK_HEADERS === message.ethType
+      ) {
+        const blockHeaders = this.sendEthMessage.sendBlockHeaders({
+          requestId: message.requestId,
+        });
+        callback(blockHeaders);
+        await sleep(1500);
+        this.emit('requestBlockHeaders', null);
+      } else if (EthMessageType.GET_BLOCK_HEADERS === message.ethType) {
+        const requestBlockHeaders = this.sendEthMessage.requestBlockHeaders();
+        callback(requestBlockHeaders);
       } else {
         throw new Error(`Unknown message type${message.ethType}`);
       }
@@ -160,9 +178,7 @@ export class CommunicationState extends MyEmitter<{
           const packetPayload = packet.slice(1);
           // falsy values are parsed as 0x80 in RLP
           const parsedPacketId = packetId === 0x80 ? 0 : packetId;
-          const isPing =
-            /*            parsedPacketId === 16 ? RlpxPacketTypes.PING : */ parsedPacketId;
-          this.logger.log([packetId, packetPayload]);
+          const isPing = parsedPacketId;
 
           if (parsedPacketId === EthMessageType.STATUS) {
             this.logger.log('Got status message :)');
@@ -174,17 +190,23 @@ export class CommunicationState extends MyEmitter<{
                 })
               )
             );
-            */
             console.log(SnappyDecompress(packetPayload));
             console.log(
               new RlpDecoder().decode({
                 input: SnappyDecompress(packetPayload).toString('hex'),
               })
             );
+            */
 
             await sleep(500);
             this.emit('sendStatus', null);
             callback(Buffer.alloc(0));
+          } else if (parsedPacketId === EthMessageType.GET_BLOCK_HEADERS) {
+            const { requestId } =
+              this.sendEthMessage.parseBlockRequest(packetPayload);
+            this.emit('sendBlockHeaders', { requestId });
+          } else if (parsedPacketId === EthMessageType.SEND_BLOCK_HEADERS) {
+            this.sendEthMessage.parseBlockResponse(packetPayload);
           } else if (
             isPing === RplxMessageType.PING ||
             parsedPacketId === RplxMessageType.PONG
@@ -294,6 +316,8 @@ export enum RplxMessageType {
 
 export enum EthMessageType {
   STATUS = 16,
+  GET_BLOCK_HEADERS = 19,
+  SEND_BLOCK_HEADERS = 20,
 }
 
 interface RplxMessage {
@@ -302,4 +326,5 @@ interface RplxMessage {
 
 interface EthMessage {
   ethType: EthMessageType;
+  requestId?: Buffer;
 }

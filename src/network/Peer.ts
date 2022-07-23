@@ -90,10 +90,19 @@ export class Peer extends MyEmitter<{ disconnect: null }> {
 
     this.communicationState.on('sendStatus', async () => {
       await this.sendMessage({ ethType: EthMessageType.STATUS });
+    });
 
-      /*
-      const statusMessage = this.statusMessage.sendStatus();
-      await this.peerConnection.sendMessage(statusMessage);*/
+    this.communicationState.on('sendBlockHeaders', async ({ requestId }) => {
+      await this.sendMessage({
+        ethType: EthMessageType.SEND_BLOCK_HEADERS,
+        requestId,
+      });
+    });
+
+    this.communicationState.on('requestBlockHeaders', async () => {
+      await this.sendMessage({
+        ethType: EthMessageType.GET_BLOCK_HEADERS,
+      });
     });
 
     this.communicationState.on('pong', async () => {

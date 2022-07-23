@@ -16,33 +16,43 @@ export class ForkId {
 
   public get forkId() {
     return this.getForkId({
-      bestHash: this.chainInformation.chainInformation.genesisHash,
+      hashBuffer: getBufferFromHex(
+        this.chainInformation.chainInformation.genesisHash
+      ),
     });
   }
 
   public calculate({
     hash = this.chainInformation.chainInformation.genesisHash,
-    next = 0,
+    next = this.chainInformation.chainInformation.nextForkBlock,
+    providedForkId = false,
   }: {
-    hash?: number | string;
-    next?: number;
+    hash?: string | number;
+    next?: string | number;
+    providedForkId?: boolean;
   }) {
-    let hashBuffer = getBufferFromHex(hash);
-    if (hashBuffer.length < 4) {
-      hashBuffer = Buffer.concat([
-        getBufferFromHex(hash),
-        Buffer.alloc(4 - hashBuffer.length),
-      ]);
-    }
-    return this.rlp.encode({
-      input: [hashBuffer, next],
-    });
+    const padding = (data: Buffer) => {
+      if (data.length < 4) {
+        return Buffer.concat([
+          getBufferFromHex(data),
+          Buffer.alloc(4 - data.length),
+        ]);
+      }
+      return data;
+    };
+
+    const hashBuffer = padding(getBufferFromHex(hash));
+
+    const forkId = !providedForkId
+      ? this.getForkId({ hashBuffer })
+      : hashBuffer;
+    return [getBufferFromHex(forkId), next];
   }
 
-  private getForkId({ bestHash }: { bestHash: string | number }) {
+  private getForkId({ hashBuffer }: { hashBuffer: Buffer }) {
     const converter = new SignedUnsignedNumberConverter();
     const results = converter
-      .convert(new BigNumber(crc32.buf(getBufferFromHex(bestHash))))
+      .convert(new BigNumber(crc32.buf(hashBuffer)))
       .toString(16)
       .slice(-8);
 

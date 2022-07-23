@@ -33,9 +33,9 @@ export class SendStatusMessage {
       getBufferFromHex(this.chainInformation.chainInformation.bestBlockHash),
       getBufferFromHex(this.chainInformation.chainInformation.genesisHash),
       // fork hash hardcoded.
-      // getBufferFromHex(this.forkId.calculate({})),
+      this.forkId.calculate({}),
 
-      [getBufferFromHex('fc64ec04'), getBufferFromHex('118c30')],
+      //[getBufferFromHex('fc64ec04'), getBufferFromHex('118c30')],
     ];
 
     const message = this.rlpxMessageEncoder.encodeEthMessage({
