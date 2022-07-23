@@ -63,6 +63,8 @@ import { SimpleRplxHelloMessageEncoder } from '../network/rlpx/packet-types/Rlpx
 import { ChainInformation } from '../network/ChainInformation';
 import { ForkId } from '../network/rlpx/eth/ForkId';
 import { SendEthMessage } from '../network/rlpx/eth/SendEthMessage';
+import { Lexer } from '../tiny-solidiity-compiler/Lexer';
+import { Parser } from '../tiny-solidiity-compiler/Parser';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -169,6 +171,9 @@ export class CoreContainer {
     container.bind(Logger).toSelf();
 
     container.bind(BlockLoader).toSelf();
+
+    container.bind(Lexer).toSelf();
+    container.bind(Parser).toSelf();
 
     return container;
   }

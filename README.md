@@ -56,6 +56,10 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
         - No optimizer.
     - https://docs.soliditylang.org/en/v0.8.15/grammar.html
+    - What could be interesting is diving into static analysis of solidity programs
+      - Or dynamic analysis, by doing some cool fuzzing ? 
+      - Maybe with sat solvers also
+    - This would make it easy to test things like state channels.
 
 - [ ] RPC ? 
     - Not sure if this is necessary.
