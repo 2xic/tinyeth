@@ -16,6 +16,9 @@ import { HEADER_SIZE, MessageQueue } from './MessageQueue';
 import { ParsedHelloPacket } from './packet-types/RlpxHelloPacketEncoderDecoder';
 import { NodeId } from './NodeId';
 import { sleep } from '../utils/sleep';
+import { SendStatusMessage } from './eth/SendStatusMessage';
+import { RlpDecoder } from '../../rlp';
+import { SNappyDecompress as SnappyDecompress } from './SnappyCompress';
 
 /**=>
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
@@ -24,6 +27,7 @@ import { sleep } from '../utils/sleep';
 @injectable()
 export class CommunicationState extends MyEmitter<{
   hello: ParsedHelloPacket;
+  sendStatus: null;
   pong: null;
   disconnect: string;
 }> {
@@ -38,10 +42,13 @@ export class CommunicationState extends MyEmitter<{
     private peerConnection: PeerConnectionState,
     private messageQueue: MessageQueue,
     private nodeId: NodeId,
-    private simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder
+    private simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder,
+    private statusMessage: SendStatusMessage
   ) {
     super();
   }
+
+  private isProtocolActive = false;
 
   public get publicKey() {
     return this.keyPair.getPublicKey();
@@ -55,22 +62,33 @@ export class CommunicationState extends MyEmitter<{
     message: MessageOptions,
     callback: (message: Buffer, header?: unknown) => void
   ) {
-    if (MessageType.AUTH_EIP_8 === message.type) {
-      this.logger.log('[Sending AUTH8 message]');
-      const { authMessage, header } = await this.createAuthMessageHeader();
-      callback(authMessage, header);
-    } else if (MessageType.HELLO === message.type) {
-      throw new Error('This method should not be called from here.');
-    } else if (MessageType.PONG === message.type) {
-      const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
-        RlpxPacketTypes.PONG
-      );
-      callback(encodedMessage);
-    } else if (MessageType.PING === message.type) {
-      const ping = this.rlpxMessageEncoder.encodeMessage(RlpxPacketTypes.PING);
-      callback(ping);
+    if ('rplxType' in message) {
+      if (RplxMessageType.AUTH_EIP_8 === message.rplxType) {
+        this.logger.log('[Sending AUTH8 message]');
+        const { authMessage, header } = await this.createAuthMessageHeader();
+        callback(authMessage, header);
+      } else if (RplxMessageType.HELLO === message.rplxType) {
+        throw new Error('This method should not be called from here.');
+      } else if (RplxMessageType.PONG === message.rplxType) {
+        const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
+          RlpxPacketTypes.PONG
+        );
+        callback(encodedMessage);
+      } else if (RplxMessageType.PING === message.rplxType) {
+        const ping = this.rlpxMessageEncoder.encodeMessage(
+          RlpxPacketTypes.PING
+        );
+        callback(ping);
+      } else {
+        throw new Error(`Unknown message type${message.rplxType}`);
+      }
     } else {
-      throw new Error(`Unknown message type${message.type}`);
+      if (EthMessageType.STATUS === message.ethType) {
+        const statusMessage = this.statusMessage.sendStatus();
+        callback(statusMessage);
+      } else {
+        throw new Error(`Unknown message type${message.ethType}`);
+      }
     }
   }
 
@@ -81,7 +99,7 @@ export class CommunicationState extends MyEmitter<{
     parseOnly = false
   ) {
     await (async () => {
-      this.logger.log(`Got message ${message}`);
+      // this.logger.log(`Got message ${message}`);
       if (this.peerConnection.state === MessageState.AUTH) {
         this.logger.log('[Received AUTH8 message]');
         const results = await this.peerConnection.parseAuth({ message });
@@ -99,6 +117,8 @@ export class CommunicationState extends MyEmitter<{
         this.messageQueue.setLimit({
           size: HEADER_SIZE,
         });
+
+        //        this.isProtocolActive = true;
 
         callback(encodedMessage);
       } else if (this.peerConnection.state === MessageState.PACKETS) {
@@ -132,38 +152,86 @@ export class CommunicationState extends MyEmitter<{
         return callback(Buffer.alloc(0));
       }
       this.logger.log(`body : ${body.toString('hex')}`);
-      const options = this.rlpxMessageDecoder.decode({
-        packet: body,
-      });
-      this.logger.log(`parsed : ${JSON.stringify(options)}`);
-      if (!parseOnly) {
-        if (options.packet === RlpxPacketTypes.HELLO) {
-          this.logger.log('[Got a hello :)]');
-          this.logger.log(JSON.stringify(options));
-          this.emit('hello', options.data);
-          callback(Buffer.alloc(0));
-        } else if (options.packet == RlpxPacketTypes.PING) {
-          this.logger.log('[Got a ping, replying with pong]');
-          const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
-            RlpxPacketTypes.PONG
-          );
-          callback(encodedMessage);
+      let pingPong = false;
+      if (this.isProtocolActive) {
+        if (body) {
+          const packet = body;
+          const packetId = packet[0];
+          const packetPayload = packet.slice(1);
+          // falsy values are parsed as 0x80 in RLP
+          const parsedPacketId = packetId === 0x80 ? 0 : packetId;
+          const isPing =
+            /*            parsedPacketId === 16 ? RlpxPacketTypes.PING : */ parsedPacketId;
+          this.logger.log([packetId, packetPayload]);
 
-          // TODO: remove this, it should not be executed,
-          await sleep(100);
-          this.emit('pong', null);
-        } else if (options.packet == RlpxPacketTypes.PONG) {
-          this.logger.log('[Got a pong]');
-          this.emit('pong', null);
-          callback(Buffer.alloc(0));
-        } else if (options.packet == RlpxPacketTypes.DISCONNECT) {
-          this.emit('disconnect', options.data.reason);
-          callback(Buffer.alloc(0));
-        } else {
-          this.logger.log('Unknown state ... ');
+          if (parsedPacketId === EthMessageType.STATUS) {
+            this.logger.log('Got status message :)');
+            /*
+            this.logger.log(
+              JSON.stringify(
+                new RlpDecoder().decode({
+                  input: packetPayload.toString('hex'),
+                })
+              )
+            );
+            */
+            console.log(SnappyDecompress(packetPayload));
+            console.log(
+              new RlpDecoder().decode({
+                input: SnappyDecompress(packetPayload).toString('hex'),
+              })
+            );
+
+            await sleep(500);
+            this.emit('sendStatus', null);
+            callback(Buffer.alloc(0));
+          } else if (
+            isPing === RplxMessageType.PING ||
+            parsedPacketId === RplxMessageType.PONG
+          ) {
+            pingPong = true;
+          } else {
+            throw new Error(
+              `what kind of message is this ? (${parsedPacketId})`
+            );
+          }
         }
-      } else {
-        callback(Buffer.alloc(0));
+      }
+
+      if (!this.isProtocolActive || pingPong) {
+        const options = this.rlpxMessageDecoder.decode({
+          packet: body,
+        });
+        this.logger.log(`parsed : ${JSON.stringify(options)}`);
+        if (!parseOnly) {
+          if (options.packet === RlpxPacketTypes.HELLO) {
+            this.logger.log('[Got a hello :)]');
+            this.logger.log(JSON.stringify(options));
+            this.emit('hello', options.data);
+            callback(Buffer.alloc(0));
+            this.isProtocolActive = true;
+          } else if (options.packet == RlpxPacketTypes.PING) {
+            this.logger.log('[Got a ping, replying with pong]');
+            const encodedMessage = this.rlpxMessageEncoder.encodeMessage(
+              RlpxPacketTypes.PONG
+            );
+            callback(encodedMessage);
+            // TODO: remove this, it should not be executed,
+            /*          await sleep(100);
+            this.emit('pong', null);*/
+          } else if (options.packet == RlpxPacketTypes.PONG) {
+            this.logger.log('[Got a pong]');
+            this.emit('pong', null);
+            callback(Buffer.alloc(0));
+          } else if (options.packet == RlpxPacketTypes.DISCONNECT) {
+            this.emit('disconnect', options.data.reason);
+            callback(Buffer.alloc(0));
+          } else {
+            this.logger.log('Unknown state ... ');
+          }
+        } else {
+          callback(Buffer.alloc(0));
+        }
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -215,14 +283,23 @@ export class CommunicationState extends MyEmitter<{
   }
 }
 
-export type MessageOptions = BaseMessage;
+export type MessageOptions = RplxMessage | EthMessage;
 
-export enum MessageType {
+export enum RplxMessageType {
   AUTH_EIP_8,
   HELLO,
   PING,
   PONG,
 }
-interface BaseMessage {
-  type: MessageType;
+
+export enum EthMessageType {
+  STATUS = 16,
+}
+
+interface RplxMessage {
+  rplxType: RplxMessageType;
+}
+
+interface EthMessage {
+  ethType: EthMessageType;
 }

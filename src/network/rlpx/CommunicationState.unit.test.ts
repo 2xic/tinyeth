@@ -4,24 +4,24 @@
   - ^ This test is not super important actually because we get coverage form other places.  
 */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/*
 import { UnitTestContainer } from '../../container/UnitTestContainer';
-import { CommunicationState, MessageType } from './CommunicationState';
+import { DecodeFrame } from '../auth/frameing/DecodeFrame';
+import { EncodeFrame } from '../auth/frameing/EncodeFrame';
 import { MockNonceGenerator } from '../nonce-generator/MockNonceGenerator';
 import { NonceGenerator } from '../nonce-generator/NonceGenerator';
+import {
+  CommunicationState,
+  EthMessageType,
+  RplxMessageType,
+} from './CommunicationState';
+import { MessageState } from './PeerConnectionState';
+
 import { ExposedFrameCommunication } from '../auth/frameing/ExposedFrameCommunication';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
-import { EncodeFrame } from '../auth/frameing/EncodeFrame';
-import { DecodeFrame } from '../auth/frameing/DecodeFrame';
 import { Peer } from '../Peer';
-import { MessageState } from './PeerConnectionState';
-*/
-describe.skip('CommunicationState', () => {
+
+describe('CommunicationState', () => {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  it.skip('', () => {});
-});
-/*
   it('should run correct determinsitcally', async () => {
     const senderContainer = new UnitTestContainer().create({
       privateKey:
@@ -60,7 +60,7 @@ describe.skip('CommunicationState', () => {
       senderContainerCommunicationState
         .constructMessage(
           {
-            type: MessageType.AUTH_EIP_8,
+            rplxType: RplxMessageType.AUTH_EIP_8,
           },
           async (value) => resolve(value)
         )
@@ -95,7 +95,7 @@ describe.skip('CommunicationState', () => {
 
     const sendPing = await new Promise<any>((resolve, reject) => {
       receiverContainerCommunicationState
-        .constructMessage({ type: MessageType.PING }, async (value) =>
+        .constructMessage({ rplxType: RplxMessageType.PING }, async (value) =>
           resolve(value)
         )
         .catch(reject);
@@ -107,7 +107,7 @@ describe.skip('CommunicationState', () => {
 
     const sendPingAnotherPing = await new Promise<any>((resolve, reject) => {
       receiverContainerCommunicationState
-        .constructMessage({ type: MessageType.PING }, async (value) =>
+        .constructMessage({ rplxType: RplxMessageType.PING }, async (value) =>
           resolve(value)
         )
         .catch(reject);
@@ -156,7 +156,7 @@ describe.skip('CommunicationState', () => {
       senderContainerCommunicationState
         .constructMessage(
           {
-            type: MessageType.AUTH_EIP_8,
+            rplxType: RplxMessageType.AUTH_EIP_8,
           },
           async (value) => resolve(value)
         )
@@ -215,7 +215,7 @@ describe.skip('CommunicationState', () => {
 
     const sendPing = await new Promise<any>((resolve, reject) => {
       senderContainerCommunicationState
-        .constructMessage({ type: MessageType.PING }, async (value) =>
+        .constructMessage({ rplxType: RplxMessageType.PING }, async (value) =>
           resolve(value)
         )
         .catch(reject);
@@ -227,9 +227,45 @@ describe.skip('CommunicationState', () => {
     expect(receiverContainerCommunicationState.nextState).toBe(
       MessageState.PACKETS
     );
+
+    const sendPong = await new Promise<any>((resolve, reject) =>
+      receiverContainerCommunicationState.parseMessage(
+        sendPing,
+        resolve,
+        reject,
+        true
+      )
+    );
+    // should only parse
+    expect(sendPong.length).toBe(0);
+
+    const sendStatus = await new Promise<any>((resolve, reject) => {
+      receiverContainerCommunicationState
+        .constructMessage(
+          {
+            ethType: EthMessageType.STATUS,
+          },
+          async (value) => resolve(value)
+        )
+        .catch(reject);
+    });
+    expect(sendStatus.length).toBeTruthy();
+
+    const receivedStatus = await new Promise<any>((resolve, reject) =>
+      senderContainerCommunicationState.parseMessage(
+        sendStatus,
+        resolve,
+        reject,
+        true
+      )
+    );
+
+    // should only parse
+    expect(receivedStatus.length).toBe(0);
   });
 
-  it('should be able to communicate correctly with randomness', async () => {
+  // flacky
+  it.skip('should be able to communicate correctly with randomness', async () => {
     const senderContainer = new UnitTestContainer().create({
       privateKey:
         '49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee',
@@ -269,7 +305,7 @@ describe.skip('CommunicationState', () => {
       senderContainerCommunicationState
         .constructMessage(
           {
-            type: MessageType.AUTH_EIP_8,
+            rplxType: RplxMessageType.AUTH_EIP_8,
           },
           async (value) => resolve(value)
         )
@@ -325,7 +361,7 @@ describe.skip('CommunicationState', () => {
 
     const sendPing = await new Promise<any>((resolve, reject) => {
       senderContainerCommunicationState
-        .constructMessage({ type: MessageType.PING }, async (value) =>
+        .constructMessage({ rplxType: RplxMessageType.PING }, async (value) =>
           resolve(value)
         )
         .catch(reject);
@@ -356,7 +392,7 @@ describe.skip('CommunicationState', () => {
 
     const actualPong = await new Promise<any>((resolve) =>
       receiverContainerCommunicationState.constructMessage(
-        { type: MessageType.PONG },
+        { rplxType: RplxMessageType.PONG },
         resolve
       )
     );
@@ -380,4 +416,3 @@ describe.skip('CommunicationState', () => {
     expect(senderMacDecodeFrame).toBe(reciverMacEncodeFrame);
   });
 });
-*/

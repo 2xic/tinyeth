@@ -8,7 +8,7 @@ import { NonceGenerator } from './nonce-generator/NonceGenerator';
 import { Container } from 'inversify';
 import { AbstractSocket } from './socket/AbstractSocket';
 import { GetRandomBytesInteractor } from './nonce-generator/GetRandomBytesInteractor';
-import { MessageType } from './rlpx/CommunicationState';
+import { RplxMessageType } from './rlpx/CommunicationState';
 
 describe.skip('Peer', () => {
   let peer: Peer;
@@ -40,7 +40,7 @@ describe.skip('Peer', () => {
       )
     );
     await node.sendMessage({
-      type: MessageType.AUTH_EIP_8,
+      rplxType: RplxMessageType.AUTH_EIP_8,
     });
     await socket.emit(
       'data',
@@ -90,7 +90,7 @@ describe.skip('Peer', () => {
       )
     );
     await node.sendMessage({
-      type: MessageType.AUTH_EIP_8,
+      rplxType: RplxMessageType.AUTH_EIP_8,
     });
 
     return socket.writtenData[0];

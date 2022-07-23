@@ -3,8 +3,9 @@ import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
 import {
   CommunicationState,
+  EthMessageType,
   MessageOptions,
-  MessageType,
+  RplxMessageType,
 } from './rlpx/CommunicationState';
 import { PeerConnection } from './rlpx/PeerConnection';
 import { SendStatusMessage } from './rlpx/eth/SendStatusMessage';
@@ -87,6 +88,14 @@ export class Peer extends MyEmitter<{ disconnect: null }> {
       */
     });
 
+    this.communicationState.on('sendStatus', async () => {
+      await this.sendMessage({ ethType: EthMessageType.STATUS });
+
+      /*
+      const statusMessage = this.statusMessage.sendStatus();
+      await this.peerConnection.sendMessage(statusMessage);*/
+    });
+
     this.communicationState.on('pong', async () => {
       if (!this.sentStatus && this.protocolVersion) {
         this.sentStatus = true;
@@ -96,11 +105,7 @@ export class Peer extends MyEmitter<{ disconnect: null }> {
         );
         process.exit(0);
         /*
-        const statusMessage = this.statusMessage.sendStatus({
-          version: this.protocolVersion,
-        });
-        await this.peerConnection.sendMessage(statusMessage);
-        */
+         */
       }
     });
 
@@ -118,10 +123,6 @@ export class Peer extends MyEmitter<{ disconnect: null }> {
 
   public async disconnect() {
     await this.peerConnection.disconnect();
-  }
-
-  public get nodePublicKey() {
-    return this.keyPair.getPublicKey();
   }
 }
 

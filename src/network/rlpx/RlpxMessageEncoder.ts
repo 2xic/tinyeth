@@ -3,6 +3,7 @@ import { InputTypes, RlpEncoder } from '../../rlp/RlpEncoder';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Logger } from '../../utils/Logger';
 import { FrameCommunication } from '../auth/frameing/FrameCommunication';
+import { EthMessageType } from './CommunicationState';
 import { Messages } from './eth/Messages';
 import { RlpxPacketTypes } from './packet-types/RlpxMessageDecoder';
 import { SnappyCompress } from './SnappyCompress';
@@ -15,15 +16,15 @@ export class RlpxMessageEncoder {
     private logger: Logger
   ) {}
 
-  public encodeStatusMessage({
+  public encodeEthMessage({
     code,
     payload,
   }: {
-    code: Messages;
+    code: EthMessageType;
     payload: InputTypes[];
   }) {
     const message = this.sharedEncoding({
-      command: 0x0,
+      command: code,
       payload,
     });
 
@@ -48,11 +49,11 @@ export class RlpxMessageEncoder {
     payload,
     compress = true,
   }: {
-    command: RlpxPacketTypes | Messages;
+    command: RlpxPacketTypes | EthMessageType;
     compress?: boolean;
     payload: InputTypes;
   }) {
-    this.logger.log(payload);
+    //   this.logger.log(payload);
     const rawMessage = Buffer.concat([
       getBufferFromHex(this.rlpEncoder.encode({ input: command })),
       this.parseParameters({

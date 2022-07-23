@@ -22,7 +22,7 @@ import { Peer, sleep, ProductionContainer, parseEncode, MessageType } from '../d
   );
 
   await node.sendMessage({
-    type: MessageType.AUTH_EIP_8,
+    rplxType: MessageType.AUTH_EIP_8,
   });
 
   // eslint-disable-next-line no-constant-condition

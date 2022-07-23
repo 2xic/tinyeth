@@ -4,7 +4,7 @@ import { replayFile } from './replays/replayFile';
 /*
     This will replays packets from a "real" node!
 */
-describe('CommunicationStateReplay', () => {
+describe.skip('CommunicationStateReplay', () => {
   it('should correctly deal with messages where header and body is in different packets', async () => {
     await replayFile({
       filePath: path.resolve(

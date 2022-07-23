@@ -15,6 +15,7 @@ import { MessageQueue } from './MessageQueue';
 import { NodeId } from './NodeId';
 import { SimpleDecodingResults } from '../../rlp/types/TypeEncoderDecoder';
 import { SimpleRplxHelloMessageEncoder } from './packet-types/RlpxHelloMessageEncoder';
+import { SendStatusMessage } from './eth/SendStatusMessage';
 
 @injectable()
 export class DebugCommunicationState extends CommunicationState {
@@ -29,7 +30,8 @@ export class DebugCommunicationState extends CommunicationState {
     peerConnection: PeerConnectionState,
     messageQueue: MessageQueue,
     nodeId: NodeId,
-    simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder
+    simpleRplxHelloMessageEncoder: SimpleRplxHelloMessageEncoder,
+    sendStatusMessage: SendStatusMessage
   ) {
     super(
       rlpx,
@@ -42,7 +44,8 @@ export class DebugCommunicationState extends CommunicationState {
       peerConnection,
       messageQueue,
       nodeId,
-      simpleRplxHelloMessageEncoder
+      simpleRplxHelloMessageEncoder,
+      sendStatusMessage
     );
   }
 

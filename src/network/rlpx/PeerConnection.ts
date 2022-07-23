@@ -5,6 +5,7 @@ import { AbstractSocket } from '../socket/AbstractSocket';
 import { CommunicationState } from './CommunicationState';
 import { MyEmitter } from './MyEmitter';
 import { MessageQueue } from './MessageQueue';
+import { sleep } from '../utils/sleep';
 
 @injectable()
 export class PeerConnection extends MyEmitter<{
@@ -91,6 +92,7 @@ export class PeerConnection extends MyEmitter<{
         await new Promise<void>((resolve, reject) => {
           this.socket.write(message, (error) => {
             if (error) {
+              this.logger.log(error);
               reject(error);
             } else {
               resolve();

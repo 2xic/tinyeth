@@ -28,7 +28,7 @@ export class MessageQueue {
     } else if (this.limit <= this.data.length) {
       const limit = this.limit === 0 ? this.data.length : this.limit;
       const oldBatch = this.data.slice(0, limit);
-      this.logger.log(`read ${this.data.toString('hex')}`);
+      // this.logger.log(`read ${this.data.toString('hex')}`);
       this.data = this.data.slice(limit);
       return oldBatch;
     } else {
