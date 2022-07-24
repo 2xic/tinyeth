@@ -18,7 +18,7 @@ import { NodeId } from './NodeId';
 import { sleep } from '../utils/sleep';
 import { SendEthMessage } from './eth/SendEthMessage';
 
-/**=>
+/**
  * TODO: this class is becoming a bit big, and it has a lot of state that could be extracted.
  * Move it out.
  */
@@ -36,7 +36,7 @@ export class CommunicationState extends MyEmitter<{
   constructor(
     private rlpx: Rlpx,
     protected keyPair: KeyPair,
-    private logger: Logger,
+    protected logger: Logger,
     protected auth8Eip: Auth8Eip,
     protected frameCommunication: FrameCommunication,
     private rlpxMessageEncoder: RlpxMessageEncoder,
@@ -179,22 +179,6 @@ export class CommunicationState extends MyEmitter<{
 
           if (parsedPacketId === EthMessageType.STATUS) {
             this.logger.log('Got status message :)');
-            /*
-            this.logger.log(
-              JSON.stringify(
-                new RlpDecoder().decode({
-                  input: packetPayload.toString('hex'),
-                })
-              )
-            );
-            console.log(SnappyDecompress(packetPayload));
-            console.log(
-              new RlpDecoder().decode({
-                input: SnappyDecompress(packetPayload).toString('hex'),
-              })
-            );
-            */
-
             await sleep(500);
             this.emit('sendStatus', null);
             callback(Buffer.alloc(0));
@@ -235,9 +219,6 @@ export class CommunicationState extends MyEmitter<{
               RlpxPacketTypes.PONG
             );
             callback(encodedMessage);
-            // TODO: remove this, it should not be executed,
-            /*          await sleep(100);
-            this.emit('pong', null);*/
           } else if (options.packet == RlpxPacketTypes.PONG) {
             this.logger.log('[Got a pong]');
             this.emit('pong', null);

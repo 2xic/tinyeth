@@ -1,7 +1,5 @@
 import { injectable } from 'inversify';
 import { Scanner } from './Scanner';
-import { AnyToken } from './tokens/AnyToken';
-import { Token } from './tokens/Token';
 
 @injectable()
 export class Lexer {
@@ -19,5 +17,3 @@ export class Lexer {
     return tokens;
   }
 }
-
-type TokenTypes = Token;

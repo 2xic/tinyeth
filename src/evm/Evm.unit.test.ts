@@ -6,7 +6,7 @@ import { StackUnderflow } from './errors/StackUnderflow';
 import { EvmAccountState } from './EvmAccountState';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
-import { Wei } from './Wei';
+import { Wei } from './eth-units/Wei';
 
 describe('evm', () => {
   const sender = new Address();

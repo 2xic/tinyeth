@@ -30,7 +30,7 @@ export class NodeManager {
     this.stateRecord[options.address] = State.WAITING_FOR_PING_OR_PONG;
 
     await this.nodeCommunication.connect({
-      onMessage: (message) => this.messageHandler(message, options.address), //this.messageHandler.bind(this),
+      onMessage: (message) => this.messageHandler(message, options.address),
       nodeOptions: options,
     });
 

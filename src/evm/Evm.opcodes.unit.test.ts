@@ -4,11 +4,11 @@ import { Address } from './Address';
 import { EvmAccountState } from './EvmAccountState';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
-import { Wei } from './Wei';
+import { Wei } from './eth-units/Wei';
 
 /*
     The test mnemonic code here is are all from https://www.evm.codes/
-    They have great examples :) 
+    They have great examples, and credit goes to them for creating it :) 
 */
 describe('evm.codes', () => {
   const sender = new Address();

@@ -3,8 +3,8 @@ import { Token } from './Token';
 
 // Note : this is just a token used while developing
 export class AnyToken extends Token {
-  constructor(inputValue: string | null = null) {
-    super(inputValue);
+  constructor() {
+    super();
   }
 
   public isValid(): boolean {

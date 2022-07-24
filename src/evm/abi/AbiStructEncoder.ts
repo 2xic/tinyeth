@@ -26,7 +26,7 @@ export class AbiStructEncoder {
       return item.value.encoding;
     });
 
-    // Todo : clean up this.
+    // TODO : clean up this.
     for (const item of [...mappedStruct]) {
       if (typeof item == 'number') {
         const value = parameterIndex[item];

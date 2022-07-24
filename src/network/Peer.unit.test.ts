@@ -23,6 +23,7 @@ describe.skip('Peer', () => {
     });
     peer = container.get(Peer);
   });
+
   it('should be able to do an handshake with local geth', async () => {
     const interactor = container.get(NonceGenerator) as MockNonceGenerator;
     interactor.setNonces([
@@ -65,7 +66,7 @@ describe.skip('Peer', () => {
     });
   };
 
-  const getBufferENcoding = async (pubkey?: string) => {
+  const getBufferEncoding = async (pubkey?: string) => {
     const containerx = getContainer();
     const interactor = containerx.get(NonceGenerator) as MockNonceGenerator;
     const fakeInteractor = containerx
@@ -95,9 +96,10 @@ describe.skip('Peer', () => {
 
     return socket.writtenData[0];
   };
+
   it('should be deterministic', async () => {
-    expect((await getBufferENcoding()).toString('hex')).toBe(
-      (await getBufferENcoding()).toString('hex')
+    expect((await getBufferEncoding()).toString('hex')).toBe(
+      (await getBufferEncoding()).toString('hex')
     );
   });
 });

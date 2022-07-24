@@ -15,8 +15,8 @@ describe('Transaction', () => {
     const transaction = interactor
       .construct({
         nonce: 0x1e7,
-        gasprice: new BigNumber('0x2e90edd000'),
-        startgas: 0x30d40,
+        gasPrice: new BigNumber('0x2e90edd000'),
+        startGas: 0x30d40,
         to: new BigNumber('0xbd064928cdd4fd67fb99917c880e6560978d7ca1'),
         value: new BigNumber('0xde0b6b3a7640000'),
         data: '',
@@ -33,8 +33,8 @@ describe('Transaction', () => {
     const transaction = interactor
       .construct({
         nonce: 0x1e7,
-        gasprice: new BigNumber('0x2e90edd000'),
-        startgas: 0x30d40,
+        gasPrice: new BigNumber('0x2e90edd000'),
+        startGas: 0x30d40,
         to: new BigNumber('0xbd064928cdd4fd67fb99917c880e6560978d7ca1'),
         value: new BigNumber('0xde0b6b3a7640000'),
         data: '',

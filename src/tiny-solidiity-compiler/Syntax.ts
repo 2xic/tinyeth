@@ -9,78 +9,54 @@ export class Syntax {
     this.tokenOrder.push(rootToken);
   }
 
+  public then(token: SyntaxInput) {
+    this.tokenOrder.push(token);
+    return this;
+  }
+
   public matches({
     tokens,
     currentIndex,
     level,
-    build,
   }: {
     currentIndex: number;
     level: number;
     tokens: string[];
-    build: ({
-      tokens,
-      currentIndex,
-      level,
-    }: {
-      tokens: string[];
-      currentIndex: number;
-      level: number;
-    }) => Node | null;
   }): null | [Node, number] {
     let root: Node | undefined = undefined;
-    const hasValidSyntax = this.tokenOrder.every((item, index) => {
+    const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
       const tokenValue = tokens[currentIndex + index];
-      const isValidOperation = (item: Union) => {
-        if (item instanceof Token) {
-          if (item instanceof Keyword && item.value !== tokenValue) {
-            return false;
-          } else if (!(item instanceof Keyword) && !item.isValid(tokenValue)) {
-            return false;
-          } else {
-            if (index == 0) {
-              const constructor = item.node();
-              root = new constructor(tokenValue);
-            } else if (root) {
-              const constructor = item.node();
-              const node = new constructor(tokenValue);
-              root.add(node);
-            }
-            return true;
-          }
-        } else if (item instanceof Syntax) {
-          const results = item.matches({
-            tokens,
-            currentIndex: currentIndex + index,
-            level: level + 1,
-            build,
-          });
-          if (!results) {
-            return false;
-          } else {
-            const [node, movement] = results;
-            root?.add(node);
-            currentIndex += movement - 1;
-            return true;
-          }
+
+      const addNode = (node: Node) => {
+        if (!root) {
+          root = node;
         } else {
-          throw new Error('Not implemented');
+          root.add(node);
         }
       };
-      if (Array.isArray(item)) {
-        const rootCopy: Node = Object.assign({}, root);
-        return item.find((item) => {
-          if (isValidOperation(item)) {
-            return true;
-          } else {
-            if (root) {
-              Object.assign(root, rootCopy);
-            }
-          }
+
+      const item = Array.isArray(inputItem) ? inputItem : [inputItem];
+
+      const rootCopy: Node = Object.assign({}, root);
+      return item.find((item) => {
+        const options = this.isValidOperation({
+          currentIndex: currentIndex + index,
+          tokens,
+          tokenValue,
+          level,
+          item,
         });
-      } else {
-        return isValidOperation(item);
-      }
+        if (options.isValid) {
+          addNode(options.node);
+          currentIndex += options.movedIndex;
+          return true;
+        } else {
+          // revert the changes ...
+          if (root) {
+            Object.assign(root, rootCopy);
+          }
+        }
+      });
     });
 
     if (hasValidSyntax) {
@@ -94,9 +70,66 @@ export class Syntax {
     }
   }
 
-  public then(token: SyntaxInput) {
-    this.tokenOrder.push(token);
-    return this;
+  private isValidOperation({
+    item,
+    tokens,
+    tokenValue,
+    currentIndex,
+    level,
+  }: {
+    item: Union;
+    tokens: string[];
+    tokenValue: string;
+    currentIndex: number;
+    level: number;
+  }):
+    | {
+        isValid: boolean;
+        movedIndex: number;
+        node: Node;
+      }
+    | {
+        isValid: false;
+      } {
+    if (item instanceof Token) {
+      const isKeyword = item instanceof Keyword;
+      const isNotSameTokenValue = isKeyword && item.value !== tokenValue;
+      const isInvalidToken = !isKeyword && !item.isValid(tokenValue);
+      if (isNotSameTokenValue || isInvalidToken) {
+        return {
+          isValid: false,
+        };
+      } else {
+        const NodeConstructor = item.node();
+        const node = new NodeConstructor(tokenValue);
+
+        return {
+          isValid: true,
+          movedIndex: 0,
+          node,
+        };
+      }
+    } else if (item instanceof Syntax) {
+      const results = item.matches({
+        tokens,
+        currentIndex,
+        level: level + 1,
+      });
+      if (!results) {
+        return {
+          isValid: false,
+        };
+      } else {
+        const [node, movement] = results;
+        return {
+          isValid: true,
+          movedIndex: movement - 1,
+          node,
+        };
+      }
+    } else {
+      throw new Error('Not implemented');
+    }
   }
 
   public get root(): Token {

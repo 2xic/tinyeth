@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { MemoryExpansionGas } from './gas/MemoyExspansionGas';
+import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 
 @injectable()
 export class EvmMemory {

@@ -21,7 +21,7 @@ export class DebugCommunicationState extends CommunicationState {
   constructor(
     rlpx: Rlpx,
     protected keyPair: KeyPair,
-    logger: Logger,
+    protected logger: Logger,
     protected auth8Eip: Auth8Eip,
     protected frameCommunication: FrameCommunication,
     rlpxMessageEncoder: RlpxMessageEncoder,
@@ -151,8 +151,7 @@ export class DebugCommunicationState extends CommunicationState {
   public dump({ path }: { path: string }) {
     if (this.communications.length > 5) {
       fs.writeFileSync(path, stringify(this.communications));
-      // eslint-disable-next-line no-console
-      console.log(`Saved ${this.communications.length} messages`);
+      this.logger.log(`Saved ${this.communications.length} messages`);
     }
   }
 }

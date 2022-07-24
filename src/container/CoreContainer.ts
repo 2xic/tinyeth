@@ -40,7 +40,6 @@ import { FindNodePacketEncodeDecode } from '../network/wire/FindNodePacketEncode
 import { RlpxHelloPacketEncoderDecoder } from '../network/rlpx/packet-types/RlpxHelloPacketEncoderDecoder';
 import { RlpxMessageDecoder } from '../network/rlpx/packet-types/RlpxMessageDecoder';
 import { SendStatusMessage } from '../network/rlpx/eth/SendStatusMessage';
-import { GetBlockHeader } from '../network/rlpx/eth/GetBlockHeader';
 import { PeerConnectionState } from '../network/rlpx/PeerConnectionState';
 import { PeerConnection } from '../network/rlpx/PeerConnection';
 import { MessageQueue } from '../network/rlpx/MessageQueue';
@@ -51,7 +50,7 @@ import { GasComputer } from '../evm/gas/GasComputer';
 import { ComputeSstoreGas } from '../evm/gas/ComputeSstoreGas';
 import { AccessSets } from '../evm/gas/AccessSets';
 import { EvmKeyValueStorage } from '../evm/EvmKeyValueStorage';
-import { MemoryExpansionGas } from '../evm/gas/MemoyExspansionGas';
+import { MemoryExpansionGas } from '../evm/gas/MemoryExpansionGas';
 import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 import { EvmSubContext } from '../evm/EvmSubContext';
 import { EvmSubContextCall } from '../evm/EvmSubContextCall';
@@ -104,19 +103,13 @@ export class CoreContainer {
     container.bind(WireMessageEncoder).toSelf();
     container.bind(PeerConnection).toSelf();
     container.bind(PeerConnectionState).toSelf();
-
-    container.bind(SendStatusMessage).toSelf();
-    container.bind(GetBlockHeader).toSelf();
-
-    container.bind(KeyPair).toSelf();
-    container.bind(Signatures).toSelf();
-
     container.bind(NodeId).toSelf();
     container.bind(SimpleRplxHelloMessageEncoder).toSelf();
     container.bind(ChainInformation).toSelf();
     container.bind(ForkId).toSelf();
     container.bind(SendEthMessage).toSelf();
-
+    container.bind(SendStatusMessage).toSelf();
+    container.bind(EncodeAckEip8).toSelf();
     container.bind(DecodeAuthEip8).toSelf();
     container.bind(EncodeAuthEip8).toSelf();
     container.bind(DecodeAuthMessageInteractor).toSelf();
@@ -125,8 +118,22 @@ export class CoreContainer {
     container.bind(WireMessageDecoder).toSelf();
     container.bind(RlpxHelloPacketEncoderDecoder).toSelf();
     container.bind(RlpxMessageDecoder).toSelf();
+    container.bind(Rlpx).toSelf();
+    container.bind(Peer).toSelf();
+    container.bind(Auth8Eip).toSelf();
+    container.bind(RlpxDecrpyt).toSelf();
+    container.bind(RlpxEcies).toSelf();
+    container.bind(ConstructAuthMessage).toSelf();
+    container.bind(EciesEncrypt).toSelf();
+    container.bind(EciesDecrypt).toSelf();
+    container.bind(EncodeFrame).toSelf();
+    container.bind(DecodeFrame).toSelf();
+    container.bind(ReplayHelloPacket).toSelf();
+    container.bind(MessageQueue).toSelf();
 
-    container.bind(EncodeAckEip8).toSelf();
+    container.bind(KeyPair).toSelf();
+    container.bind(Signatures).toSelf();
+
     if (options?.debugMode) {
       container.bind(CommunicationState).to(DebugCommunicationState);
     } else {
@@ -139,19 +146,6 @@ export class CoreContainer {
     container.bind(RlpEncoder).toSelf();
     container.bind(RlpDecoder).toSelf();
 
-    container.bind(Rlpx).toSelf();
-    container.bind(Peer).toSelf();
-    container.bind(Auth8Eip).toSelf();
-    container.bind(RlpxDecrpyt).toSelf();
-    container.bind(RlpxEcies).toSelf();
-    container.bind(ConstructAuthMessage).toSelf();
-    container.bind(EciesEncrypt).toSelf();
-    container.bind(EciesDecrypt).toSelf();
-    container.bind(EncodeFrame).toSelf();
-    container.bind(DecodeFrame).toSelf();
-    container.bind(ReplayHelloPacket).toSelf();
-
-    container.bind(MessageQueue).toSelf();
     container.bind(GetRandomBytesInteractor).toSelf();
 
     container.bind(EvmStack).toSelf();

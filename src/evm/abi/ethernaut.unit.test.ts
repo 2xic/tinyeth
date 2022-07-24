@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { Ether } from '../Ether';
+import { Ether } from '../eth-units/Ether';
 import { Abi } from './Abi';
 import { AbiStructEncoder } from './AbiStructEncoder';
 

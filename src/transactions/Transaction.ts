@@ -8,23 +8,23 @@ export class Transactions {
 
   public construct({
     nonce,
-    gasprice,
-    startgas,
+    gasPrice,
+    startGas,
     to,
     value,
     data,
   }: {
     nonce: number;
-    gasprice: BigNumber;
-    startgas: number;
+    gasPrice: BigNumber;
+    startGas: number;
     to: BigNumber;
     value: BigNumber;
     data: string;
   }): RawTransaction {
     return this.rawTransaction.construct(
       nonce,
-      gasprice,
-      startgas,
+      gasPrice,
+      startGas,
       to,
       value,
       data

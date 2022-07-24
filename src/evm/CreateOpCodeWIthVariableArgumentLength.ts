@@ -25,6 +25,7 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
       typeof options.arguments == 'number'
         ? options.arguments
         : options.arguments(delta);
+
     record[opcode] = new OpCode({
       name: `${options.baseName}${delta}`,
       arguments: opcode_arguments,

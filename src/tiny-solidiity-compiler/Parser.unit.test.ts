@@ -1,4 +1,4 @@
-import { BindingScopeEnum, Container } from 'inversify';
+import { Container } from 'inversify';
 import { UnitTestContainer } from '../container/UnitTestContainer';
 import { KeywordNode } from './ast/KeywordNode';
 import { VariableNode } from './ast/VariableNode';
@@ -39,6 +39,7 @@ describe('Parser', () => {
 
     expect(tree.nodes[1]).toBeInstanceOf(KeywordNode);
     const scope = tree.nodes[1];
+
     // TODO: is this actually needed ?
     expect(scope.value).toBe('{');
     expect(scope.nodes[1].value).toBe('}');

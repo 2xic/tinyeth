@@ -1,15 +1,14 @@
-import { anything } from 'fast-check';
 import { injectable } from 'inversify';
 import { Node } from './ast/Node';
 import { Lexer } from './Lexer';
 import { Syntax } from './Syntax';
-import { AnyToken } from './tokens/AnyToken';
 import { Keyword } from './tokens/Keyword';
 import { StringToken } from './tokens/StringToken';
 
 @injectable()
 export class Parser {
   private syntaxReferences: Record<string, Syntax[]>;
+
   constructor(private lexer: Lexer) {
     this.syntaxReferences = this.constructSyntax();
   }
@@ -37,14 +36,10 @@ export class Parser {
     if (syntaxRoutes) {
       for (const syntax of syntaxRoutes) {
         const currentTokens = [...tokens];
-        // okay, so what do we do if the syntax is recursive ?
-        // we can pass a callback.... But then we will never leave here ?
-
         const value = syntax.matches({
           tokens: currentTokens,
           currentIndex,
           level,
-          build: this.recursiveConstruction.bind(this),
         });
 
         if (value) {
@@ -66,45 +61,57 @@ export class Parser {
   }
 
   private constructSyntax(): Record<string, Syntax[]> {
-    const syntaxReferences: Record<string, Syntax[]> = {};
+    const syntaxStorage: Record<string, Syntax[]> = {};
 
-    const addSyntax = (syntax: Syntax, reference?: string) => {
-      const rootToken = reference || syntax.root.value;
-      if (!rootToken) {
-        throw new Error('expected root token');
-      }
-      if (!syntaxReferences[rootToken]) {
-        syntaxReferences[rootToken] = [];
-      }
-      syntaxReferences[rootToken].push(syntax);
-
-      return syntax;
-    };
-
-    const variablesAssignment = addSyntax(
-      new Syntax(new Keyword('uint8'))
+    const variablesAssignment = this.addSyntax({
+      syntax: new Syntax(new Keyword('uint8'))
         .then(new Keyword('public'))
         .then(new StringToken())
-        .then(new Keyword(';'))
-    );
+        .then(new Keyword(';')),
+      syntaxStorage,
+    });
 
-    const codeSection = addSyntax(
-      // TODO: need to make it multi conditional
-      new Syntax(new Keyword('{'))
+    const codeSection = this.addSyntax({
+      syntax: new Syntax(new Keyword('{'))
         .then(variablesAssignment)
-        .then(new Keyword('}'))
-    );
-    const emptyCodeSection = addSyntax(
-      new Syntax(new Keyword('{')).then(new Keyword('}')),
-      '{'
-    );
+        .then(new Keyword('}')),
+      syntaxStorage,
+    });
+    const emptyCodeSection = this.addSyntax({
+      syntax: new Syntax(new Keyword('{')).then(new Keyword('}')),
+      syntaxStorage,
+    });
 
-    addSyntax(
-      new Syntax(new Keyword('contract'))
+    this.addSyntax({
+      syntax: new Syntax(new Keyword('contract'))
         .then(new StringToken())
-        .then([codeSection, emptyCodeSection])
-    );
+        .then([codeSection, emptyCodeSection]),
+      syntaxStorage,
+    });
 
-    return syntaxReferences;
+    return syntaxStorage;
+  }
+
+  private addSyntax({
+    syntax,
+    syntaxStorage,
+  }: {
+    syntax: Syntax;
+    syntaxStorage: Record<string, Syntax[]>;
+  }) {
+    const syntaxRoot = syntax.root;
+    if (!(syntaxRoot instanceof Keyword)) {
+      throw new Error('First token in a syntax must be a keyword');
+    }
+    const rootToken = syntaxRoot.value;
+    if (!rootToken) {
+      throw new Error('expected root token');
+    }
+    if (!syntaxStorage[rootToken]) {
+      syntaxStorage[rootToken] = [];
+    }
+    syntaxStorage[rootToken].push(syntax);
+
+    return syntax;
   }
 }

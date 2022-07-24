@@ -15,7 +15,7 @@ describe('ForkId', () => {
     expect(expectedForkId).toBe('fc64ec04');
   });
 
-  it('should calculate the [zero, zero] fork id correctly', () => {
+  it('should calculate the [zero, zero] fork id correctly', () => {
     const expectedForkId = new RlpEncoder().encode({
       input: container.get(ForkId).calculate({
         hash: 0,
@@ -26,7 +26,7 @@ describe('ForkId', () => {
     expect(expectedForkId).toBe('0xc6840000000080');
   });
 
-  it('should calculate the [deadbeef, deadbeef]  fork id correctly', () => {
+  it('should calculate the [deadbeef, deadbeef] fork id correctly', () => {
     const expectedForkId = new RlpEncoder().encode({
       input: container.get(ForkId).calculate({
         hash: 0xdeadbeef,

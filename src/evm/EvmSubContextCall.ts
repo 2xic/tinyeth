@@ -6,7 +6,7 @@ import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
 import { TxContext } from './Evm';
 import { EvmContext, InterfaceEvm } from './interfaceEvm';
-import { Wei } from './Wei';
+import { Wei } from './eth-units/Wei';
 
 @injectable()
 export class EvmSubContextCall {

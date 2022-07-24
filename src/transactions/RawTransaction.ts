@@ -10,8 +10,8 @@ export class RawTransaction {
   constructor(private signatures: Signatures) {}
 
   private nonce?: number;
-  private gasprice?: BigNumber;
-  private startgas?: number;
+  private gasPrice?: BigNumber;
+  private startGas?: number;
   private to?: BigNumber;
   private value?: BigNumber;
   private data?: string;
@@ -19,14 +19,14 @@ export class RawTransaction {
   public construct(
     nonce: number,
     gasprice: BigNumber,
-    startgas: number,
+    startGas: number,
     to: BigNumber,
     value: BigNumber,
     data: string
   ) {
     this.nonce = nonce;
-    this.gasprice = gasprice;
-    this.startgas = startgas;
+    this.gasPrice = gasprice;
+    this.startGas = startGas;
     this.to = to;
     this.value = value;
     this.data = data;
@@ -66,8 +66,8 @@ export class RawTransaction {
   private get params(): any[] {
     return [
       this.nonce,
-      this.gasprice,
-      this.startgas,
+      this.gasPrice,
+      this.startGas,
       this.to,
       this.value,
       this.data,

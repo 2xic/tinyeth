@@ -6,6 +6,6 @@ export class NodeId {
   constructor(private keyPair: KeyPair) {}
 
   public get nodeId() {
-    return this.keyPair.getPublicKey(); //{ privateKey: 'deadbeef'.repeat(8) });
+    return this.keyPair.getPublicKey();
   }
 }

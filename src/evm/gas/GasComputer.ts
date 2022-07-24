@@ -4,7 +4,7 @@ import { ComputeSstoreGas, SstoreContext } from './ComputeSstoreGas';
 import {
   MemoryExpansionContext,
   MemoryExpansionGas,
-} from './MemoyExspansionGas';
+} from './MemoryExpansionGas';
 
 @injectable()
 export class GasComputer {

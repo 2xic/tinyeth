@@ -21,7 +21,7 @@ export class Network {
       height: 42,
       coinbase: new Address('5B38Da6a701c568545dCfcB03FcB875f56beddC4'),
       gasLimit: 0xffffffffffff,
-      difficulty: new BigNumber(10995000000000000),
+      difficulty: new BigNumber('10995000000000000'),
       chainId: 1,
       gasPrice: 222,
       baseFee: 1024,

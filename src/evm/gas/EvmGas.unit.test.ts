@@ -3,7 +3,7 @@ import { getClassFromTestContainer } from '../../container/getClassFromTestConta
 import { Address } from '../Address';
 import { Evm } from '../Evm';
 import { MnemonicParser } from '../MnemonicParser';
-import { Wei } from '../Wei';
+import { Wei } from '../eth-units/Wei';
 
 describe('EvmGas', () => {
   const sender = new Address();

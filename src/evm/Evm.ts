@@ -2,7 +2,7 @@ import { EvmStack } from './EvmStack';
 import { InvalidPc } from './errors/InvalidPc';
 import { ExecutionResults, OpCode } from './OpCode';
 import { opcodes } from './Opcodes';
-import { Wei } from './Wei';
+import { Wei } from './eth-units/Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
 import { calculateDataGasCost, GAS_BASE_COST } from './gas/Gas';
@@ -202,10 +202,4 @@ export interface TxContext {
   nonce: number;
   sender: Address;
   gasLimit: BigNumber;
-
-  /* 
-    Todo 
-    - Caller should be added here also.
-      This affect the access sets for instance.
-  */
 }

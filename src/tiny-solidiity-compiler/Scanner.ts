@@ -1,5 +1,3 @@
-import { injectable } from 'inversify';
-
 export class Scanner {
   private index = 0;
 

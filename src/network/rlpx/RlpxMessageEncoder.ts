@@ -52,7 +52,6 @@ export class RlpxMessageEncoder {
     compress?: boolean;
     payload: InputTypes;
   }) {
-    //   this.logger.log(payload);
     const rawMessage = Buffer.concat([
       getBufferFromHex(this.rlpEncoder.encode({ input: command })),
       this.parseParameters({

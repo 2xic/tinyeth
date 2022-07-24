@@ -1,9 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/*
-  TODO (reenable): 
-  - We have tests for state replay + test vectors, disabling this for a short while refactoring
-  - ^ This test is not super important actually because we get coverage form other places.  
-*/
 
 import { UnitTestContainer } from '../../container/UnitTestContainer';
 import { DecodeFrame } from '../auth/frameing/DecodeFrame';
@@ -265,7 +260,7 @@ describe('CommunicationState', () => {
     expect(receivedStatus.length).toBe(0);
   });
 
-  // flacky
+  // TODO: fix this flacky test
   it.skip('should be able to communicate correctly with randomness', async () => {
     const senderContainer = new UnitTestContainer().create({
       privateKey:

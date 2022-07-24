@@ -1,12 +1,10 @@
 import { injectable } from 'inversify';
-import { KeyPair } from '../../signatures/KeyPair';
 import { EciesDecrypt } from '../ecies/EciesDecrypt';
 import { EciesEncrypt } from '../ecies/EciesEncrypt';
 
 @injectable()
 export class RlpxEcies {
   constructor(
-    private keyPair: KeyPair,
     private eciesEncrypt: EciesEncrypt,
     private eciesDecrypt: EciesDecrypt
   ) {}

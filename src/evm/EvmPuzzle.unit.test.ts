@@ -4,7 +4,7 @@ import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { Address } from './Address';
 import { Evm } from './Evm';
 import { ExposedEvm } from './ExposedEvm';
-import { Wei } from './Wei';
+import { Wei } from './eth-units/Wei';
 
 describe('https://github.com/fvictorio/evm-puzzles', () => {
   const sender = new Address();
