@@ -60,6 +60,8 @@ _Just something so I get a better understanding of the core parts of the protoco
       - Or dynamic analysis, by doing some cool fuzzing ? 
       - Maybe with sat solvers also
     - This would make it easy to test things like state channels.
+    - It also makes it super easy to obscure decode function calls
+      - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
 
 - [ ] RPC ? 
     - Not sure if this is necessary.
