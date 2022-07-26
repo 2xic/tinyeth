@@ -35,7 +35,7 @@ export class Scanner {
   }
 
   private isSpecialCharacters({ char }: { char: string }) {
-    return ['[', ']', '{', '}', ';'].includes(char);
+    return ['[', ']', '{', '}', ';', '(', ')'].includes(char);
   }
 
   public get isDone() {

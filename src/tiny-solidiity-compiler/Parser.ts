@@ -2,7 +2,9 @@ import { injectable } from 'inversify';
 import { Node } from './ast/Node';
 import { Lexer } from './Lexer';
 import { Syntax } from './Syntax';
+import { AccessModifiers } from './tokens/AccessModifiers';
 import { Keyword } from './tokens/Keyword';
+import { StopToken } from './tokens/StopToken';
 import { StringToken } from './tokens/StringToken';
 
 @injectable()
@@ -63,18 +65,61 @@ export class Parser {
   private constructSyntax(): Record<string, Syntax[]> {
     const syntaxStorage: Record<string, Syntax[]> = {};
 
+    const functionArguments = this.addSyntax({
+      syntax: new Syntax(new Keyword('(')).then(new Keyword(')')),
+      syntaxStorage,
+    });
+
+    const unnamedArguments = this.addSyntax({
+      syntax: new Syntax(new Keyword('(')).thenRecursive(
+        new Syntax(new Keyword('uint8')),
+        new StopToken(')')
+      ),
+      syntaxStorage,
+    });
+
     const variablesAssignment = this.addSyntax({
       syntax: new Syntax(new Keyword('uint8'))
-        .then(new Keyword('public'))
+        .then(new AccessModifiers())
         .then(new StringToken())
         .then(new Keyword(';')),
       syntaxStorage,
     });
 
+    const returnStatement = this.addSyntax({
+      syntax: new Syntax(new Keyword('return'))
+        .then(new StringToken())
+        .then(new Keyword(';')),
+      syntaxStorage,
+    });
+
+    const functionSection = this.addSyntax({
+      syntax: new Syntax(new Keyword('function'))
+        .then(new StringToken())
+        .then(functionArguments)
+        .then(new AccessModifiers())
+        .then(new Keyword('pure'))
+        .then(new Keyword('returns'))
+        .then(unnamedArguments)
+        .then(
+          // TODO: seperate this into local and global code section
+          new Syntax(new Keyword('{')).thenRecursive(
+            [variablesAssignment, returnStatement],
+            // TODO: Is this a good abstraction ?
+            // stop token and start token for recursion?
+            new StopToken('}')
+          )
+        ),
+      syntaxStorage,
+    });
+
     const codeSection = this.addSyntax({
-      syntax: new Syntax(new Keyword('{'))
-        .then(variablesAssignment)
-        .then(new Keyword('}')),
+      syntax: new Syntax(new Keyword('{')).thenRecursive(
+        [variablesAssignment, functionSection],
+        // TODO: Is this a good abstraction ?
+        // stop token and start token for recursion?
+        new StopToken('}')
+      ),
       syntaxStorage,
     });
     const emptyCodeSection = this.addSyntax({

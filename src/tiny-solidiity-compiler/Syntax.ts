@@ -1,9 +1,12 @@
+import { KeywordNode } from './ast/KeywordNode';
 import { Node } from './ast/Node';
+import { RecursiveSyntax } from './RecursiveSyntax';
 import { Keyword } from './tokens/Keyword';
+import { StopToken } from './tokens/StopToken';
 import { Token } from './tokens/Token';
 
 export class Syntax {
-  private tokenOrder: Array<SyntaxInput> = [];
+  private tokenOrder: Array<SyntaxInput | RecursiveSyntax> = [];
 
   constructor(rootToken: Token) {
     this.tokenOrder.push(rootToken);
@@ -11,6 +14,11 @@ export class Syntax {
 
   public then(token: SyntaxInput) {
     this.tokenOrder.push(token);
+    return this;
+  }
+
+  public thenRecursive(token: Syntax | Syntax[], stopToken: Token) {
+    this.tokenOrder.push(new RecursiveSyntax(token, stopToken));
     return this;
   }
 
@@ -24,9 +32,8 @@ export class Syntax {
     tokens: string[];
   }): null | [Node, number] {
     let root: Node | undefined = undefined;
+    let movement = 0;
     const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
-      const tokenValue = tokens[currentIndex + index];
-
       const addNode = (node: Node) => {
         if (!root) {
           root = node;
@@ -35,34 +42,83 @@ export class Syntax {
         }
       };
 
-      const item = Array.isArray(inputItem) ? inputItem : [inputItem];
+      const rootItems = Array.isArray(inputItem) ? inputItem : [inputItem];
 
       const rootCopy: Node = Object.assign({}, root);
-      return item.find((item) => {
-        const options = this.isValidOperation({
-          currentIndex: currentIndex + index,
-          tokens,
-          tokenValue,
-          level,
-          item,
-        });
-        if (options.isValid) {
-          addNode(options.node);
-          currentIndex += options.movedIndex;
-          return true;
-        } else {
-          // revert the changes ...
-          if (root) {
-            Object.assign(root, rootCopy);
+      return rootItems.find((rootItem) => {
+        let shouldRun = true;
+        const copiedCurrentIndex = currentIndex;
+        while (shouldRun) {
+          let convertedItem;
+          const tokenValue = tokens[currentIndex + index];
+
+          if (rootItem instanceof RecursiveSyntax) {
+            convertedItem = rootItem.recursiveToken;
+            /*
+            console.log([rootItem.breakRecursion, tokenValue]);
+            console.log(rootItem.breakRecursion.isValid(tokenValue));*/
+            if (rootItem.breakRecursion.isValid(tokenValue)) {
+              addNode(new KeywordNode(tokenValue));
+              movement++;
+              break;
+            }
+          } else {
+            convertedItem = rootItem;
+          }
+
+          // TODO: this should probably not be recursive at this level.
+          const items = Array.isArray(convertedItem)
+            ? convertedItem
+            : [convertedItem];
+
+          console.log([tokenValue, rootItem, currentIndex + index, level]);
+          let noMatch = true;
+          items.find((item) => {
+            const options = this.isValidOperation({
+              currentIndex: currentIndex + index,
+              tokens,
+              tokenValue,
+              level,
+              item,
+            });
+            if (options.isValid) {
+              movement++;
+              addNode(options.node);
+              currentIndex += options.movedIndex;
+              if (!(rootItem instanceof RecursiveSyntax)) {
+                return true;
+              } else {
+                currentIndex += 1;
+              }
+              noMatch = false;
+            } else {
+              // revert the changes ...
+              if (!(rootItem instanceof RecursiveSyntax)) {
+                if (root) {
+                  Object.assign(root, rootCopy);
+                  currentIndex = copiedCurrentIndex;
+                  shouldRun = false;
+                } else {
+                  shouldRun = false;
+                }
+                return true;
+              }
+            }
+          });
+          if (noMatch) {
+            break;
           }
         }
+        return shouldRun;
       });
     });
 
     if (hasValidSyntax) {
       if (root) {
-        return [root, this.tokenOrder.length];
+        return [root, movement]; // this.tokenOrder.length];
       } else {
+        console.log(tokens);
+        console.log(currentIndex);
         throw new Error('This should not happen');
       }
     } else {
@@ -121,6 +177,7 @@ export class Syntax {
         };
       } else {
         const [node, movement] = results;
+        console.log([level, movement]);
         return {
           isValid: true,
           movedIndex: movement - 1,

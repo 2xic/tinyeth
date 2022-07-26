@@ -4,3 +4,4 @@ export * from './evm';
 export * from './signatures';
 export * from './container/ProductionContainer';
 export * from './rlp';
+export * from './tiny-solidiity-compiler';
