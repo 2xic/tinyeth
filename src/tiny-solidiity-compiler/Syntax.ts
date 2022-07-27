@@ -26,12 +26,14 @@ export class Syntax {
     tokens,
     currentIndex,
     level,
+    parent,
   }: {
     currentIndex: number;
     level: number;
     tokens: string[];
+    parent: null | Node;
   }): null | [Node, number] {
-    let root: Node | undefined = undefined;
+    let root: Node | undefined;
     let movement = 0;
     const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
       const addNode = (node: Node) => {
@@ -54,11 +56,11 @@ export class Syntax {
 
           if (rootItem instanceof RecursiveSyntax) {
             convertedItem = rootItem.recursiveToken;
-            /*
-            console.log([rootItem.breakRecursion, tokenValue]);
-            console.log(rootItem.breakRecursion.isValid(tokenValue));*/
             if (rootItem.breakRecursion.isValid(tokenValue)) {
-              addNode(new KeywordNode(tokenValue));
+              if (!parent) {
+                throw new Error('should this happen ? ');
+              }
+              root?.add(new KeywordNode(tokenValue));
               movement++;
               break;
             }
@@ -71,7 +73,7 @@ export class Syntax {
             ? convertedItem
             : [convertedItem];
 
-          console.log([tokenValue, rootItem, currentIndex + index, level]);
+          //   console.log([tokenValue, rootItem, currentIndex + index, level]);
           let noMatch = true;
           items.find((item) => {
             const options = this.isValidOperation({
@@ -80,11 +82,13 @@ export class Syntax {
               tokenValue,
               level,
               item,
+              parent: root || null,
             });
             if (options.isValid) {
-              movement++;
               addNode(options.node);
               currentIndex += options.movedIndex;
+              movement += options.movedIndex + 1;
+
               if (!(rootItem instanceof RecursiveSyntax)) {
                 return true;
               } else {
@@ -132,12 +136,14 @@ export class Syntax {
     tokenValue,
     currentIndex,
     level,
+    parent,
   }: {
     item: Union;
     tokens: string[];
     tokenValue: string;
     currentIndex: number;
     level: number;
+    parent: Node | null;
   }):
     | {
         isValid: boolean;
@@ -149,7 +155,7 @@ export class Syntax {
       } {
     if (item instanceof Token) {
       const isKeyword = item instanceof Keyword;
-      const isNotSameTokenValue = isKeyword && item.value !== tokenValue;
+      const isNotSameTokenValue = isKeyword && !item.isValid(tokenValue);
       const isInvalidToken = !isKeyword && !item.isValid(tokenValue);
       if (isNotSameTokenValue || isInvalidToken) {
         return {
@@ -170,6 +176,7 @@ export class Syntax {
         tokens,
         currentIndex,
         level: level + 1,
+        parent,
       });
       if (!results) {
         return {

@@ -4,8 +4,10 @@ import { Lexer } from './Lexer';
 import { Syntax } from './Syntax';
 import { AccessModifiers } from './tokens/AccessModifiers';
 import { Keyword } from './tokens/Keyword';
+import { SpecificKeyword } from './tokens/SpesificKeyword';
 import { StopToken } from './tokens/StopToken';
 import { StringToken } from './tokens/StringToken';
+import { Types } from './tokens/Types';
 
 @injectable()
 export class Parser {
@@ -17,6 +19,8 @@ export class Parser {
 
   public parse({ input }: { input: string }) {
     const tokens = this.lexer.getTokens({ input });
+
+    console.log(tokens);
 
     return this.recursiveConstruction({
       tokens,
@@ -42,6 +46,7 @@ export class Parser {
           tokens: currentTokens,
           currentIndex,
           level,
+          parent: null,
         });
 
         if (value) {
@@ -66,45 +71,56 @@ export class Parser {
     const syntaxStorage: Record<string, Syntax[]> = {};
 
     const functionArguments = this.addSyntax({
-      syntax: new Syntax(new Keyword('(')).then(new Keyword(')')),
+      syntax: new Syntax(new SpecificKeyword('(')).then(
+        new SpecificKeyword(')')
+      ),
       syntaxStorage,
     });
 
     const unnamedArguments = this.addSyntax({
-      syntax: new Syntax(new Keyword('(')).thenRecursive(
-        new Syntax(new Keyword('uint8')),
+      syntax: new Syntax(new SpecificKeyword('(')).thenRecursive(
+        new Syntax(new Types()),
         new StopToken(')')
       ),
       syntaxStorage,
     });
 
     const variablesAssignment = this.addSyntax({
-      syntax: new Syntax(new Keyword('uint8'))
+      syntax: new Syntax(new Types())
         .then(new AccessModifiers())
         .then(new StringToken())
-        .then(new Keyword(';')),
+        .then(new SpecificKeyword(';')),
+      syntaxStorage,
+    });
+
+    const localVariableAssignment = this.addSyntax({
+      syntax: new Syntax(new Types())
+        .then(new StringToken())
+        .then(new SpecificKeyword('='))
+        .then(new StringToken())
+        .then(new SpecificKeyword(';')),
       syntaxStorage,
     });
 
     const returnStatement = this.addSyntax({
-      syntax: new Syntax(new Keyword('return'))
+      syntax: new Syntax(new SpecificKeyword('return'))
         .then(new StringToken())
-        .then(new Keyword(';')),
+        .then(new SpecificKeyword(';')),
       syntaxStorage,
     });
 
     const functionSection = this.addSyntax({
-      syntax: new Syntax(new Keyword('function'))
+      syntax: new Syntax(new SpecificKeyword('function'))
         .then(new StringToken())
         .then(functionArguments)
         .then(new AccessModifiers())
-        .then(new Keyword('pure'))
-        .then(new Keyword('returns'))
+        .then(new SpecificKeyword('pure'))
+        .then(new SpecificKeyword('returns'))
         .then(unnamedArguments)
         .then(
           // TODO: seperate this into local and global code section
-          new Syntax(new Keyword('{')).thenRecursive(
-            [variablesAssignment, returnStatement],
+          new Syntax(new SpecificKeyword('{')).thenRecursive(
+            [localVariableAssignment, returnStatement],
             // TODO: Is this a good abstraction ?
             // stop token and start token for recursion?
             new StopToken('}')
@@ -114,7 +130,7 @@ export class Parser {
     });
 
     const codeSection = this.addSyntax({
-      syntax: new Syntax(new Keyword('{')).thenRecursive(
+      syntax: new Syntax(new SpecificKeyword('{')).thenRecursive(
         [variablesAssignment, functionSection],
         // TODO: Is this a good abstraction ?
         // stop token and start token for recursion?
@@ -123,12 +139,14 @@ export class Parser {
       syntaxStorage,
     });
     const emptyCodeSection = this.addSyntax({
-      syntax: new Syntax(new Keyword('{')).then(new Keyword('}')),
+      syntax: new Syntax(new SpecificKeyword('{')).then(
+        new SpecificKeyword('}')
+      ),
       syntaxStorage,
     });
 
     this.addSyntax({
-      syntax: new Syntax(new Keyword('contract'))
+      syntax: new Syntax(new SpecificKeyword('contract'))
         .then(new StringToken())
         .then([codeSection, emptyCodeSection]),
       syntaxStorage,
@@ -148,14 +166,17 @@ export class Parser {
     if (!(syntaxRoot instanceof Keyword)) {
       throw new Error('First token in a syntax must be a keyword');
     }
-    const rootToken = syntaxRoot.value;
+    const rootToken = syntaxRoot.value();
     if (!rootToken) {
       throw new Error('expected root token');
     }
-    if (!syntaxStorage[rootToken]) {
-      syntaxStorage[rootToken] = [];
-    }
-    syntaxStorage[rootToken].push(syntax);
+    const values = !Array.isArray(rootToken) ? [rootToken] : rootToken;
+    values.forEach((rootToken) => {
+      if (!syntaxStorage[rootToken]) {
+        syntaxStorage[rootToken] = [];
+      }
+      syntaxStorage[rootToken].push(syntax);
+    });
 
     return syntax;
   }

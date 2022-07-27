@@ -138,6 +138,105 @@ describe('Parser', () => {
 
     const functionNode = scope.nodes[0];
     expect(functionNode.value).toBe('function');
+  });
+
+  it('should correctly construct a ast tree for a pure function', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      uint8 public name;
+
+      function return1() public pure returns (uint8) {
+        return 1;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    expect(tree).toBeTruthy();
+    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
+    expect(tree.nodes[0].value).toBe('SimpleContract');
+
+    const scope = tree.nodes[1];
+    expect(scope.value).toBe('{');
+
+    const variableNode = scope.nodes[0];
+    expect(variableNode.value).toBe('uint8');
+
+    const functionNode = scope.nodes[1];
     expect(functionNode.value).toBe('function');
+  });
+
+  it('should correctly parse comments', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      uint8 public name;
+
+      /*
+      function return1() public pure returns (uint8) {
+        return 1;
+      }
+      */
+
+      // this is a test
+
+      uint8 public name;
+
+      function return1() public pure returns (uint8) {
+        return 1;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    expect(tree).toBeTruthy();
+    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
+    expect(tree.nodes[0].value).toBe('SimpleContract');
+
+    const scope = tree.nodes[1];
+    expect(scope.value).toBe('{');
+
+    const variableNode = scope.nodes[0];
+    expect(variableNode.value).toBe('uint8');
+
+    const secondVariableNode = scope.nodes[1];
+    expect(secondVariableNode.value).toBe('uint8');
+
+    const functionNode = scope.nodes[2];
+    expect(functionNode.value).toBe('function');
+  });
+
+  it('should correctly parse variables inside functions', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      function return1() public pure returns (uint8) {
+        uint8 name = 1;
+        return name;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    expect(tree).toBeTruthy();
+    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
+    expect(tree.nodes[0].value).toBe('SimpleContract');
+
+    const scope = tree.nodes[1];
+    expect(scope.value).toBe('{');
+
+    const functionNode = scope.nodes[0];
+    expect(functionNode.value).toBe('function');
+
+    const secondVariableNode =
+      functionNode.nodes[functionNode.nodes.length - 1].nodes[0];
+    expect(secondVariableNode.value).toBe('uint8');
   });
 });
