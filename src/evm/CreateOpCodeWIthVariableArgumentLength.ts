@@ -17,10 +17,13 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
     stack: EvmStack;
   }) => void | ExecutionResults;
   arguments: number | ((index: number) => number);
+  deltaStart?: number;
 }) {
   const record: Record<number, OpCode> = {};
   for (let opcode = options.fromOpcode; opcode <= options.toOpcode; opcode++) {
-    const delta = 1 + (opcode - options.fromOpcode);
+    const jumpStart =
+      typeof options.deltaStart === 'number' ? options.deltaStart : 1;
+    const delta = jumpStart + (opcode - options.fromOpcode);
     const opcode_arguments =
       typeof options.arguments == 'number'
         ? options.arguments

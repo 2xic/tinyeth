@@ -1,8 +1,8 @@
-import { opcodes } from './Opcodes';
+import { Opcodes } from './Opcodes';
 
 export const mnemonicLookup: Record<string, number> = {};
 
-Object.entries(opcodes).forEach(([opcode, opcodeImplementation]) => {
+Object.entries(Opcodes).forEach(([opcode, opcodeImplementation]) => {
   const ref = mnemonicLookup[opcodeImplementation.mnemonic];
   if (ref) {
     throw Error(`Colliding opcode name (${ref} and ${opcode})`);

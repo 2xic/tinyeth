@@ -1,7 +1,7 @@
 import { EvmStack } from './EvmStack';
 import { InvalidPc } from './errors/InvalidPc';
 import { ExecutionResults, OpCode } from './OpCode';
-import { opcodes } from './Opcodes';
+import { Opcodes } from './Opcodes';
 import { Wei } from './eth-units/Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
@@ -74,7 +74,7 @@ export class Evm {
     }
 
     const { opcode, opcodeNumber } = this.loadOpcode();
-    this.logger.log(`Running ${opcodes[opcodeNumber].mnemonic}`);
+    this.logger.log(`Running ${Opcodes[opcodeNumber].mnemonic}`);
     const evmContext: EvmContext = {
       evm: this,
       stack: this.stack,
@@ -144,7 +144,7 @@ export class Evm {
 
   private loadOpcode(): { opcode: OpCode; opcodeNumber: number } {
     const opcodeNumber = this.currentOpcodeNumber;
-    const opcode = opcodes[opcodeNumber];
+    const opcode = Opcodes[opcodeNumber];
     if (!opcode) {
       throw new Error(`0x${opcodeNumber.toString(16)}`);
     }

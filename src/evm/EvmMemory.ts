@@ -2,6 +2,8 @@ import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 
+// TODO: should be restricted to 32 bit size
+
 @injectable()
 export class EvmMemory {
   private memory!: Buffer;

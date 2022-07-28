@@ -15,7 +15,7 @@ import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 // TODO: see if there is away around this.
 BigNumber.set({ EXPONENTIAL_AT: 1024 });
 
-export const opcodes: Record<number, OpCode> = {
+export const Opcodes: Record<number, OpCode> = {
   0x0: new OpCode({
     name: 'STOP',
     arguments: 0,
@@ -820,7 +820,8 @@ export const opcodes: Record<number, OpCode> = {
     fromOpcode: 0xa0,
     toOpcode: 0xa4,
     baseName: 'LOG',
-    arguments: (index) => index + 1,
+    deltaStart: 0,
+    arguments: () => 0,
     iteratedExecuteConstruction: () => () => {
       // This should not change the EVM state, but need to add gas adjustments
       // It's used for events.

@@ -1,7 +1,7 @@
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { mnemonicLookup } from './MnemonicLookup';
-import { opcodes } from './Opcodes';
+import { Opcodes } from './Opcodes';
 
 export class MnemonicParser {
   public parse(options: ScriptInterface | ConvertInterface): Buffer {
@@ -32,7 +32,7 @@ export class MnemonicParser {
       }
       let converted_arguments = Buffer.from(
         opcode_arguments
-          .slice(1, opcodes[foundOpcode].length)
+          .slice(1, Opcodes[foundOpcode].length)
           .map((item) =>
             item.startsWith('0x')
               ? getBufferFromHex(item).toString('hex')
@@ -41,7 +41,7 @@ export class MnemonicParser {
           .join(''),
         'hex'
       );
-      const argumentsPadding = opcodes[foundOpcode].length - 1;
+      const argumentsPadding = Opcodes[foundOpcode].length - 1;
       if (converted_arguments.length < argumentsPadding) {
         converted_arguments = Buffer.concat([
           Buffer.alloc(argumentsPadding - converted_arguments.length),
