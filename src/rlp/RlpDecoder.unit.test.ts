@@ -1,4 +1,4 @@
-import { cleanString } from '../utils';
+import { cleanString } from '../utils/cleanString';
 import { RlpDecoder } from './RlpDecoder';
 
 describe('RlpDecoder', () => {

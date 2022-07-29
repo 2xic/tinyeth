@@ -64,6 +64,10 @@ import { ForkId } from '../network/rlpx/eth/ForkId';
 import { SendEthMessage } from '../network/rlpx/eth/SendEthMessage';
 import { Lexer } from '../tiny-solidiity-compiler/Lexer';
 import { Parser } from '../tiny-solidiity-compiler/Parser';
+import { AstToByteCode } from '../tiny-solidiity-compiler/AstToByteCode';
+import { EvmProgram } from '../tiny-solidiity-compiler/EvmProgram';
+import { EvmByteCodeMacros } from '../tiny-solidiity-compiler/EvmBytecodeMacros';
+import { MnemonicParser } from '../evm/MnemonicParser';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -166,8 +170,12 @@ export class CoreContainer {
 
     container.bind(BlockLoader).toSelf();
 
+    container.bind(MnemonicParser).toSelf();
     container.bind(Lexer).toSelf();
     container.bind(Parser).toSelf();
+    container.bind(AstToByteCode).toSelf();
+    container.bind(EvmProgram).toSelf();
+    container.bind(EvmByteCodeMacros).toSelf();
 
     return container;
   }

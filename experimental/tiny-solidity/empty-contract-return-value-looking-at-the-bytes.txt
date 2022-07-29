@@ -1,21 +1,25 @@
     6080604052600080fdfea264697066735822122062b37c2f49de67be4e4e8d8e912267eeef2505297138bd257fd40fe4e97a2d1064736f6c634300080f0033
-
 PUSH1 0x80
 PUSH1 0x40
 MSTORE 
+    -> 
 PUSH1 0x00
 DUP1 
 REVERT 
 INVALID 
+    -> Oh, this is automatically invalid, how nice.
 LOG2 
 PUSH5 0x6970667358
 INVALID
+    -> what is this doing here ?
 SLT 
 SHA3 
 PUSH3 0xb37c2f
+    -> What is this doing here ? 
 INVALID
 INVALID
 PUSH8 0xbe4e4e8d8e912267
+    -> What is this doing here ? 
 INVALID
 INVALID
 INVALID
@@ -23,6 +27,7 @@ SDIV
 INVALID
 PUSH18 0x38bd257fd40fe4e97a2d1064736f6c634300
 ADDMOD 
+    -> What is this doing here ? 
 INVALID
 STOP 
 CALLER 

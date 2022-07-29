@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { mnemonicLookup } from './MnemonicLookup';
 import { Opcodes } from './Opcodes';
 
+@injectable()
 export class MnemonicParser {
   public parse(options: ScriptInterface | ConvertInterface): Buffer {
     if ('mnemonics' in options) {

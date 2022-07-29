@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../../container/UnitTestContainer';
-import { cleanString } from '../../utils';
+import { cleanString } from '../../utils/cleanString';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { WireMessageDecoder, WirePacketTypes } from './WireMessageDecoder';
 
