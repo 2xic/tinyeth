@@ -235,6 +235,7 @@ export class Syntax {
   }
 
   public construct(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     returnNode: new (values: Record<string, string>) => FieldNode<any>
   ): Syntax {
     this.nodeConstruction = returnNode;

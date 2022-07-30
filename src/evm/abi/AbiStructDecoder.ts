@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { buf } from 'crc-32/*';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Address } from '../Address';
 
@@ -46,10 +45,6 @@ export class AbiStructDecoder {
             array.push(item);
           }
         }
-        /*
-        if (type === 'ARRAY_BYTES') {
-          array.reverse();
-        }*/
         results.push(array);
         index += 32;
       } else if (type === 'ARRAY_BYTES') {
@@ -78,7 +73,7 @@ export class AbiStructDecoder {
 
         if (1 < size) {
           for (let i = 0; i < size; i++) {
-            const _size = buffer.slice(location, location + 32).toString('hex');
+            // const _size = buffer.slice(location, location + 32).toString('hex');
             location += 32;
 
             const bytes = buffer.slice(location, location + 32).toString('hex');

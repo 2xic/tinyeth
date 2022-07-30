@@ -18,6 +18,7 @@ import { Logger } from '../utils/Logger';
 import { EvmAccountState } from './EvmAccountState';
 import { DebugOptions, EvmBootOptions, EvmContext } from './interfaceEvm';
 import { EvmErrorTrace } from './EvmErrorTrace';
+import { Contract } from './Contract';
 
 @injectable()
 export class Evm {
@@ -193,6 +194,36 @@ export class Evm {
 
   public get gasLeft() {
     return this._gasLeft;
+  }
+
+  // TODO: should add proper deployment support, and interaction.
+  public deploy({ contractBytes }: { contractBytes: Buffer }) {
+    const forkedEvm = this.evmSubContextCall.fork({
+      txContext: this.context,
+      evmContext: {
+        evm: this,
+        stack: this.stack,
+        network: this.network,
+        storage: this.storage,
+        memory: this.memory,
+        gasComputer: this.gasComputer,
+        accessSets: this.accessSets,
+        byteIndex: this.pc,
+        context: this.context,
+        subContext: this.subContext,
+        evmSubContextCall: this.evmSubContextCall,
+        evmAccountState: this.evmAccountState,
+      },
+    });
+    const contract = new Contract({
+      program: contractBytes,
+      value: new BigNumber(0),
+      context: this.context,
+    }).execute(forkedEvm);
+
+    this.network.register({ contract });
+
+    return contract.address;
   }
 }
 

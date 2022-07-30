@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import { MnemonicParser } from '../evm/MnemonicParser';
-import { getBufferFromHex } from '../utils';
 
 @injectable()
 export class EvmByteCodeMacros {

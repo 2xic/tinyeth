@@ -160,6 +160,15 @@ export class Parser {
         .construct(ContractNode),
       syntaxStorage,
     });
+    /**
+     * Syntax missing
+     *  library definitions
+     *  if / else conditions
+     *  make function payable
+     *  assembly keyword
+     * +++ https://docs.soliditylang.org/en/v0.8.15/grammar.html
+     *
+     */
 
     return syntaxStorage;
   }

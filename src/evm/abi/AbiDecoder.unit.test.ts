@@ -92,8 +92,8 @@ describe('AbiDecoder', () => {
     });
     expect(decodedArguments).toHaveLength(2);
     expect(decodedArguments[0].toString()).toEqual('324124');
-    expect(getBigNumber(decodedArguments[1])?.toString(16)).toEqual(
-      'cd2a3d9f938e13cd947ec05abc7fe734df8dd826'
+    expect(decodedArguments[1].toString()).toEqual(
+      '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826'
     );
   });
 
