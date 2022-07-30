@@ -1,7 +1,6 @@
 import { KeywordNode } from '../ast/KeywordNode';
 import { Node } from '../ast/Node';
 import { Keyword } from './Keyword';
-import { Token } from './Token';
 
 export class Types extends Keyword {
   private keywords = ['uint8', 'uint64', 'address'];

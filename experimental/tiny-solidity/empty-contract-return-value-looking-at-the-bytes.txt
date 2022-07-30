@@ -8,6 +8,7 @@ DUP1
 REVERT 
 INVALID 
     -> Oh, this is automatically invalid, how nice.
+    -> that will also revert any transfers, so does not need to check callvalue
 LOG2 
 PUSH5 0x6970667358
 INVALID

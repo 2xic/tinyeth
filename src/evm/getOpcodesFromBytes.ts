@@ -1,4 +1,3 @@
-import { buf } from 'crc-32/*';
 import { Opcodes } from './Opcodes';
 
 export function getOpcodesFromBytes(input: Buffer) {

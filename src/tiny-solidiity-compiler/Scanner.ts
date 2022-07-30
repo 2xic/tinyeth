@@ -1,5 +1,3 @@
-import { privateKeyImport } from 'secp256k1';
-
 export class Scanner {
   private index = 0;
 

@@ -1,11 +1,11 @@
 PUSH1 0x80
 PUSH1 0x40
 MSTORE 
-CALLVALUE 
-DUP1 
-ISZERO 
-PUSH1 0x0f
-JUMPI 
+CALLVALUE       -> Part of the jump table
+DUP1            -> Part of the jump table
+ISZERO          -> Part of the jump table
+PUSH1 0x0f      -> Part of the jump table
+JUMPI           -> Part of the jump table
     PUSH1 0x00
     DUP1 
     REVERT
@@ -105,10 +105,12 @@ SWAP2
 POP 
 POP 
 JUMP 
+
 INVALID 
 LOG2 
 PUSH5 0x6970667358
 INVALID
+    -> Also in the empty contract
 SLT 
 SHA3 
 INVALID

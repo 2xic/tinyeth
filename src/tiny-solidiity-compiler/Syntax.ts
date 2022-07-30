@@ -1,12 +1,17 @@
+import { FieldNode } from './ast/FieldNode';
 import { KeywordNode } from './ast/KeywordNode';
 import { Node } from './ast/Node';
 import { RecursiveSyntax } from './RecursiveSyntax';
 import { Keyword } from './tokens/Keyword';
-import { StopToken } from './tokens/StopToken';
 import { Token } from './tokens/Token';
+import { TokenName } from './tokens/TokenName';
 
 export class Syntax {
   private tokenOrder: Array<SyntaxInput | RecursiveSyntax> = [];
+
+  private nodeConstruction:
+    | undefined
+    | (new (values: Record<string, string>) => FieldNode) = undefined;
 
   constructor(rootToken: Token) {
     this.tokenOrder.push(rootToken);
@@ -34,6 +39,8 @@ export class Syntax {
     parent: null | Node;
   }): null | [Node, number] {
     let root: Node | undefined;
+    const fieldValues: Record<string, string> = {};
+
     let movement = 0;
     const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
       const addNode = (node: Node) => {
@@ -85,6 +92,10 @@ export class Syntax {
               parent: root || null,
             });
             if (options.isValid) {
+              if (item instanceof TokenName) {
+                fieldValues[item.name] = tokenValue;
+              }
+
               addNode(options.node);
               currentIndex += options.movedIndex;
               movement += options.movedIndex + 1;
@@ -118,11 +129,31 @@ export class Syntax {
     });
 
     if (hasValidSyntax) {
+      if (this.nodeConstruction) {
+        // TODO: This should be done automatically on construction
+        if (root instanceof FieldNode) {
+          return [root, movement];
+        }
+        const fieldNode = new this.nodeConstruction(fieldValues);
+        const recursiveAddFieldNodes = (currentNode: Node) => {
+          currentNode?.nodes.forEach((item) => {
+            if (item instanceof FieldNode) {
+              // TODO, this should only transfer field nodes.
+              fieldNode.add(item);
+            } else {
+              recursiveAddFieldNodes(item);
+            }
+          });
+        };
+        if (root) {
+          recursiveAddFieldNodes(root);
+        }
+
+        return [fieldNode, movement];
+      }
       if (root) {
         return [root, movement]; // this.tokenOrder.length];
       } else {
-        console.log(tokens);
-        console.log(currentIndex);
         throw new Error('This should not happen');
       }
     } else {
@@ -184,7 +215,6 @@ export class Syntax {
         };
       } else {
         const [node, movement] = results;
-        console.log([level, movement]);
         return {
           isValid: true,
           movedIndex: movement - 1,
@@ -202,6 +232,17 @@ export class Syntax {
       throw new Error('First token should always be a identifier');
     }
     return value;
+  }
+
+  public construct(
+    returnNode: new (values: Record<string, string>) => FieldNode<any>
+  ): Syntax {
+    this.nodeConstruction = returnNode;
+    return this;
+  }
+
+  public get node() {
+    return this.nodeConstruction;
   }
 }
 

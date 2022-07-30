@@ -1,4 +1,4 @@
-import { VariableNode } from '../ast/VariableNode';
+import { StringNode } from '../ast/StringNode';
 import { Token } from './Token';
 
 export class StringToken extends Token {
@@ -10,7 +10,7 @@ export class StringToken extends Token {
     return !!input.match(/^[0-9a-zA-Z]+$/);
   }
 
-  public node(): new (value: string) => VariableNode {
-    return VariableNode;
+  public node(): new (value: string) => StringNode {
+    return StringNode;
   }
 }

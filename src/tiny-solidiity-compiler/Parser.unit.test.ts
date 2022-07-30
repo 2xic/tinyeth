@@ -1,6 +1,8 @@
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../container/UnitTestContainer';
-import { KeywordNode } from './ast/KeywordNode';
+import { ContractNode } from './ast/ContractNode';
+import { FunctionNode } from './ast/FunctionNode';
+import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
 import { Parser } from './Parser';
 
@@ -34,20 +36,16 @@ describe('Parser', () => {
       throw new Error('Error');
     }
     expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('VariableContract');
 
-    expect(tree.nodes[1]).toBeInstanceOf(KeywordNode);
-    const scope = tree.nodes[1];
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('VariableContract');
 
-    // TODO: is this actually needed ?
-    expect(scope.value).toBe('{');
-    expect(scope.nodes[1].value).toBe('}');
-
-    const uint8 = scope.nodes[0];
-    expect(uint8.value).toBe('uint8');
-    expect(uint8.nodes[0].value).toBe('public');
-    expect(uint8.nodes[1].value).toBe('name');
+    const variableNode = tree.nodes[0] as VariableNode;
+    expect(variableNode).toBeInstanceOf(VariableNode);
+    expect(variableNode.fields.type).toBe('uint8');
+    expect(variableNode.fields.name).toBe('name');
+    expect(variableNode.fields.access).toBe('public');
   });
 
   it('should correctly construct a ast tree with private access modifiers', () => {
@@ -63,21 +61,15 @@ describe('Parser', () => {
       throw new Error('Error');
     }
 
-    expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('VariableContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('VariableContract');
 
-    expect(tree.nodes[1]).toBeInstanceOf(KeywordNode);
-    const scope = tree.nodes[1];
-
-    // TODO: is this actually needed ?
-    expect(scope.value).toBe('{');
-    expect(scope.nodes[1].value).toBe('}');
-
-    const uint8 = scope.nodes[0];
-    expect(uint8.value).toBe('uint8');
-    expect(uint8.nodes[0].value).toBe('private');
-    expect(uint8.nodes[1].value).toBe('name');
+    const variableNode = tree.nodes[0] as VariableNode;
+    expect(variableNode).toBeInstanceOf(VariableNode);
+    expect(variableNode.fields.type).toBe('uint8');
+    expect(variableNode.fields.name).toBe('name');
+    expect(variableNode.fields.access).toBe('private');
   });
 
   it('should correctly construct a ast tree with multiple variables', () => {
@@ -95,25 +87,21 @@ describe('Parser', () => {
       throw new Error('Error');
     }
     expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('VariableContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('VariableContract');
 
-    expect(tree.nodes[1]).toBeInstanceOf(KeywordNode);
-    const scope = tree.nodes[1];
+    const publicVariableNode = tree.nodes[0] as VariableNode;
+    expect(publicVariableNode).toBeInstanceOf(VariableNode);
+    expect(publicVariableNode.fields.type).toBe('uint8');
+    expect(publicVariableNode.fields.name).toBe('name');
+    expect(publicVariableNode.fields.access).toBe('public');
 
-    // TODO: is this actually needed ?
-    expect(scope.value).toBe('{');
-    expect(scope.nodes[2].value).toBe('}');
-
-    const publicUint8 = scope.nodes[0];
-    expect(publicUint8.value).toBe('uint8');
-    expect(publicUint8.nodes[0].value).toBe('public');
-    expect(publicUint8.nodes[1].value).toBe('name');
-
-    const privateUint8 = scope.nodes[1];
-    expect(privateUint8.value).toBe('uint8');
-    expect(privateUint8.nodes[0].value).toBe('private');
-    expect(privateUint8.nodes[1].value).toBe('name');
+    const privateVariableNode = tree.nodes[1] as VariableNode;
+    expect(privateVariableNode).toBeInstanceOf(VariableNode);
+    expect(privateVariableNode.fields.type).toBe('uint8');
+    expect(privateVariableNode.fields.name).toBe('name');
+    expect(privateVariableNode.fields.access).toBe('private');
   });
 
   it('should correctly construct a ast tree for a pure function', () => {
@@ -129,18 +117,15 @@ describe('Parser', () => {
     if (!tree) {
       throw new Error('Error');
     }
-    expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('SimpleContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
 
-    const scope = tree.nodes[1];
-    expect(scope.value).toBe('{');
-
-    const functionNode = scope.nodes[0];
-    expect(functionNode.value).toBe('function');
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
   });
 
-  it('should correctly construct a ast tree for a pure function', () => {
+  it('should correctly construct a ast tree for a pure function with a variable', () => {
     const simpleSolidity = `
     contract SimpleContract {
       uint8 public name;
@@ -155,18 +140,15 @@ describe('Parser', () => {
     if (!tree) {
       throw new Error('Error');
     }
-    expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('SimpleContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
 
-    const scope = tree.nodes[1];
-    expect(scope.value).toBe('{');
+    const variableNode = contractNode.nodes[0] as VariableNode;
+    expect(variableNode.fields.type).toBe('uint8');
 
-    const variableNode = scope.nodes[0];
-    expect(variableNode.value).toBe('uint8');
-
-    const functionNode = scope.nodes[1];
-    expect(functionNode.value).toBe('function');
+    const functionNode = contractNode.nodes[1] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
   });
 
   it('should correctly parse comments', () => {
@@ -194,24 +176,35 @@ describe('Parser', () => {
     if (!tree) {
       throw new Error('Error');
     }
-    expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('SimpleContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
 
-    const scope = tree.nodes[1];
-    expect(scope.value).toBe('{');
+    const firstVariableNode = contractNode.nodes[0] as VariableNode;
+    expect(firstVariableNode.fields.type).toBe('uint8');
 
-    const variableNode = scope.nodes[0];
-    expect(variableNode.value).toBe('uint8');
+    const secondVariableNode = contractNode.nodes[1] as VariableNode;
+    expect(secondVariableNode.fields.type).toBe('uint8');
 
-    const secondVariableNode = scope.nodes[1];
-    expect(secondVariableNode.value).toBe('uint8');
-
-    const functionNode = scope.nodes[2];
-    expect(functionNode.value).toBe('function');
+    const functionNode = contractNode.nodes[2] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
   });
 
   it('should correctly parse variables inside functions', () => {
+    /**
+     * How should this be interpreted ?
+     *  I think this way to visualize it makes it better, and cleaner
+     *        contract node (name field)
+     *          /
+     *        function node (name, returns field)
+     *        /
+     *       variable_1 (type, name, value field)
+     *      /
+     *      return_1 (name field)
+     *  Currently add values are added as a child to a root node.
+     *  The root node should be the name of the Node.
+     *  ReturnNode for instance.
+     */
     const simpleSolidity = `
     contract SimpleContract {
       function return1() public pure returns (uint8) {
@@ -225,18 +218,19 @@ describe('Parser', () => {
     if (!tree) {
       throw new Error('Error');
     }
-    expect(tree).toBeTruthy();
-    expect(tree.nodes[0]).toBeInstanceOf(VariableNode);
-    expect(tree.nodes[0].value).toBe('SimpleContract');
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
 
-    const scope = tree.nodes[1];
-    expect(scope.value).toBe('{');
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
 
-    const functionNode = scope.nodes[0];
-    expect(functionNode.value).toBe('function');
+    const functionNodeScopeUint8 = functionNode.nodes[0] as VariableNode;
+    expect(functionNodeScopeUint8.fields.type).toBe('uint8');
+    expect(functionNodeScopeUint8.fields.name).toBe('name');
+    expect(functionNodeScopeUint8.fields.value).toBe('1');
 
-    const secondVariableNode =
-      functionNode.nodes[functionNode.nodes.length - 1].nodes[0];
-    expect(secondVariableNode.value).toBe('uint8');
+    const functionNodeReturn = functionNode.nodes[1] as ReturnNode;
+    expect(functionNodeReturn.fields.value).toBe('name');
   });
 });

@@ -1,5 +1,9 @@
 import { injectable } from 'inversify';
+import { ContractNode } from './ast/ContractNode';
+import { FunctionNode } from './ast/FunctionNode';
 import { Node } from './ast/Node';
+import { ReturnNode } from './ast/ReturnNode';
+import { VariableNode } from './ast/VariableNode';
 import { Lexer } from './Lexer';
 import { Syntax } from './Syntax';
 import { AccessModifiers } from './tokens/AccessModifiers';
@@ -7,6 +11,7 @@ import { Keyword } from './tokens/Keyword';
 import { SpecificKeyword } from './tokens/SpesificKeyword';
 import { StopToken } from './tokens/StopToken';
 import { StringToken } from './tokens/StringToken';
+import { TokenName } from './tokens/TokenName';
 import { Types } from './tokens/Types';
 
 @injectable()
@@ -19,8 +24,6 @@ export class Parser {
 
   public parse({ input }: { input: string }) {
     const tokens = this.lexer.getTokens({ input });
-
-    console.log(tokens);
 
     return this.recursiveConstruction({
       tokens,
@@ -85,53 +88,58 @@ export class Parser {
       syntaxStorage,
     });
 
-    const variablesAssignment = this.addSyntax({
-      syntax: new Syntax(new Types())
-        .then(new AccessModifiers())
-        .then(new StringToken())
-        .then(new SpecificKeyword(';')),
+    const variablesDeceleration = this.addSyntax({
+      syntax: new Syntax(new TokenName(new Types(), 'type'))
+        .then(new TokenName(new AccessModifiers(), 'access'))
+        .then(new TokenName(new StringToken(), 'name'))
+        .then(new SpecificKeyword(';'))
+        .construct(VariableNode),
       syntaxStorage,
     });
 
     const localVariableAssignment = this.addSyntax({
-      syntax: new Syntax(new Types())
-        .then(new StringToken())
+      syntax: new Syntax(new TokenName(new Types(), 'type'))
+        .then(new TokenName(new StringToken(), 'name'))
         .then(new SpecificKeyword('='))
-        .then(new StringToken())
-        .then(new SpecificKeyword(';')),
+        .then(new TokenName(new StringToken(), 'value'))
+        .then(new SpecificKeyword(';'))
+        .construct(VariableNode),
       syntaxStorage,
     });
 
     const returnStatement = this.addSyntax({
       syntax: new Syntax(new SpecificKeyword('return'))
-        .then(new StringToken())
-        .then(new SpecificKeyword(';')),
+        .then(new TokenName(new StringToken(), 'value'))
+        //.then(new StringToken())
+        .then(new SpecificKeyword(';'))
+        .construct(ReturnNode),
       syntaxStorage,
     });
 
     const functionSection = this.addSyntax({
       syntax: new Syntax(new SpecificKeyword('function'))
-        .then(new StringToken())
+        .then(new TokenName(new StringToken(), 'name'))
         .then(functionArguments)
         .then(new AccessModifiers())
         .then(new SpecificKeyword('pure'))
         .then(new SpecificKeyword('returns'))
         .then(unnamedArguments)
         .then(
-          // TODO: seperate this into local and global code section
+          // TODO: separate this into local and global code section
           new Syntax(new SpecificKeyword('{')).thenRecursive(
             [localVariableAssignment, returnStatement],
             // TODO: Is this a good abstraction ?
             // stop token and start token for recursion?
             new StopToken('}')
           )
-        ),
+        )
+        .construct(FunctionNode),
       syntaxStorage,
     });
 
     const codeSection = this.addSyntax({
       syntax: new Syntax(new SpecificKeyword('{')).thenRecursive(
-        [variablesAssignment, functionSection],
+        [variablesDeceleration, functionSection],
         // TODO: Is this a good abstraction ?
         // stop token and start token for recursion?
         new StopToken('}')
@@ -147,8 +155,9 @@ export class Parser {
 
     this.addSyntax({
       syntax: new Syntax(new SpecificKeyword('contract'))
-        .then(new StringToken())
-        .then([codeSection, emptyCodeSection]),
+        .then(new TokenName(new StringToken(), 'name'))
+        .then([codeSection, emptyCodeSection])
+        .construct(ContractNode),
       syntaxStorage,
     });
 
@@ -162,7 +171,12 @@ export class Parser {
     syntax: Syntax;
     syntaxStorage: Record<string, Syntax[]>;
   }) {
-    const syntaxRoot = syntax.root;
+    let syntaxRoot = syntax.root;
+
+    if (syntaxRoot instanceof TokenName) {
+      syntaxRoot = syntaxRoot.token;
+    }
+
     if (!(syntaxRoot instanceof Keyword)) {
       throw new Error('First token in a syntax must be a keyword');
     }

@@ -10,8 +10,6 @@ Just some thoughts, implementation over the next few days
 */
 
 import { injectable } from 'inversify';
-import { isTemplateExpression } from 'typescript';
-import { GetRandomBytesInteractor } from '../network/nonce-generator/GetRandomBytesInteractor';
 import { getBufferFromHex } from '../utils';
 import { EvmByteCodeMacros } from './EvmBytecodeMacros';
 import { EvmProgram } from './EvmProgram';
