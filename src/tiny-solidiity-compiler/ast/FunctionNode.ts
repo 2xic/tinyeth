@@ -9,4 +9,5 @@ export class FunctionNode extends FieldNode<FunctionNodeFields> {
 interface FunctionNodeFields {
   name: string;
   payable: boolean;
+  modifier: string;
 }

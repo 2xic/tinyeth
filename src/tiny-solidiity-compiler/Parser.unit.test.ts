@@ -224,6 +224,7 @@ describe('Parser', () => {
 
     const functionNode = contractNode.nodes[0] as FunctionNode;
     expect(functionNode.fields.name).toBe('return1');
+    expect(functionNode.fields.modifier).toBe('pure');
 
     const functionNodeScopeUint8 = functionNode.nodes[0] as VariableNode;
     expect(functionNodeScopeUint8.fields.type).toBe('uint8');
@@ -253,6 +254,28 @@ describe('Parser', () => {
 
     const functionNode = contractNode.nodes[0] as FunctionNode;
     expect(functionNode.fields.name).toBe('return1');
+  });
+
+  it('should correctly construct a ast tree when function has payable modifier', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      function return1() public payable returns (uint8) {
+        return 1;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+    expect(functionNode.fields.modifier).toBe('payable');
   });
 
   it('should correctly construct a ast tree when function returns nothing', () => {

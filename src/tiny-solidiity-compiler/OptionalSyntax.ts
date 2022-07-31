@@ -1,3 +1,4 @@
+import { makeArray } from '../network/utils/makeArray';
 import { Syntax } from './Syntax';
 
 export class OptionalSyntax {
@@ -16,9 +17,7 @@ export class OptionalSyntax {
     if (!thenSyntax) {
       throw new Error('Bad input');
     }
-    const optionalSyntax = Array.isArray(this.optionalSyntax)
-      ? this.optionalSyntax
-      : [this.optionalSyntax];
+    const optionalSyntax = makeArray(this.optionalSyntax);
 
     return [...optionalSyntax.map((item) => item.then(thenSyntax)), thenSyntax];
   }

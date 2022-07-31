@@ -1,10 +1,19 @@
 import { Abi } from '../evm';
 import { MnemonicParser } from '../evm/MnemonicParser';
+import { SimpleBuffers } from '../utils/SimpleBuffers';
 
 export class JumpTable {
-  private functions: Array<[string, Buffer]> = [];
+  private functions: Array<
+    [string, (options: BuildFunctionOptions) => Buffer]
+  > = [];
 
-  public add({ name, functionCode }: { name: string; functionCode: Buffer }) {
+  public add({
+    name,
+    functionCode,
+  }: {
+    name: string;
+    functionCode: (options: BuildFunctionOptions) => Buffer;
+  }) {
     this.functions.push([name, functionCode]);
   }
 
@@ -32,21 +41,34 @@ export class JumpTable {
         `,
       });
 
-      return Buffer.concat([
-        extra,
+      const simpleBuffer = new SimpleBuffers();
+      simpleBuffer.concat(extra);
+      simpleBuffer.concat(
         new MnemonicParser().parse({
           script: `
-          PUSH1 ${length + extra.length + 2 + revert.length}
-        `,
-        }),
-        revert,
+        PUSH1 ${length + extra.length + 2 + revert.length}
+      `,
+        })
+      );
+      simpleBuffer.concat(revert);
+      simpleBuffer.concat(
         new MnemonicParser().parse({
           script: 'JUMPDEST',
-        }),
-        this.functions[0][1],
-      ]);
+        })
+      );
+      simpleBuffer.concat(
+        this.functions[0][1]({
+          length: simpleBuffer.length,
+        })
+      );
+
+      return simpleBuffer.build();
     } else {
       throw new Error('Not implemented');
     }
   }
+}
+
+interface BuildFunctionOptions {
+  length: number;
 }

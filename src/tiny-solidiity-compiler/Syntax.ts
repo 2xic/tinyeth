@@ -1,3 +1,4 @@
+import { makeArray } from '../network/utils/makeArray';
 import { FieldNode } from './ast/FieldNode';
 import { KeywordNode } from './ast/KeywordNode';
 import { Node } from './ast/Node';
@@ -9,6 +10,8 @@ import { TokenName } from './tokens/TokenName';
 
 export class Syntax {
   private tokenOrder: Array<SyntaxInput | RecursiveSyntax> = [];
+
+  private connectedFields = false;
 
   private nodeConstruction:
     | undefined
@@ -33,9 +36,7 @@ export class Syntax {
     thenSyntax: Syntax | OptionalSyntax
   ) {
     // TODO: clean this up
-    const optionalSyntaxArray = Array.isArray(optionalSyntax)
-      ? optionalSyntax
-      : [optionalSyntax];
+    const optionalSyntaxArray = makeArray(optionalSyntax);
     const convertedThenSyntax =
       thenSyntax instanceof OptionalSyntax
         ? thenSyntax.optionality()
@@ -68,9 +69,9 @@ export class Syntax {
     level: number;
     tokens: string[];
     parent: null | Node;
-  }): null | [Node, number] {
+  }): null | [Node, number, Record<string, string>] {
     let root: Node | undefined;
-    const fieldValues: Record<string, string> = {};
+    let fieldValues: Record<string, string> = {};
 
     let movement = 0;
     const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
@@ -82,7 +83,7 @@ export class Syntax {
         }
       };
 
-      const rootItems = Array.isArray(inputItem) ? inputItem : [inputItem];
+      const rootItems = makeArray(inputItem);
 
       const rootCopy: Node = Object.assign({}, root);
       return rootItems.find((rootItem) => {
@@ -126,6 +127,14 @@ export class Syntax {
               if (item instanceof TokenName) {
                 fieldValues[item.name] = tokenValue;
               }
+              if (item instanceof Syntax) {
+                if (item.connectedFields) {
+                  fieldValues = {
+                    ...fieldValues,
+                    ...options.fieldValues,
+                  };
+                }
+              }
 
               addNode(options.node);
               currentIndex += options.movedIndex;
@@ -151,6 +160,7 @@ export class Syntax {
               }
             }
           });
+
           if (noMatch) {
             break;
           }
@@ -163,7 +173,7 @@ export class Syntax {
       if (this.nodeConstruction) {
         // TODO: This should be done automatically on construction
         if (root instanceof FieldNode) {
-          return [root, movement];
+          return [root, movement, fieldValues];
         }
         const fieldNode = new this.nodeConstruction(fieldValues);
         const recursiveAddFieldNodes = (currentNode: Node) => {
@@ -180,10 +190,10 @@ export class Syntax {
           recursiveAddFieldNodes(root);
         }
 
-        return [fieldNode, movement];
+        return [fieldNode, movement, fieldValues];
       }
       if (root) {
-        return [root, movement]; // this.tokenOrder.length];
+        return [root, movement, fieldValues]; // this.tokenOrder.length];
       } else {
         throw new Error('This should not happen');
       }
@@ -211,6 +221,7 @@ export class Syntax {
         isValid: boolean;
         movedIndex: number;
         node: Node;
+        fieldValues: Record<string, string>;
       }
     | {
         isValid: false;
@@ -231,6 +242,7 @@ export class Syntax {
           isValid: true,
           movedIndex: 0,
           node,
+          fieldValues: {},
         };
       }
     } else if (item instanceof Syntax) {
@@ -245,11 +257,12 @@ export class Syntax {
           isValid: false,
         };
       } else {
-        const [node, movement] = results;
+        const [node, movement, fieldValues] = results;
         return {
           isValid: true,
           movedIndex: movement - 1,
           node,
+          fieldValues,
         };
       }
     } else {
@@ -275,6 +288,11 @@ export class Syntax {
 
   public get node() {
     return this.nodeConstruction;
+  }
+
+  public isConnectedFields(): Syntax {
+    this.connectedFields = true;
+    return this;
   }
 }
 

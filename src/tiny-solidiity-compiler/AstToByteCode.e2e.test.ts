@@ -46,7 +46,7 @@ describe('AstToByteCode', () => {
     );
   });
 
-  it.skip('should not be able to pay a non-payable function', () => {
+  it('should not be able to pay a non-payable function', () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -68,10 +68,8 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
-    expect(evm.callingContextReturnData?.toString('hex')).toBe(
-      '0000000000000000000000000000000000000000000000000000000000000001'
-    );
+
+    expect(() => evm.execute()).toThrowError(Reverted);
   });
 
   it('should revert trying to call non existing function', () => {

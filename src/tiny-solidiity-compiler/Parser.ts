@@ -8,6 +8,7 @@ import { Lexer } from './Lexer';
 import { OptionalSyntax } from './OptionalSyntax';
 import { Syntax } from './Syntax';
 import { AccessModifiers } from './tokens/AccessModifiers';
+import { FunctionModifierTypesToken } from './tokens/FunctionModifierTypesToken';
 import { Keyword } from './tokens/Keyword';
 import { SpecificKeyword } from './tokens/SpesificKeyword';
 import { StopToken } from './tokens/StopToken';
@@ -123,14 +124,27 @@ export class Parser {
         .then(functionArguments)
         // TODO: Is this a good abstraction ?
         //      It does look a bit messy.
+        //    ALSO! It does not currently propagate fields upwards.
+        //    This results in us currently not being able to know the modifier
+        //    because it's an optional syntax.
+        /*
+          Thinking about this a bit more, what is the best way to solve for this ?
+          ->  We can just tell the syntax to use the fields at a higher level ?
+          ->  We need a way to separate levels.
+          ->  Then optional fields with parent fields.
+            -> This makes it easy to separate.
+            -> Then optional always carriers fields of child nodes ?
+        */
         .thenOptional(
           [
-            new Syntax(new AccessModifiers()).then(new SpecificKeyword('pure')),
+            new Syntax(new AccessModifiers())
+              .then(new TokenName(new FunctionModifierTypesToken(), 'modifier'))
+              .isConnectedFields(),
             new Syntax(new AccessModifiers()),
           ],
           new OptionalSyntax().paths(
             new Syntax(new SpecificKeyword('returns')).then(unnamedArguments),
-
+            // Shared
             new Syntax(new SpecificKeyword('{')).thenRecursive(
               [localVariableAssignment, returnStatement],
               // TODO: Is this a good abstraction ?
