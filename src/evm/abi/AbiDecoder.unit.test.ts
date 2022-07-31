@@ -8,9 +8,6 @@ import { AbiStructEncoder } from './AbiStructEncoder';
 import { AbiUintType } from './AbiUintType';
 
 describe('AbiDecoder', () => {
-  const getBigNumber = (item: unknown) => {
-    return BigNumber.isBigNumber(item) ? item : null;
-  };
   const getBuffer = (item: unknown) => {
     return Buffer.isBuffer(item) ? item : null;
   };

@@ -5,6 +5,7 @@ import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
 import { Lexer } from './Lexer';
+import { OptionalSyntax } from './OptionalSyntax';
 import { Syntax } from './Syntax';
 import { AccessModifiers } from './tokens/AccessModifiers';
 import { Keyword } from './tokens/Keyword';
@@ -120,17 +121,22 @@ export class Parser {
       syntax: new Syntax(new SpecificKeyword('function'))
         .then(new TokenName(new StringToken(), 'name'))
         .then(functionArguments)
-        .then(new AccessModifiers())
-        .then(new SpecificKeyword('pure'))
-        .then(new SpecificKeyword('returns'))
-        .then(unnamedArguments)
-        .then(
-          // TODO: separate this into local and global code section
-          new Syntax(new SpecificKeyword('{')).thenRecursive(
-            [localVariableAssignment, returnStatement],
-            // TODO: Is this a good abstraction ?
-            // stop token and start token for recursion?
-            new StopToken('}')
+        // TODO: Is this a good abstraction ?
+        //      It does look a bit messy.
+        .thenOptional(
+          [
+            new Syntax(new AccessModifiers()).then(new SpecificKeyword('pure')),
+            new Syntax(new AccessModifiers()),
+          ],
+          new OptionalSyntax().paths(
+            new Syntax(new SpecificKeyword('returns')).then(unnamedArguments),
+
+            new Syntax(new SpecificKeyword('{')).thenRecursive(
+              [localVariableAssignment, returnStatement],
+              // TODO: Is this a good abstraction ?
+              // stop token and start token for recursion?
+              new StopToken('}')
+            )
           )
         )
         .construct(FunctionNode),

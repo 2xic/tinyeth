@@ -233,4 +233,49 @@ describe('Parser', () => {
     const functionNodeReturn = functionNode.nodes[1] as ReturnNode;
     expect(functionNodeReturn.fields.value).toBe('name');
   });
+
+  it('should correctly construct a ast tree when function has no modifiers specified', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      function return1() public returns (uint8) {
+        return 1;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+  });
+
+  it('should correctly construct a ast tree when function returns nothing', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      function return1() public {
+        uint8 name = 1;
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+
+    const variableNode = functionNode.nodes[0] as VariableNode;
+    expect(variableNode.fields.name).toBe('name');
+  });
 });

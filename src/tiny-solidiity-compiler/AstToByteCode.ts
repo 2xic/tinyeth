@@ -56,6 +56,13 @@ export class AstToByteCode {
 
   private compileFunction({ node }: { node: FunctionNode }): Buffer {
     for (const child of node.nodes) {
+      /*
+        - This should be more strict
+          - view = no change to change
+          - Pure = no interaction with state
+          - Payable = allow state changes
+          - Support custom modifiers.
+      */
       if (child instanceof ReturnNode) {
         let bufferOutput = Buffer.alloc(0);
         // TODO: This should ideally check if the value is a variable or not.

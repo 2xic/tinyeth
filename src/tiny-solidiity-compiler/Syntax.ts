@@ -1,6 +1,7 @@
 import { FieldNode } from './ast/FieldNode';
 import { KeywordNode } from './ast/KeywordNode';
 import { Node } from './ast/Node';
+import { OptionalSyntax } from './OptionalSyntax';
 import { RecursiveSyntax } from './RecursiveSyntax';
 import { Keyword } from './tokens/Keyword';
 import { Token } from './tokens/Token';
@@ -24,6 +25,36 @@ export class Syntax {
 
   public thenRecursive(token: Syntax | Syntax[], stopToken: Token) {
     this.tokenOrder.push(new RecursiveSyntax(token, stopToken));
+    return this;
+  }
+
+  public thenOptional(
+    optionalSyntax: Syntax | Syntax[],
+    thenSyntax: Syntax | OptionalSyntax
+  ) {
+    // TODO: clean this up
+    const optionalSyntaxArray = Array.isArray(optionalSyntax)
+      ? optionalSyntax
+      : [optionalSyntax];
+    const convertedThenSyntax =
+      thenSyntax instanceof OptionalSyntax
+        ? thenSyntax.optionality()
+        : thenSyntax;
+
+    optionalSyntaxArray.forEach((item) => {
+      item.then(convertedThenSyntax);
+    });
+
+    const thenActualSyntax = Array.isArray(convertedThenSyntax)
+      ? undefined
+      : convertedThenSyntax;
+
+    const paths = [...optionalSyntaxArray];
+    if (thenActualSyntax) {
+      paths.push(thenActualSyntax);
+    }
+
+    this.tokenOrder.push(paths);
     return this;
   }
 
