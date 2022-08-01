@@ -1,5 +1,6 @@
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../container/UnitTestContainer';
+import { ConditionalNode } from './ast/ConditionalNode';
 import { ContractNode } from './ast/ContractNode';
 import { FunctionNode } from './ast/FunctionNode';
 import { ReturnNode } from './ast/ReturnNode';
@@ -301,4 +302,71 @@ describe('Parser', () => {
     const variableNode = functionNode.nodes[0] as VariableNode;
     expect(variableNode.fields.name).toBe('name');
   });
+
+  it('should correctly construct a ast tree with conditional nodes', () => {
+    const simpleSolidity = `
+    contract SimpleContract {
+      function return1() public {
+        if (true) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+
+    const firstConditionalNode = functionNode.nodes[0] as ConditionalNode;
+    expect(firstConditionalNode).toBeInstanceOf(ConditionalNode);
+
+    // TODO: Reflect, should it be a child, or not ?
+    const secondConditionalNode = firstConditionalNode
+      .nodes[1] as ConditionalNode;
+    expect(secondConditionalNode).toBeInstanceOf(ConditionalNode);
+  });
+
+  it('should throw an parsing error on invalid syntax', () => {
+    expect(() =>
+      parser.parse({
+        input: `
+      function return1() public {
+        if (true) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    `,
+      })
+    ).toThrowError();
+
+    expect(() =>
+      parser.parse({
+        input: `
+        contract SimpleContract {
+          function return1() public {
+            else {
+              return 0;
+            }
+          }
+        }
+  `,
+      })
+    ).toThrowError();
+  });
+
+  it.skip('should be able to allocate storage and track variables', () => {});
+
+  it.skip('should be able to do if with variables', () => {});
 });

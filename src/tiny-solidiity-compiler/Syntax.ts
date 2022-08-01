@@ -33,8 +33,12 @@ export class Syntax {
 
   public thenOptional(
     optionalSyntax: Syntax | Syntax[],
-    thenSyntax: Syntax | OptionalSyntax
+    thenSyntax?: Syntax | OptionalSyntax
   ) {
+    if (!thenSyntax) {
+      this.tokenOrder.push(makeArray(optionalSyntax));
+      return this;
+    }
     // TODO: clean this up
     const optionalSyntaxArray = makeArray(optionalSyntax);
     const convertedThenSyntax =
@@ -193,7 +197,7 @@ export class Syntax {
         return [fieldNode, movement, fieldValues];
       }
       if (root) {
-        return [root, movement, fieldValues]; // this.tokenOrder.length];
+        return [root, movement, fieldValues];
       } else {
         throw new Error('This should not happen');
       }

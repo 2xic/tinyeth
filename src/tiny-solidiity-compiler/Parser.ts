@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { ConditionalNode } from './ast/ConditionalNode';
 import { ContractNode } from './ast/ContractNode';
 import { FunctionNode } from './ast/FunctionNode';
 import { Node } from './ast/Node';
@@ -75,59 +76,74 @@ export class Parser {
   private constructSyntax(): Record<string, Syntax[]> {
     const syntaxStorage: Record<string, Syntax[]> = {};
 
-    const functionArguments = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('(')).then(
-        new SpecificKeyword(')')
-      ),
-      syntaxStorage,
-    });
+    const functionArguments = new Syntax(new SpecificKeyword('(')).then(
+      new SpecificKeyword(')')
+    );
 
-    const unnamedArguments = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('(')).thenRecursive(
-        new Syntax(new Types()),
-        new StopToken(')')
-      ),
-      syntaxStorage,
-    });
+    const unnamedArguments = new Syntax(new SpecificKeyword('(')).thenRecursive(
+      new Syntax(new Types()),
+      new StopToken(')')
+    );
 
-    const variablesDeceleration = this.addSyntax({
-      syntax: new Syntax(new TokenName(new Types(), 'type'))
-        .then(new TokenName(new AccessModifiers(), 'access'))
-        .then(new TokenName(new StringToken(), 'name'))
-        .then(new SpecificKeyword(';'))
-        .construct(VariableNode),
-      syntaxStorage,
-    });
+    const conditionalArguments = new Syntax(
+      new SpecificKeyword('(')
+    ).thenRecursive(
+      // TODO: Should be || and && then token recursive.
+      new Syntax(new SpecificKeyword('true')),
+      new StopToken(')')
+    );
 
-    const localVariableAssignment = this.addSyntax({
-      syntax: new Syntax(new TokenName(new Types(), 'type'))
-        .then(new TokenName(new StringToken(), 'name'))
-        .then(new SpecificKeyword('='))
-        .then(new TokenName(new StringToken(), 'value'))
-        .then(new SpecificKeyword(';'))
-        .construct(VariableNode),
-      syntaxStorage,
-    });
+    const variablesDeceleration = new Syntax(new TokenName(new Types(), 'type'))
+      .then(new TokenName(new AccessModifiers(), 'access'))
+      .then(new TokenName(new StringToken(), 'name'))
+      .then(new SpecificKeyword(';'))
+      .construct(VariableNode);
 
-    const returnStatement = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('return'))
-        .then(new TokenName(new StringToken(), 'value'))
-        //.then(new StringToken())
-        .then(new SpecificKeyword(';'))
-        .construct(ReturnNode),
-      syntaxStorage,
-    });
+    const localVariableAssignment = new Syntax(
+      new TokenName(new Types(), 'type')
+    )
+      .then(new TokenName(new StringToken(), 'name'))
+      .then(new SpecificKeyword('='))
+      .then(new TokenName(new StringToken(), 'value'))
+      .then(new SpecificKeyword(';'))
+      .construct(VariableNode);
 
-    const functionSection = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('function'))
-        .then(new TokenName(new StringToken(), 'name'))
-        .then(functionArguments)
+    const returnStatement = new Syntax(new SpecificKeyword('return'))
+      .then(new TokenName(new StringToken(), 'value'))
+      //.then(new StringToken())
+      .then(new SpecificKeyword(';'))
+      .construct(ReturnNode);
+    const elseStatement = new Syntax(new SpecificKeyword('else'))
+      .then(new SpecificKeyword('{'))
+      .thenRecursive(
+        [variablesDeceleration, returnStatement],
         // TODO: Is this a good abstraction ?
-        //      It does look a bit messy.
-        //    ALSO! It does not currently propagate fields upwards.
-        //    This results in us currently not being able to know the modifier
-        //    because it's an optional syntax.
-        /*
+        // stop token and start token for recursion?
+        new StopToken('}')
+      )
+      .construct(ConditionalNode);
+
+    const ifStatement = new Syntax(new SpecificKeyword('if'))
+      .then(conditionalArguments)
+      .then(new SpecificKeyword('{'))
+      .thenRecursive(
+        [variablesDeceleration, returnStatement],
+        // TODO: Is this a good abstraction ?
+        // stop token and start token for recursion?
+        new StopToken('}')
+      )
+      .thenOptional(elseStatement)
+      .construct(ConditionalNode);
+
+    const functionSection = new Syntax(new SpecificKeyword('function'))
+      .then(new TokenName(new StringToken(), 'name'))
+      .then(functionArguments)
+      // TODO: Is this a good abstraction ?
+      //      It does look a bit messy.
+      //    ALSO! It does not currently propagate fields upwards.
+      //    This results in us currently not being able to know the modifier
+      //    because it's an optional syntax.
+      /*
           Thinking about this a bit more, what is the best way to solve for this ?
           ->  We can just tell the syntax to use the fields at a higher level ?
           ->  We need a way to separate levels.
@@ -135,43 +151,35 @@ export class Parser {
             -> This makes it easy to separate.
             -> Then optional always carriers fields of child nodes ?
         */
-        .thenOptional(
-          [
-            new Syntax(new AccessModifiers())
-              .then(new TokenName(new FunctionModifierTypesToken(), 'modifier'))
-              .isConnectedFields(),
-            new Syntax(new AccessModifiers()),
-          ],
-          new OptionalSyntax().paths(
-            new Syntax(new SpecificKeyword('returns')).then(unnamedArguments),
-            // Shared
-            new Syntax(new SpecificKeyword('{')).thenRecursive(
-              [localVariableAssignment, returnStatement],
-              // TODO: Is this a good abstraction ?
-              // stop token and start token for recursion?
-              new StopToken('}')
-            )
+      .thenOptional(
+        [
+          new Syntax(new AccessModifiers())
+            .then(new TokenName(new FunctionModifierTypesToken(), 'modifier'))
+            .isConnectedFields(),
+          new Syntax(new AccessModifiers()),
+        ],
+        new OptionalSyntax().paths(
+          new Syntax(new SpecificKeyword('returns')).then(unnamedArguments),
+          // Shared
+          new Syntax(new SpecificKeyword('{')).thenRecursive(
+            [localVariableAssignment, ifStatement, returnStatement],
+            // TODO: Is this a good abstraction ?
+            // stop token and start token for recursion?
+            new StopToken('}')
           )
         )
-        .construct(FunctionNode),
-      syntaxStorage,
-    });
+      )
+      .construct(FunctionNode);
 
-    const codeSection = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('{')).thenRecursive(
-        [variablesDeceleration, functionSection],
-        // TODO: Is this a good abstraction ?
-        // stop token and start token for recursion?
-        new StopToken('}')
-      ),
-      syntaxStorage,
-    });
-    const emptyCodeSection = this.addSyntax({
-      syntax: new Syntax(new SpecificKeyword('{')).then(
-        new SpecificKeyword('}')
-      ),
-      syntaxStorage,
-    });
+    const codeSection = new Syntax(new SpecificKeyword('{')).thenRecursive(
+      [variablesDeceleration, functionSection],
+      // TODO: Is this a good abstraction ?
+      // stop token and start token for recursion?
+      new StopToken('}')
+    );
+    const emptyCodeSection = new Syntax(new SpecificKeyword('{')).then(
+      new SpecificKeyword('}')
+    );
 
     this.addSyntax({
       syntax: new Syntax(new SpecificKeyword('contract'))
