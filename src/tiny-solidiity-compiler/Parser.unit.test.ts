@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../container/UnitTestContainer';
 import { ConditionalNode } from './ast/ConditionalNode';
@@ -79,7 +80,6 @@ describe('Parser', () => {
           uint8 public name;
 
           uint8 private name;
-          
         }
     `;
 
@@ -364,9 +364,48 @@ describe('Parser', () => {
   `,
       })
     ).toThrowError();
+
+    expect(() =>
+      parser.parse({
+        input: `
+        contract SimpleContract {
+          function return1() public {
+            if {
+              return 0;
+            }
+          }
+        }
+  `,
+      })
+    ).toThrowError();
+
+    expect(() =>
+      parser.parse({
+        input: `
+        contract SimpleContract 
+  `,
+      })
+    ).toThrowError();
   });
 
-  it.skip('should be able to allocate storage and track variables', () => {});
+  it.skip('should correctly make sure a variable is decelerated', () => {
+    expect(() =>
+      parser.parse({
+        input: `
+      contract SimpleContract {
+        function return1() public {
+          // name is not decelerated ...
+          if (name == 1) {
+            return 0;
+          }
+        }
+      }
+`,
+      })
+    ).toThrowError();
+  });
 
-  it.skip('should be able to do if with variables', () => {});
+  it.skip('should be able to allocate storage and update variables', () => {});
+
+  it.skip('should be able to preform if conditions with variables', () => {});
 });

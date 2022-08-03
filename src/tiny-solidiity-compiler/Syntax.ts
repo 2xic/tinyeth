@@ -5,6 +5,7 @@ import { Node } from './ast/Node';
 import { OptionalSyntax } from './OptionalSyntax';
 import { RecursiveSyntax } from './RecursiveSyntax';
 import { Keyword } from './tokens/Keyword';
+import { RequiredSyntax } from './RequiredSyntax';
 import { Token } from './tokens/Token';
 import { TokenName } from './tokens/TokenName';
 
@@ -26,8 +27,13 @@ export class Syntax {
     return this;
   }
 
-  public thenRecursive(token: Syntax | Syntax[], stopToken: Token) {
-    this.tokenOrder.push(new RecursiveSyntax(token, stopToken));
+  public thenRecursive(syntax: Syntax | Syntax[], stopToken: Token) {
+    this.tokenOrder.push(
+      new RecursiveSyntax(
+        makeArray<RequiredSyntax | Syntax>(syntax).concat(new RequiredSyntax()),
+        stopToken
+      )
+    );
     return this;
   }
 
@@ -98,7 +104,7 @@ export class Syntax {
           const tokenValue = tokens[currentIndex + index];
 
           if (rootItem instanceof RecursiveSyntax) {
-            convertedItem = rootItem.recursiveToken;
+            convertedItem = rootItem.recursivePaths;
             if (rootItem.breakRecursion.isValid(tokenValue)) {
               if (!parent) {
                 throw new Error('should this happen ? ');
@@ -112,13 +118,28 @@ export class Syntax {
           }
 
           // TODO: this should probably not be recursive at this level.
-          const items = Array.isArray(convertedItem)
-            ? convertedItem
-            : [convertedItem];
+          const items = makeArray<RequiredSyntax | Syntax | Token>(
+            convertedItem
+          );
 
-          //   console.log([tokenValue, rootItem, currentIndex + index, level]);
           let noMatch = true;
           items.find((item) => {
+            if (rootItem instanceof RecursiveSyntax) {
+              if (
+                rootItem.breakRecursion.isValid(tokens[currentIndex + index])
+              ) {
+                return true;
+              }
+            }
+            if (item instanceof RequiredSyntax) {
+              throw new Error(
+                `Invalid syntax close to ${tokens
+                  .slice(currentIndex, currentIndex + 5)
+                  .join(' ')}`
+              );
+              return false;
+            }
+
             const options = this.isValidOperation({
               currentIndex: currentIndex + index,
               tokens,
@@ -148,8 +169,9 @@ export class Syntax {
                 return true;
               } else {
                 currentIndex += 1;
+                noMatch = false;
+                return true;
               }
-              noMatch = false;
             } else {
               // revert the changes ...
               if (!(rootItem instanceof RecursiveSyntax)) {
