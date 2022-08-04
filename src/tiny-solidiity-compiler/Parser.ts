@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
 import { ConditionalNode } from './ast/ConditionalNode';
 import { ContractNode } from './ast/ContractNode';
 import { FunctionNode } from './ast/FunctionNode';
@@ -20,6 +21,8 @@ import { Types } from './tokens/Types';
 @injectable()
 export class Parser {
   private syntaxReferences: Record<string, Syntax[]>;
+
+  private variableScopes: Record<string, string[]> = {};
 
   constructor(private lexer: Lexer) {
     this.syntaxReferences = this.constructSyntax();
@@ -53,6 +56,7 @@ export class Parser {
           currentIndex,
           level,
           parent: null,
+          variableScopes: this.variableScopes,
         });
 
         if (value) {
@@ -89,7 +93,15 @@ export class Parser {
       new SpecificKeyword('(')
     ).thenRecursive(
       // TODO: Should be || and && then token recursive.
-      new Syntax(new SpecificKeyword('true')),
+      [
+        new Syntax(new TokenName(new StringToken(), 'variable1'))
+          .then(new TokenName(new SpecificKeyword('=='), 'operator'))
+          .then(new TokenName(new StringToken(), 'variable2'))
+          .construct(ConditionalInputVariables),
+        new Syntax(new TokenName(new StringToken(), 'variable')).construct(
+          ConditionalInputVariables
+        ),
+      ],
       new StopToken(')')
     );
 
@@ -122,6 +134,18 @@ export class Parser {
         new StopToken('}')
       )
       .construct(ConditionalNode);
+    const elseIfStatement = new Syntax(new SpecificKeyword('else'))
+      .then(new SpecificKeyword('if'))
+      .then(conditionalArguments)
+      .then(new SpecificKeyword('{'))
+      .thenRecursive(
+        [variablesDeceleration, returnStatement],
+        // TODO: Is this a good abstraction ?
+        // stop token and start token for recursion?
+        new StopToken('}')
+      )
+      .thenOptionalPath([elseStatement])
+      .construct(ConditionalNode);
 
     const ifStatement = new Syntax(new SpecificKeyword('if'))
       .then(conditionalArguments)
@@ -132,7 +156,8 @@ export class Parser {
         // stop token and start token for recursion?
         new StopToken('}')
       )
-      .thenOptional(elseStatement)
+      // TODO: else cannot be before else if, but it currently could
+      .thenOptionalPath([elseStatement, elseIfStatement])
       .construct(ConditionalNode);
 
     const functionSection = new Syntax(new SpecificKeyword('function'))
@@ -151,11 +176,11 @@ export class Parser {
             -> This makes it easy to separate.
             -> Then optional always carriers fields of child nodes ?
         */
-      .thenOptional(
+      .thenOptionalPath(
         [
           new Syntax(new AccessModifiers())
             .then(new TokenName(new FunctionModifierTypesToken(), 'modifier'))
-            .isConnectedFields(),
+            .setConnectedFields(),
           new Syntax(new AccessModifiers()),
         ],
         new OptionalSyntax().paths(

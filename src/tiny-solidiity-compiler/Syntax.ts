@@ -8,6 +8,9 @@ import { Keyword } from './tokens/Keyword';
 import { RequiredSyntax } from './RequiredSyntax';
 import { Token } from './tokens/Token';
 import { TokenName } from './tokens/TokenName';
+import { VariableNode } from './ast/VariableNode';
+import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
+import { UndeclaredVariableError } from './errors/UndeclaredVariableError';
 
 export class Syntax {
   private tokenOrder: Array<SyntaxInput | RecursiveSyntax> = [];
@@ -37,7 +40,7 @@ export class Syntax {
     return this;
   }
 
-  public thenOptional(
+  public thenOptionalPath(
     optionalSyntax: Syntax | Syntax[],
     thenSyntax?: Syntax | OptionalSyntax
   ) {
@@ -74,11 +77,13 @@ export class Syntax {
     currentIndex,
     level,
     parent,
+    variableScopes,
   }: {
     currentIndex: number;
     level: number;
     tokens: string[];
     parent: null | Node;
+    variableScopes: Record<string, string[]>;
   }): null | [Node, number, Record<string, string>] {
     let root: Node | undefined;
     let fieldValues: Record<string, string> = {};
@@ -147,6 +152,7 @@ export class Syntax {
               level,
               item,
               parent: root || null,
+              variableScopes,
             });
             if (options.isValid) {
               if (item instanceof TokenName) {
@@ -202,6 +208,25 @@ export class Syntax {
           return [root, movement, fieldValues];
         }
         const fieldNode = new this.nodeConstruction(fieldValues);
+
+        if (fieldNode instanceof VariableNode) {
+          if (variableScopes[level]) {
+            variableScopes[level].push(fieldNode.fields.value);
+          } else {
+            variableScopes[level] = [fieldNode.fields.value];
+          }
+        } else if (fieldNode instanceof ConditionalInputVariables) {
+          const variables = fieldNode.variables();
+          const isDefined = variables.every((conditionalVariable) => {
+            const variablesScope = Object.values(variableScopes).flat();
+            return variablesScope.includes(conditionalVariable);
+          });
+
+          if (!isDefined) {
+            throw new UndeclaredVariableError();
+          }
+        }
+
         const recursiveAddFieldNodes = (currentNode: Node) => {
           currentNode?.nodes.forEach((item) => {
             if (item instanceof FieldNode) {
@@ -235,6 +260,7 @@ export class Syntax {
     currentIndex,
     level,
     parent,
+    variableScopes,
   }: {
     item: Union;
     tokens: string[];
@@ -242,6 +268,7 @@ export class Syntax {
     currentIndex: number;
     level: number;
     parent: Node | null;
+    variableScopes: Record<string, string[]>;
   }):
     | {
         isValid: boolean;
@@ -277,6 +304,7 @@ export class Syntax {
         currentIndex,
         level: level + 1,
         parent,
+        variableScopes,
       });
       if (!results) {
         return {
@@ -316,7 +344,7 @@ export class Syntax {
     return this.nodeConstruction;
   }
 
-  public isConnectedFields(): Syntax {
+  public setConnectedFields(): Syntax {
     this.connectedFields = true;
     return this;
   }

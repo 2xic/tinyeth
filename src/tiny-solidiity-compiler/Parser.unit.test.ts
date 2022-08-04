@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Container } from 'inversify';
 import { UnitTestContainer } from '../container/UnitTestContainer';
+import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
 import { ConditionalNode } from './ast/ConditionalNode';
 import { ContractNode } from './ast/ContractNode';
 import { FunctionNode } from './ast/FunctionNode';
 import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
+import { UndeclaredVariableError } from './errors/UndeclaredVariableError';
 import { Parser } from './Parser';
 
 describe('Parser', () => {
@@ -309,8 +311,10 @@ describe('Parser', () => {
       function return1() public {
         if (true) {
           return 1;
-        } else {
+        } else if (1 == 2) {
           return 0;
+        } else {
+          return 1;
         }
       }
     }
@@ -329,11 +333,62 @@ describe('Parser', () => {
 
     const firstConditionalNode = functionNode.nodes[0] as ConditionalNode;
     expect(firstConditionalNode).toBeInstanceOf(ConditionalNode);
+    expect(
+      ((firstConditionalNode.nodes[0] as VariableNode).fields as any).variable
+    ).toBe('true');
 
     // TODO: Reflect, should it be a child, or not ?
     const secondConditionalNode = firstConditionalNode
-      .nodes[1] as ConditionalNode;
+      .nodes[2] as ConditionalNode;
     expect(secondConditionalNode).toBeInstanceOf(ConditionalNode);
+    expect(
+      (
+        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
+          .fields as any
+      ).variable1
+    ).toBe('1');
+    expect(
+      (
+        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
+          .fields as any
+      ).variable2
+    ).toBe('2');
+    expect(
+      (
+        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
+          .fields as any
+      ).operator
+    ).toBe('==');
+
+    const thirdConditionalNode = secondConditionalNode
+      .nodes[2] as ConditionalNode;
+    expect(thirdConditionalNode).toBeInstanceOf(ConditionalNode);
+  });
+
+  it('should correctly construct a ast tree with a if conditional nodes', () => {
+    const simpleSolidity = `
+      contract SimpleContract {
+        function return1() public {
+          if (1 == 2){
+            // ok
+          }
+        }
+      }
+    `;
+
+    const tree = parser.parse({ input: simpleSolidity });
+    if (!tree) {
+      throw new Error('Error');
+    }
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+
+    const firstConditionalNode = functionNode.nodes[0] as ConditionalNode;
+    expect(firstConditionalNode).toBeInstanceOf(ConditionalNode);
   });
 
   it('should throw an parsing error on invalid syntax', () => {
@@ -388,7 +443,26 @@ describe('Parser', () => {
     ).toThrowError();
   });
 
-  it.skip('should correctly make sure a variable is decelerated', () => {
+  it('should correctly make sure a variable is decelerated', () => {
+    expect(() =>
+      parser.parse({
+        input: `
+      contract SimpleContract {
+        function return1() public {
+          // name is not decelerated ...
+          if (2 == 1) {
+            return 0;
+          } else {
+            // ok
+          }
+        }
+      }
+`,
+      })
+    ).not.toThrowError(UndeclaredVariableError);
+  });
+
+  it('should correctly make sure a variable is decelerated', () => {
     expect(() =>
       parser.parse({
         input: `
@@ -397,12 +471,14 @@ describe('Parser', () => {
           // name is not decelerated ...
           if (name == 1) {
             return 0;
+          } else {
+            // ok
           }
         }
       }
 `,
       })
-    ).toThrowError();
+    ).toThrowError(UndeclaredVariableError);
   });
 
   it.skip('should be able to allocate storage and update variables', () => {});
