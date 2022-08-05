@@ -14,20 +14,41 @@ export class AbiStructEncoder {
     const parameterIndex: Record<number, string> = {};
     let itemIndex = 0;
 
+    const referenceSize = 32;
+
     const mappedStruct = this.struct.map((item, index) => {
       if (item.isDynamic) {
         const value = item.value.encoding;
         parameterIndex[index] = value;
-        // This will just be reference of 32 bits.
-        itemIndex += 32;
+
+        itemIndex += referenceSize;
         return index;
       }
       itemIndex += getBufferFromHex(item.value.encoding).length;
       return item.value.encoding;
     });
 
-    // TODO : clean up this.
-    for (const item of [...mappedStruct]) {
+    this.setReferenceValue({
+      parameterIndex,
+      mappedStruct,
+      itemIndex,
+    });
+
+    return {
+      encoding: mappedStruct.join(''),
+    };
+  }
+
+  private setReferenceValue({
+    parameterIndex,
+    mappedStruct,
+    itemIndex,
+  }: {
+    parameterIndex: Record<number, string>;
+    mappedStruct: Array<number | string>;
+    itemIndex: number;
+  }) {
+    [...mappedStruct].forEach((item) => {
       if (typeof item == 'number') {
         const value = parameterIndex[item];
         mappedStruct[item] = convertNumberToPadHex(itemIndex).padStart(64, '0');
@@ -35,11 +56,7 @@ export class AbiStructEncoder {
 
         mappedStruct.push(value);
       }
-    }
-
-    return {
-      encoding: mappedStruct.join(''),
-    };
+    });
   }
 
   public get type() {

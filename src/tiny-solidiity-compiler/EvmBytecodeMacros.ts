@@ -58,15 +58,6 @@ export class EvmByteCodeMacros {
 
     return Buffer.concat([jumpStatement, falseStatement, destinationOpcodes]);
   }
-  /*
-  public pop(): Buffer {
-    return this.mnemonicParser.parse({
-      script: `
-                  POP
-              `,
-    });
-  }
-  */
 
   public codeCopyReturn({
     destination,
