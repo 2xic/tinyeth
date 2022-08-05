@@ -51,15 +51,20 @@ export class Evm {
     this.program = program;
     this.context = context;
     this.options = options;
-    this._pc = 0;
-    this._lastPc = -1;
     this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
     this._gasLeft = context.gasLimit.minus(this.gasCost);
-    this.running = true;
+    this.resetPc();
 
     this.logger.log(JSON.stringify(context));
 
     return this;
+  }
+
+  public resetPc() {
+    this._pc = 0;
+    this._lastPc = -1;
+    this.running = true;
+    this._callingContextReturnData = undefined;
   }
 
   public step(): boolean {

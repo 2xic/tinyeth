@@ -1,5 +1,5 @@
 export class UndeclaredVariableError extends Error {
-  constructor() {
-    super('Undeclared variable');
+  constructor(variables: string) {
+    super(`Undeclared variable ${variables}`);
   }
 }

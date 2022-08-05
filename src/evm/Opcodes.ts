@@ -693,6 +693,7 @@ export const Opcodes: Record<number, OpCode> = {
       });
 
       storage.write({ key, value });
+
       return {
         setPc: false,
         // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.

@@ -11,9 +11,10 @@ import { TokenName } from './tokens/TokenName';
 import { VariableNode } from './ast/VariableNode';
 import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
 import { UndeclaredVariableError } from './errors/UndeclaredVariableError';
+import { EmptySyntax } from './EmptySyntax';
 
 export class Syntax {
-  private tokenOrder: Array<SyntaxInput | RecursiveSyntax> = [];
+  private tokenOrder: Array<SyntaxInput | RecursiveSyntax | EmptySyntax> = [];
 
   private connectedFields = false;
 
@@ -41,7 +42,7 @@ export class Syntax {
   }
 
   public thenOptionalPath(
-    optionalSyntax: Syntax | Syntax[],
+    optionalSyntax: Syntax | Array<Syntax | EmptySyntax>,
     thenSyntax?: Syntax | OptionalSyntax
   ) {
     if (!thenSyntax) {
@@ -56,16 +57,18 @@ export class Syntax {
         : thenSyntax;
 
     optionalSyntaxArray.forEach((item) => {
-      item.then(convertedThenSyntax);
+      if (!(item instanceof EmptySyntax)) {
+        item.then(convertedThenSyntax);
+      }
     });
-
+    /*
     const thenActualSyntax = Array.isArray(convertedThenSyntax)
       ? undefined
       : convertedThenSyntax;
-
+    */
     const paths = [...optionalSyntaxArray];
-    if (thenActualSyntax) {
-      paths.push(thenActualSyntax);
+    if (!Array.isArray(convertedThenSyntax)) {
+      paths.push(convertedThenSyntax);
     }
 
     this.tokenOrder.push(paths);
@@ -89,6 +92,7 @@ export class Syntax {
     let fieldValues: Record<string, string> = {};
 
     let movement = 0;
+
     const hasValidSyntax = this.tokenOrder.every((inputItem, index) => {
       const addNode = (node: Node) => {
         if (!root) {
@@ -105,7 +109,7 @@ export class Syntax {
         let shouldRun = true;
         const copiedCurrentIndex = currentIndex;
         while (shouldRun) {
-          let convertedItem;
+          let convertedItem: Syntax | EmptySyntax;
           const tokenValue = tokens[currentIndex + index];
 
           if (rootItem instanceof RecursiveSyntax) {
@@ -128,6 +132,7 @@ export class Syntax {
           );
 
           let noMatch = true;
+
           items.find((item) => {
             if (rootItem instanceof RecursiveSyntax) {
               if (
@@ -136,6 +141,14 @@ export class Syntax {
                 return true;
               }
             }
+
+            if (item instanceof EmptySyntax) {
+              shouldRun = true;
+              noMatch = true;
+
+              return true;
+            }
+
             if (item instanceof RequiredSyntax) {
               throw new Error(
                 `Invalid syntax close to ${tokens
@@ -154,6 +167,7 @@ export class Syntax {
               parent: root || null,
               variableScopes,
             });
+
             if (options.isValid) {
               if (item instanceof TokenName) {
                 fieldValues[item.name] = tokenValue;
@@ -167,7 +181,9 @@ export class Syntax {
                 }
               }
 
-              addNode(options.node);
+              if (options.node) {
+                addNode(options.node);
+              }
               currentIndex += options.movedIndex;
               movement += options.movedIndex + 1;
 
@@ -192,6 +208,10 @@ export class Syntax {
               }
             }
           });
+          /*
+          if (lastItemWasEmpty) {
+            throw new Error('hm?');
+          }*/
 
           if (noMatch) {
             break;
@@ -211,9 +231,9 @@ export class Syntax {
 
         if (fieldNode instanceof VariableNode) {
           if (variableScopes[level]) {
-            variableScopes[level].push(fieldNode.fields.value);
+            variableScopes[level].push(fieldNode.fields.name);
           } else {
-            variableScopes[level] = [fieldNode.fields.value];
+            variableScopes[level] = [fieldNode.fields.name];
           }
         } else if (fieldNode instanceof ConditionalInputVariables) {
           const variables = fieldNode.variables();
@@ -223,7 +243,7 @@ export class Syntax {
           });
 
           if (!isDefined) {
-            throw new UndeclaredVariableError();
+            throw new UndeclaredVariableError(`${variables.join(',')}`);
           }
         }
 

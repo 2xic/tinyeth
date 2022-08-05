@@ -6,6 +6,8 @@ import { FunctionNode } from './ast/FunctionNode';
 import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
+import { VariableOperatorNode } from './ast/VariableOperatorNode';
+import { EmptySyntax } from './EmptySyntax';
 import { Lexer } from './Lexer';
 import { OptionalSyntax } from './OptionalSyntax';
 import { Syntax } from './Syntax';
@@ -120,6 +122,14 @@ export class Parser {
       .then(new SpecificKeyword(';'))
       .construct(VariableNode);
 
+    const variableIncrement = new Syntax(
+      new TokenName(new StringToken(), 'name')
+    )
+      .then(new TokenName(new SpecificKeyword('+='), 'operator'))
+      .then(new TokenName(new StringToken(), 'value'))
+      .then(new SpecificKeyword(';'))
+      .construct(VariableOperatorNode);
+
     const returnStatement = new Syntax(new SpecificKeyword('return'))
       .then(new TokenName(new StringToken(), 'value'))
       //.then(new StringToken())
@@ -157,7 +167,7 @@ export class Parser {
         new StopToken('}')
       )
       // TODO: else cannot be before else if, but it currently could
-      .thenOptionalPath([elseStatement, elseIfStatement])
+      .thenOptionalPath([elseStatement, elseIfStatement, new EmptySyntax()])
       .construct(ConditionalNode);
 
     const functionSection = new Syntax(new SpecificKeyword('function'))
@@ -187,7 +197,12 @@ export class Parser {
           new Syntax(new SpecificKeyword('returns')).then(unnamedArguments),
           // Shared
           new Syntax(new SpecificKeyword('{')).thenRecursive(
-            [localVariableAssignment, ifStatement, returnStatement],
+            [
+              localVariableAssignment,
+              variableIncrement,
+              ifStatement,
+              returnStatement,
+            ],
             // TODO: Is this a good abstraction ?
             // stop token and start token for recursion?
             new StopToken('}')

@@ -10,12 +10,18 @@ import { Parser, ProductionContainer } from '../dist/';
     })
     .get(Parser);
     const simpleSolidity = `
-      contract SimpleContract {
-        function return1() public pure returns (uint8) {
-          uint8 name = 1;
-          return name;
+    contract SimpleContract {
+      uint8 public name;
+
+      uint8 public fade;
+
+      function return1() public {
+
+        if (name == fade){
+          return 1;
         }
       }
+    }
     `;
 
     //   uint8 private name;

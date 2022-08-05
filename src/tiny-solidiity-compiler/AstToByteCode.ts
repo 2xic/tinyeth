@@ -3,10 +3,13 @@ import { MnemonicParser } from '../evm/MnemonicParser';
 import { SimpleBuffers } from '../utils/SimpleBuffers';
 import { FunctionNode } from './ast/FunctionNode';
 import { ReturnNode } from './ast/ReturnNode';
+import { VariableNode } from './ast/VariableNode';
+import { VariableOperatorNode } from './ast/VariableOperatorNode';
 import { EvmByteCodeMacros } from './EvmBytecodeMacros';
 import { EvmProgram } from './EvmProgram';
 import { JumpTable } from './JumpTable';
 import { Parser } from './Parser';
+import { VariableTable } from './VariableTable';
 
 @injectable()
 export class AstToByteCode {
@@ -26,16 +29,22 @@ export class AstToByteCode {
     }
     let output = this.evmByteCodeMacros.allocateMemory();
     const jumpTable = new JumpTable();
+    const variableTable = new VariableTable();
 
     // Should probably be a tree search.
     for (const node of tree.nodes) {
       if (node instanceof FunctionNode) {
         jumpTable.add({
           name: node.fieldValues.name,
-          functionCode: ({ length }) => this.compileFunction({ node, length }),
+          functionCode: ({ length }) =>
+            this.compileFunction({ variableTable, node, length }),
+        });
+      } else if (node instanceof VariableNode) {
+        variableTable.add({
+          name: node.fields.name,
         });
       } else {
-        throw new Error('Not supported.');
+        throw new Error(`Not supported. ${node}`);
       }
     }
 
@@ -47,9 +56,11 @@ export class AstToByteCode {
   private compileFunction({
     node,
     length,
+    variableTable,
   }: {
     node: FunctionNode;
     length: number;
+    variableTable: VariableTable;
   }): Buffer {
     const bufferOutput = new SimpleBuffers();
     if (node.fields.modifier !== 'payable') {
@@ -85,11 +96,42 @@ export class AstToByteCode {
             })
           );
         } else {
-          throw new Error('We don`t support variables yet sir.');
+          bufferOutput.concat(
+            this.mnemonicParser.parse({
+              script: `
+              PUSH1 ${variableTable.getSlot({ name: child.fields.value })}
+              SLOAD
+              PUSH1 0x0
+              MSTORE
+              PUSH1 32
+              PUSH1 0x0
+              return
+            `,
+            })
+          );
         }
 
         return bufferOutput.build();
+      } else if (child instanceof VariableOperatorNode) {
+        // This can be moved to another function.
+        if (child.fields.operator == '+=') {
+          bufferOutput.concat(
+            this.mnemonicParser.parse({
+              script: `
+                PUSH1 ${variableTable.getSlot({ name: child.fields.name })}
+                SLOAD
+                PUSH1 ${child.fields.value}
+                ADD
+                PUSH1 $${variableTable.getSlot({ name: child.fields.name })}
+                SSTORE
+              `,
+            })
+          );
+        } else {
+          throw new Error('Unknown operator');
+        }
       } else {
+        //console.log(child);
         throw new Error('Unknown node');
       }
     }
