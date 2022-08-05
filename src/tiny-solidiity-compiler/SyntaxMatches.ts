@@ -10,6 +10,14 @@ import { EmptySyntax } from './EmptySyntax';
 import { Syntax, Union } from './Syntax';
 
 export class SyntaxMatch {
+  private currentIndex = 0;
+
+  private tokens: string[] = [];
+
+  private variableScopes: Record<string, string[]> = {};
+
+  private fieldValues: Record<string, string> = {};
+
   public matches({
     syntax,
     tokens,
@@ -29,28 +37,23 @@ export class SyntaxMatch {
     movement: number;
     fieldValues: Record<string, string>;
   } {
+    this.currentIndex = currentIndex;
+    this.tokens = tokens;
+    this.variableScopes = variableScopes;
+
     let root: Node | undefined;
-    let fieldValues: Record<string, string> = {};
 
     let movement = 0;
 
     const hasValidSyntax = syntax.tokenOrder.every((inputItem, index) => {
-      const addNode = (node: Node) => {
-        if (!root) {
-          root = node;
-        } else {
-          root.add(node);
-        }
-      };
-
       const rootCopy: Node = Object.assign({}, root);
 
       return makeArray(inputItem).find((rootItem) => {
         let shouldRun = true;
-        const copiedCurrentIndex = currentIndex;
+        const copiedCurrentIndex = this.currentIndex;
         while (shouldRun) {
           let convertedItem: Syntax | EmptySyntax;
-          const tokenValue = tokens[currentIndex + index];
+          const tokenValue = tokens[this.currentIndex + index];
 
           if (rootItem instanceof RecursiveSyntax) {
             convertedItem = rootItem.recursivePaths;
@@ -73,82 +76,31 @@ export class SyntaxMatch {
             convertedItem
           );
 
-          let noMatch = true;
-
-          items.find((item) => {
-            if (rootItem instanceof RecursiveSyntax) {
-              if (
-                rootItem.breakRecursion.isValid(tokens[currentIndex + index])
-              ) {
-                return true;
-              }
-            }
-
-            if (item instanceof EmptySyntax) {
-              shouldRun = true;
-              noMatch = true;
-
-              return true;
-            }
-
-            if (item instanceof RequiredSyntax) {
-              throw new Error(
-                `Invalid syntax close to ${tokens
-                  .slice(currentIndex, currentIndex + 5)
-                  .join(' ')}`
-              );
-            }
-
-            const options = this.isValidOperation({
-              currentIndex: currentIndex + index,
-              tokens,
-              tokenValue,
-              level,
-              item,
-              parent: root || null,
-              variableScopes,
-            });
-
-            if (options.isValid) {
-              if (item instanceof TokenName) {
-                fieldValues[item.name] = tokenValue;
-              }
-              if (item instanceof Syntax) {
-                if (item.connectedFields) {
-                  fieldValues = {
-                    ...fieldValues,
-                    ...options.fieldValues,
-                  };
-                }
-              }
-
-              if (options.node) {
-                addNode(options.node);
-              }
-              currentIndex += options.movedIndex;
-              movement += options.movedIndex + 1;
-
-              if (!(rootItem instanceof RecursiveSyntax)) {
-                return true;
-              } else {
-                currentIndex += 1;
-                noMatch = false;
-                return true;
-              }
-            } else {
-              // revert the changes ...
-              if (!(rootItem instanceof RecursiveSyntax)) {
-                if (root) {
-                  Object.assign(root, rootCopy);
-                  currentIndex = copiedCurrentIndex;
-                  shouldRun = false;
-                } else {
-                  shouldRun = false;
-                }
-                return true;
-              }
-            }
+          const {
+            noMatch,
+            reset,
+            shouldRun: newShouldRun,
+            movement: newMovement,
+            root: newRoot,
+          } = this.isValidItemSyntax({
+            index,
+            items,
+            root,
+            rootItem,
+            level,
           });
+          if (reset) {
+            if (root) {
+              Object.assign(root, rootCopy);
+              this.currentIndex = copiedCurrentIndex;
+              shouldRun = false;
+            } else {
+              shouldRun = false;
+            }
+          }
+          movement += newMovement;
+          shouldRun = newShouldRun;
+          root = newRoot;
 
           if (noMatch) {
             break;
@@ -162,11 +114,125 @@ export class SyntaxMatch {
       return {
         root,
         movement,
-        fieldValues,
+        fieldValues: this.fieldValues,
       };
     } else {
       return null;
     }
+  }
+
+  private isValidItemSyntax({
+    items,
+    index,
+    rootItem,
+    level,
+    root,
+  }: {
+    root: Node | undefined;
+    level: number;
+    index: number;
+    items: Array<RequiredSyntax | Syntax | Token>;
+    rootItem: Syntax | Token | RecursiveSyntax | EmptySyntax;
+  }): {
+    root?: Node;
+    reset: boolean;
+    noMatch: boolean;
+    shouldRun: boolean;
+    movement: number;
+  } {
+    const addNode = (node: Node) => {
+      if (!root) {
+        root = node;
+      } else {
+        root.add(node);
+      }
+    };
+
+    const tokenValue = this.tokens[this.currentIndex + index];
+    let shouldRun = true;
+    let noMatch = true;
+    let reset = false;
+    let movement = 0;
+
+    items.find((item) => {
+      if (rootItem instanceof RecursiveSyntax) {
+        if (
+          rootItem.breakRecursion.isValid(
+            this.tokens[this.currentIndex + index]
+          )
+        ) {
+          return true;
+        }
+      }
+
+      if (item instanceof EmptySyntax) {
+        shouldRun = true;
+        noMatch = true;
+
+        return true;
+      }
+
+      if (item instanceof RequiredSyntax) {
+        throw new Error(
+          `Invalid syntax close to ${this.tokens
+            .slice(this.currentIndex, this.currentIndex + 5)
+            .join(' ')}`
+        );
+      }
+
+      const options = this.isValidOperation({
+        currentIndex: this.currentIndex + index,
+        tokens: this.tokens,
+        tokenValue,
+        level,
+        item,
+        parent: root || null,
+        variableScopes: this.variableScopes,
+      });
+
+      if (options.isValid) {
+        if (item instanceof TokenName) {
+          this.fieldValues[item.name] = tokenValue;
+        }
+        if (item instanceof Syntax) {
+          if (item.connectedFields) {
+            this.fieldValues = {
+              ...this.fieldValues,
+              ...options.fieldValues,
+            };
+          }
+        }
+
+        if (options.node) {
+          addNode(options.node);
+        }
+        this.currentIndex += options.movedIndex;
+        movement += options.movedIndex + 1;
+
+        if (!(rootItem instanceof RecursiveSyntax)) {
+          return true;
+        } else {
+          this.currentIndex += 1;
+          noMatch = false;
+          return true;
+        }
+      } else {
+        // revert the changes ...
+        if (!(rootItem instanceof RecursiveSyntax)) {
+          reset = true;
+          shouldRun = false;
+          return true;
+        }
+      }
+    });
+
+    return {
+      noMatch,
+      reset,
+      shouldRun,
+      movement,
+      root,
+    };
   }
 
   private isValidOperation({
