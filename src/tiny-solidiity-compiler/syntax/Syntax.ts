@@ -8,7 +8,7 @@ import { Token } from '.././tokens/Token';
 import { VariableNode } from '.././ast/VariableNode';
 import { ConditionalInputVariables } from '.././ast/ConditionalInputVariables';
 import { UndeclaredVariableError } from '.././errors/UndeclaredVariableError';
-import { EmptySyntax } from '.././EmptySyntax';
+import { EmptySyntax } from './EmptySyntax';
 import { SyntaxMatch } from './SyntaxMatches';
 import { recursiveAddFieldNodes } from './recursiveAddFieldNodes';
 import { SyntaxContext } from './SyntaxContext';
@@ -74,9 +74,9 @@ export class Syntax {
   public matches({
     tokens,
     currentIndex,
+    variableScopes,
     level,
     parent,
-    variableScopes,
   }: {
     currentIndex: number;
     level: number;
@@ -96,8 +96,9 @@ export class Syntax {
       parent,
       syntax: this,
     });
+
     if (results) {
-      const { root, movement, fieldValues } = results;
+      const { root, indexMovement: movement, fieldValues } = results;
       if (this.nodeConstruction) {
         // TODO: This should be done automatically on construction
         if (root instanceof FieldNode) {

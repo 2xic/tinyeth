@@ -12,6 +12,10 @@ export class SyntaxContext {
       .slice(this.context.currentIndex, this.context.currentIndex + 5)
       .join(' ');
   }
+
+  public get sumIndex(): number {
+    return this.context.currentIndex + this.context.movedIndex;
+  }
 }
 
 export interface Context {

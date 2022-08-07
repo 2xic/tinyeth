@@ -4,7 +4,7 @@ import { Keyword } from '../tokens/Keyword';
 import { RequiredSyntax } from './RequiredSyntax';
 import { Token } from '../tokens/Token';
 import { TokenName } from '../tokens/TokenName';
-import { EmptySyntax } from '../EmptySyntax';
+import { EmptySyntax } from './EmptySyntax';
 import { Syntax, Union } from './Syntax';
 import { SyntaxContext } from './SyntaxContext';
 
@@ -25,8 +25,8 @@ export class SyntaxValidator {
     root?: Node;
     reset: boolean;
     noMatch: boolean;
-    shouldRun: boolean;
-    movement: number;
+    shouldContinueToParseSyntax: boolean;
+    indexMovement: number;
   } {
     const addNode = (node: Node) => {
       if (!root) {
@@ -35,8 +35,6 @@ export class SyntaxValidator {
         root.add(node);
       }
     };
-
-    const tokenValue = syntaxContext.tokenValue;
 
     let shouldRun = true;
     let noMatch = true;
@@ -65,14 +63,15 @@ export class SyntaxValidator {
 
       const options = this.isValidOperation({
         syntaxContext,
+        parent: root || null,
         level,
         item,
-        parent: root || null,
       });
 
       if (options.isValid) {
         if (item instanceof TokenName) {
-          syntaxContext.context.fieldValues[item.name] = tokenValue;
+          syntaxContext.context.fieldValues[item.name] =
+            syntaxContext.tokenValue;
         }
         if (item instanceof Syntax) {
           if (item.connectedFields) {
@@ -86,6 +85,7 @@ export class SyntaxValidator {
         if (options.node) {
           addNode(options.node);
         }
+
         syntaxContext.context.currentIndex += options.movedIndex;
         movement += options.movedIndex + 1;
 
@@ -109,8 +109,8 @@ export class SyntaxValidator {
     return {
       noMatch,
       reset,
-      shouldRun,
-      movement,
+      shouldContinueToParseSyntax: shouldRun,
+      indexMovement: movement,
       root,
     };
   }
@@ -150,20 +150,19 @@ export class SyntaxValidator {
         const node = new NodeConstructor(syntaxContext.tokenValue);
 
         return {
-          isValid: true,
-          movedIndex: 0,
           node,
+          movedIndex: 0,
+          isValid: true,
           fieldValues: {},
         };
       }
     } else if (item instanceof Syntax) {
       const results = item.matches({
         tokens: syntaxContext.context.tokens,
-        currentIndex:
-          syntaxContext.context.currentIndex + syntaxContext.context.movedIndex,
+        currentIndex: syntaxContext.sumIndex,
+        variableScopes: syntaxContext.context.variableScopes,
         level: level + 1,
         parent,
-        variableScopes: syntaxContext.context.variableScopes,
       });
       if (!results) {
         return {

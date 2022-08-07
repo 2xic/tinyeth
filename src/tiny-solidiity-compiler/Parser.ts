@@ -7,7 +7,7 @@ import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
 import { VariableOperatorNode } from './ast/VariableOperatorNode';
-import { EmptySyntax } from './EmptySyntax';
+import { EmptySyntax } from './syntax/EmptySyntax';
 import { Lexer } from './Lexer';
 import { OptionalSyntax } from './syntax/OptionalSyntax';
 import { Syntax } from './syntax/Syntax';
@@ -56,9 +56,9 @@ export class Parser {
         const value = syntax.matches({
           tokens: currentTokens,
           currentIndex,
+          variableScopes: this.variableScopes,
           level,
           parent: null,
-          variableScopes: this.variableScopes,
         });
 
         if (value) {

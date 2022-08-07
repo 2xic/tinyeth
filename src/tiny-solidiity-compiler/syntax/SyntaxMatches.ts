@@ -4,7 +4,7 @@ import { Node } from '.././ast/Node';
 import { RecursiveSyntax } from './RecursiveSyntax';
 import { RequiredSyntax } from './RequiredSyntax';
 import { Token } from '.././tokens/Token';
-import { EmptySyntax } from '.././EmptySyntax';
+import { EmptySyntax } from './EmptySyntax';
 import { Syntax } from './Syntax';
 import { SyntaxContext } from './SyntaxContext';
 import { SyntaxValidator } from './SyntaxValidator';
@@ -22,25 +22,25 @@ export class SyntaxMatch {
     syntaxContext: SyntaxContext;
   }): null | {
     root?: Node;
-    movement: number;
+    indexMovement: number;
     fieldValues: Record<string, string>;
   } {
-    let root: Node | undefined;
-
-    let movement = 0;
+    const context: Context = {
+      root: undefined,
+      indexMovement: 0,
+      shouldContinueToParseSyntax: true,
+    };
 
     const hasValidSyntax = syntax.tokenOrder.every((inputItem, index) => {
-      const rootCopy: Node = Object.assign({}, root);
+      const rootCopy: Node = Object.assign({}, context.root);
 
       return makeArray(inputItem).find((rootItem) => {
-        let shouldRun = true;
+        context.shouldContinueToParseSyntax = true;
+
         const copiedCurrentIndex = syntaxContext.context.currentIndex;
-        while (shouldRun) {
+        while (context.shouldContinueToParseSyntax) {
           let convertedItem: Syntax | EmptySyntax;
-          const tokenValue =
-            syntaxContext.context.tokens[
-              syntaxContext.context.currentIndex + index
-            ];
+          const tokenValue = syntaxContext.tokenValue;
 
           if (rootItem instanceof RecursiveSyntax) {
             convertedItem = rootItem.recursivePaths;
@@ -50,8 +50,10 @@ export class SyntaxMatch {
                   'should not be able to break out of recursion without a parent item.'
                 );
               }
-              root?.add(new KeywordNode(tokenValue));
-              movement++;
+
+              context.root?.add(new KeywordNode(tokenValue));
+              context.indexMovement++;
+
               break;
             }
           } else {
@@ -68,45 +70,54 @@ export class SyntaxMatch {
           const {
             noMatch,
             reset,
-            shouldRun: newShouldRun,
-            movement: newMovement,
-            root: newRoot,
+            shouldContinueToParseSyntax,
+            root,
+            indexMovement,
           } = new SyntaxValidator().isValidItemSyntax({
             items,
-            root,
+            root: context.root,
             rootItem,
             level,
             syntaxContext,
           });
+
           if (reset) {
-            if (root) {
-              Object.assign(root, rootCopy);
+            if (context.root) {
+              Object.assign(context.root, rootCopy);
               syntaxContext.context.currentIndex = copiedCurrentIndex;
-              shouldRun = false;
+              context.shouldContinueToParseSyntax = false;
             } else {
-              shouldRun = false;
+              context.shouldContinueToParseSyntax = false;
             }
+          } else {
+            context.shouldContinueToParseSyntax = shouldContinueToParseSyntax;
           }
-          movement += newMovement;
-          shouldRun = newShouldRun;
-          root = newRoot;
+
+          context.indexMovement += indexMovement;
+          context.root = root;
 
           if (noMatch) {
             break;
           }
         }
-        return shouldRun;
+        return context.shouldContinueToParseSyntax;
       });
     });
 
     if (hasValidSyntax) {
       return {
-        root,
-        movement,
+        root: context.root,
+        indexMovement: context.indexMovement,
         fieldValues: syntaxContext.context.fieldValues,
       };
     } else {
       return null;
     }
   }
+}
+
+interface Context {
+  shouldContinueToParseSyntax: boolean;
+  root?: Node;
+  indexMovement: number;
 }
