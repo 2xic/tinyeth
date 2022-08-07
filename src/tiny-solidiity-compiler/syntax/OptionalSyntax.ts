@@ -1,4 +1,4 @@
-import { makeArray } from '../network/utils/makeArray';
+import { makeArray } from '../../network/utils/makeArray';
 import { Syntax } from './Syntax';
 
 export class OptionalSyntax {

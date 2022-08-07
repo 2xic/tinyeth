@@ -1,6 +1,6 @@
 import { Syntax } from './Syntax';
 import { RequiredSyntax } from './RequiredSyntax';
-import { Token } from './tokens/Token';
+import { Token } from '../tokens/Token';
 
 export class RecursiveSyntax {
   constructor(

@@ -1,15 +1,17 @@
-import { makeArray } from '../network/utils/makeArray';
-import { FieldNode } from './ast/FieldNode';
-import { Node } from './ast/Node';
+import { makeArray } from '../../network/utils/makeArray';
+import { FieldNode } from '.././ast/FieldNode';
+import { Node } from '.././ast/Node';
 import { OptionalSyntax } from './OptionalSyntax';
 import { RecursiveSyntax } from './RecursiveSyntax';
 import { RequiredSyntax } from './RequiredSyntax';
-import { Token } from './tokens/Token';
-import { VariableNode } from './ast/VariableNode';
-import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
-import { UndeclaredVariableError } from './errors/UndeclaredVariableError';
-import { EmptySyntax } from './EmptySyntax';
+import { Token } from '.././tokens/Token';
+import { VariableNode } from '.././ast/VariableNode';
+import { ConditionalInputVariables } from '.././ast/ConditionalInputVariables';
+import { UndeclaredVariableError } from '.././errors/UndeclaredVariableError';
+import { EmptySyntax } from '.././EmptySyntax';
 import { SyntaxMatch } from './SyntaxMatches';
+import { recursiveAddFieldNodes } from './recursiveAddFieldNodes';
+import { SyntaxContext } from './SyntaxContext';
 
 export class Syntax {
   public tokenOrder: Array<SyntaxInput | RecursiveSyntax | EmptySyntax> = [];
@@ -83,11 +85,15 @@ export class Syntax {
     variableScopes: Record<string, string[]>;
   }): null | [Node, number, Record<string, string>] {
     const results = new SyntaxMatch().matches({
-      tokens,
-      currentIndex,
+      syntaxContext: new SyntaxContext({
+        tokens,
+        currentIndex,
+        variableScopes,
+        fieldValues: {},
+        movedIndex: 0,
+      }),
       level,
       parent,
-      variableScopes,
       syntax: this,
     });
     if (results) {
@@ -97,8 +103,8 @@ export class Syntax {
         if (root instanceof FieldNode) {
           return [root, movement, fieldValues];
         }
-        const fieldNode = new this.nodeConstruction(fieldValues);
 
+        const fieldNode = new this.nodeConstruction(fieldValues);
         if (fieldNode instanceof VariableNode) {
           if (variableScopes[level]) {
             variableScopes[level].push(fieldNode.fields.name);
@@ -117,18 +123,11 @@ export class Syntax {
           }
         }
 
-        const recursiveAddFieldNodes = (currentNode: Node) => {
-          currentNode?.nodes.forEach((item) => {
-            if (item instanceof FieldNode) {
-              // TODO, this should only transfer field nodes.
-              fieldNode.add(item);
-            } else {
-              recursiveAddFieldNodes(item);
-            }
-          });
-        };
         if (root) {
-          recursiveAddFieldNodes(root);
+          recursiveAddFieldNodes({
+            currentNode: root,
+            fieldNode,
+          });
         }
 
         return [fieldNode, movement, fieldValues];
