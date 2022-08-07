@@ -16,17 +16,22 @@ import { EvmSubContext } from './EvmSubContext';
 import { EvmSubContextCall } from './EvmSubContextCall';
 import { Logger } from '../utils/Logger';
 import { EvmAccountState } from './EvmAccountState';
-import { DebugOptions, EvmBootOptions, EvmContext } from './interfaceEvm';
+import {
+  DebugOptions,
+  EvmBootOptions,
+  EvmContext,
+  InterfaceEvm,
+} from './interfaceEvm';
 import { EvmErrorTrace } from './EvmErrorTrace';
 import { Contract } from './Contract';
 
 @injectable()
-export class Evm {
+export class Evm implements InterfaceEvm {
   constructor(
     protected stack: EvmStack,
     protected network: Network,
-    protected memory: EvmMemory,
-    protected storage: EvmKeyValueStorage,
+    public memory: EvmMemory,
+    public storage: EvmKeyValueStorage,
     protected gasComputer: GasComputer,
     protected accessSets: AccessSets,
     protected subContext: EvmSubContext,
@@ -37,7 +42,7 @@ export class Evm {
   ) {}
 
   private running = false;
-  private gasCost = 0;
+  private _gasCost = 0;
   private _gasLeft: BigNumber = new BigNumber(0);
 
   private _pc = 0;
@@ -47,12 +52,16 @@ export class Evm {
   private context!: TxContext;
   private options?: DebugOptions;
 
+  public gasCost(): number {
+    return this._gasCost;
+  }
+
   public boot({ program, context, options }: EvmBootOptions) {
     this.program = program;
     this.context = context;
     this.options = options;
-    this.gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
-    this._gasLeft = context.gasLimit.minus(this.gasCost);
+    this._gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
+    this._gasLeft = context.gasLimit.minus(this._gasCost);
     this.resetPc();
 
     this.logger.log(JSON.stringify(context));
@@ -108,13 +117,21 @@ export class Evm {
       throw err;
     }
 
-    this.gasCost += opcode.gasCost;
-    this._gasLeft = this._gasLeft.minus(opcode.gasCost);
+    this._gasCost += opcode.computeGasCost({
+      ...evmContext,
+      evmContext,
+    });
+    this._gasLeft = this._gasLeft.minus(
+      opcode.computeGasCost({
+        ...evmContext,
+        evmContext,
+      })
+    );
 
     let updatedPc = false;
     if (results) {
       if (results.computedGas) {
-        this.gasCost += results.computedGas;
+        this._gasCost += results.computedGas;
       }
       updatedPc = results.setPc;
     }
@@ -194,7 +211,7 @@ export class Evm {
   }
 
   public get totalGasCost() {
-    return this.gasCost;
+    return this._gasCost;
   }
 
   public get gasLeft() {

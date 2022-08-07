@@ -42,12 +42,14 @@ export class EvmSubContextCall {
         returnData: contract.returnData,
       });
       stack.push(new BigNumber(1));
+
       if (subContext.last.returnData?.length) {
         subContext.last.returnData
           .slice(0, retSize.toNumber())
           .forEach((item, index) => {
             memory.write(retOffset.toNumber() + index, item);
           });
+        subContext.last.gasCost = forkedEvm.evm.gasCost();
       } else {
         throw new Error('Expected return data in sub-context');
       }
@@ -76,7 +78,7 @@ export class EvmSubContextCall {
     });
 
     return {
-      executor: ({ program }: { program: Buffer }) =>
+      executor: ({ program }: { program: Buffer }) => {
         evm
           .boot({
             program,
@@ -90,13 +92,18 @@ export class EvmSubContextCall {
             },
             options: { debug: false },
           })
-          .execute(),
+          .execute();
+
+        return evm;
+      },
+      evm,
     };
   }
 }
 
 export interface ForkedEvm {
   executor: ({ program }: { program: Buffer }) => InterfaceEvm;
+  evm: InterfaceEvm;
 }
 
 interface SubContext {

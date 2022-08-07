@@ -68,6 +68,7 @@ import { AstToByteCode } from '../tiny-solidiity-compiler/AstToByteCode';
 import { EvmProgram } from '../tiny-solidiity-compiler/EvmProgram';
 import { EvmByteCodeMacros } from '../tiny-solidiity-compiler/EvmBytecodeMacros';
 import { MnemonicParser } from '../evm/MnemonicParser';
+import { CallGasCompute } from '../evm/gas/CallGasCompute';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -165,6 +166,7 @@ export class CoreContainer {
     container.bind(EvmSubContext).toSelf();
     container.bind(EvmAccountState).toSelf();
     container.bind(EvmErrorTrace).toSelf();
+    container.bind(CallGasCompute).toSelf();
 
     container.bind(Logger).toSelf();
 

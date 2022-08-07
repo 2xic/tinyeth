@@ -4,7 +4,7 @@ Something like [https://github.com/2xic/Bitcoin-lib-small](https://github.com/2x
 
 _Just something so I get a better understanding of the core parts of the protocol, don't use this in production_
 
-### Status
+### Status / Plans
 - [ ] Add tests from https://github.com/ethereum/tests
   - [x] ABI
   - [x] RLP
@@ -47,29 +47,31 @@ _Just something so I get a better understanding of the core parts of the protoco
 - [ ] Data structures
     - Blocks
         - https://github.com/ethereum/go-ethereum/blob/4766b1107fadcd5f31c96b0744a2a788c6e4a01c/core/types/block_test.go#L35
-    - Transactions (done)
+    - Transactions (done - ish)
     - Accounts
     - Merkle Patricia Trie
     - Ethhash ? 
+    - Simple serialize
+      - https://ethereum.org/en/developers/docs/data-structures-and-encoding/ssz
 
-- [ ] Tiny solidity compiler ? 
-    - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
-        - No optimizer.
-    - https://docs.soliditylang.org/en/v0.8.15/grammar.html
-    - What could be interesting is diving into static analysis of solidity programs
-      - Or dynamic analysis, by doing some cool fuzzing ? 
-      - Maybe with sat solvers also
-    - This would make it easy to test things like state channels.
-    - It also makes it super easy to obscure decode function calls
-      - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
+- "Research" and further learning
+  - [ ] Tiny solidity compiler
+      - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
+          - No fancy optimizer.
+      - https://docs.soliditylang.org/en/v0.8.15/grammar.html
+      - What could be interesting is diving into static analysis of solidity programs
+        - Or dynamic analysis, by doing some cool fuzzing ? 
+        - Maybe with sat solvers also
+      - This would make it easy to test things like state channels.
+      - It also makes it super easy to obscure decode function calls
+        - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
+  - [ ] Account abstraction
+    - https://medium.com/infinitism/erc-4337-account-abstraction-without-ethereum-protocol-changes-d75c9d94dc4as
 
-- [ ] RPC ? 
-    - Not sure if this is necessary.
-
-- [ ] Play wargames with this implementation
-  - https://github.com/fvictorio/evm-puzzles
-    - Completed
-  - https://ethernaut.openzeppelin.com/
-  - https://www.damnvulnerabledefi.xyz/
-  - https://github.com/karmacoma-eth/pinball-ctf
-  - https://github.com/paradigm-operations/paradigm-ctf-2021
+  - [ ] Play wargames with this implementation
+    - https://github.com/fvictorio/evm-puzzles
+      - Completed
+    - https://ethernaut.openzeppelin.com/
+    - https://www.damnvulnerabledefi.xyz/
+    - https://github.com/karmacoma-eth/pinball-ctf
+    - https://github.com/paradigm-operations/paradigm-ctf-2021

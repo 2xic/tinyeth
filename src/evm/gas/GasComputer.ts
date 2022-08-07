@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { AccountAccessContext, AccountAccessGas } from './AccountAccessGas';
+import { CallContext, CallGasCompute } from './CallGasCompute';
 import { ComputeSstoreGas, SstoreContext } from './ComputeSstoreGas';
 import {
   MemoryExpansionContext,
@@ -11,7 +12,8 @@ export class GasComputer {
   constructor(
     private computeSstoreGas: ComputeSstoreGas,
     private memoryExpansionGas: MemoryExpansionGas,
-    private accountAccess: AccountAccessGas
+    private accountAccess: AccountAccessGas,
+    private callGasCompute: CallGasCompute
   ) {}
 
   public sstore(context: SstoreContext): GasComputeResults {
@@ -24,6 +26,10 @@ export class GasComputer {
 
   public account(context: AccountAccessContext) {
     return this.accountAccess.compute(context);
+  }
+
+  public call(context: CallContext) {
+    return this.callGasCompute.compute(context);
   }
 }
 

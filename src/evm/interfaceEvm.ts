@@ -19,6 +19,8 @@ export abstract class InterfaceEvm {
   public abstract get callingContextReturnData(): Buffer | undefined;
 
   public abstract execute(): InterfaceEvm;
+
+  public abstract gasCost(): number;
 }
 
 export interface EvmBootOptions {

@@ -10,7 +10,7 @@ export class OpCode {
         context: EvmContextWithSelfReference,
         opcode: OpCode
       ) => ExecutionResults | void;
-      gasCost: number | (() => number);
+      gasCost: number | ((context: EvmContextWithSelfReference) => number);
     }
   ) {}
 
@@ -29,12 +29,12 @@ export class OpCode {
     return this.options.name;
   }
 
-  public get gasCost() {
+  public computeGasCost(context: EvmContextWithSelfReference) {
     const gas = this.options.gasCost;
     if (typeof gas === 'number') {
       return gas;
     }
-    return gas();
+    return gas(context);
   }
 }
 

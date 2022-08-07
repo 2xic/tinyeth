@@ -401,7 +401,7 @@ export const Opcodes: Record<number, OpCode> = {
   0x37: new OpCode({
     name: 'CALLDATACOPY',
     arguments: 1,
-    onExecute: ({ stack, memory, context }) => {
+    onExecute: ({ stack, memory, context, gasComputer }) => {
       const dataOffset = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
@@ -409,9 +409,16 @@ export const Opcodes: Record<number, OpCode> = {
       for (let i = 0; i < length; i++) {
         memory.write(dataOffset + i, context.data[offset + i]);
       }
+
+      return {
+        setPc: false,
+        computedGas: gasComputer.memoryExpansion({
+          address: new BigNumber(offset + length),
+        }).gasCost,
+      };
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
-    gasCost: () => 1,
+    gasCost: () => 3,
   }),
   0x38: new OpCode({
     name: 'CODESIZE',
@@ -764,8 +771,15 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'GAS',
     arguments: 1,
     gasCost: () => 2,
-    onExecute: ({ stack, evm }, gasOpcode) => {
-      stack.push(evm.gasLeft.minus(gasOpcode.gasCost));
+    onExecute: (context, gasOpcode) => {
+      const { stack, evm } = context;
+      stack.push(
+        evm.gasLeft.minus(
+          gasOpcode.computeGasCost({
+            ...context,
+          })
+        )
+      );
     },
   }),
   0x5b: new OpCode({
@@ -862,9 +876,16 @@ export const Opcodes: Record<number, OpCode> = {
 
       network.register({ contract });
       stack.push(contract.address.raw);
+
+      const computedGas = 200 * contractBytes.length;
+
+      return {
+        computedGas,
+        setPc: false,
+      };
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
-    gasCost: () => 1,
+    gasCost: () => 32000,
   }),
   0xf1: new OpCode({
     name: 'CALL',
@@ -942,8 +963,20 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'DELEGATECALL',
     arguments: 1,
     // TODO this is dynamic
-    gasCost: () => 2,
-    onExecute: ({ stack, evmContext, evmSubContextCall }) => {
+    /*    gasCost: ({ subContext, gasComputer }) => {
+      if (subContext.tryGetLast) {
+        return subContext.last.gasCost || 0;
+      }
+      return 0;
+    },*/
+    gasCost: () => 0,
+    onExecute: ({
+      stack,
+      evmContext,
+      subContext,
+      evmSubContextCall,
+      gasComputer,
+    }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -963,6 +996,17 @@ export const Opcodes: Record<number, OpCode> = {
           retSize,
         },
       });
+
+      const computedGas =
+        gasComputer.call({
+          value: new BigNumber(0),
+          address,
+        }).gasCost + (subContext.tryGetLast?.gasCost || 0);
+
+      return {
+        computedGas,
+        setPc: false,
+      };
     },
   }),
   0xf5: new OpCode({

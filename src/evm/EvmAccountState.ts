@@ -4,7 +4,7 @@ import { Address } from './Address';
 
 @injectable()
 export class EvmAccountState {
-  private balance: Record<string, BigNumber> = {};
+  private balance: Record<string, BigNumber | undefined> = {};
 
   public registerBalance({
     address,
@@ -16,7 +16,7 @@ export class EvmAccountState {
     this.balance[address.toString()] = balance;
   }
 
-  public getBalance({ address }: { address: Address }) {
-    return this.balance[address.toString()];
+  public getBalance({ address }: { address: Address }): BigNumber {
+    return this.balance[address.toString()] || new BigNumber(0);
   }
 }
