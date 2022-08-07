@@ -68,7 +68,7 @@ export class AstToByteCode {
       bufferOutput.concat(
         this.evmByteCodeMacros.jumpi(
           () => this.evmByteCodeMacros.simpleRevert(),
-          length + bufferOutput.length + 5
+          length + bufferOutput.length // + 5
         )
       );
     }
@@ -86,7 +86,7 @@ export class AstToByteCode {
           bufferOutput.concat(
             this.mnemonicParser.parse({
               script: `
-              PUSH1 0x1
+              PUSH1 ${child.fields.value}
               PUSH1 0x0
               MSTORE
               PUSH1 32

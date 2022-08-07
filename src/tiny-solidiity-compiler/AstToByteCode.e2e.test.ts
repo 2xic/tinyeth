@@ -135,4 +135,52 @@ describe('AstToByteCode', () => {
       '0000000000000000000000000000000000000000000000000000000000000002'
     );
   });
+
+  it('should correctly handle two functions', () => {
+    const program = astToByteCode.compile({
+      script: `
+          contract ReturnContract {
+            function return1() public pure returns (uint8) {
+                return 1;
+            }
+
+            function return2() public pure returns (uint8) {
+              return 2;
+            }
+          }
+        `,
+    });
+
+    evm.boot({
+      program,
+      context: {
+        data: getBufferFromHex(new Abi().encodeFunction('return1')),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+      },
+    });
+    const lastPc = evm.pc;
+    evm.execute();
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000001'
+    );
+
+    evm.boot({
+      program,
+      context: {
+        data: getBufferFromHex(new Abi().encodeFunction('return2')),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+      },
+    });
+    evm.execute();
+    expect(evm.pc).not.toBe(lastPc);
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000002'
+    );
+  });
 });
