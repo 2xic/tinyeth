@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { memo } from 'fast-check';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
@@ -9,6 +10,7 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
+import { wordSize } from './gas/wordSize';
 import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
@@ -411,14 +413,18 @@ export const Opcodes: Record<number, OpCode> = {
       }
 
       return {
+        computedGas:
+          3 +
+          3 * wordSize({ address: new BigNumber(length) }).toNumber() +
+          gasComputer.memoryExpansion({
+            address: new BigNumber(memory.raw.length),
+          }).gasCost,
         setPc: false,
-        computedGas: gasComputer.memoryExpansion({
-          address: new BigNumber(offset + length),
-        }).gasCost,
       };
     },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
-    gasCost: () => 3,
+    gasCost: ({ gasComputer, memory }) => {
+      return 0;
+    },
   }),
   0x38: new OpCode({
     name: 'CODESIZE',
@@ -431,7 +437,7 @@ export const Opcodes: Record<number, OpCode> = {
   0x39: new OpCode({
     name: 'CODECOPY',
     arguments: 1,
-    onExecute: ({ evm, stack, memory }) => {
+    onExecute: ({ evm, stack, memory, gasComputer }) => {
       const destOffset = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
       const size = stack.pop().toNumber();
@@ -439,9 +445,16 @@ export const Opcodes: Record<number, OpCode> = {
       for (let i = 0; i < size; i++) {
         memory.write(destOffset + i, evm.program[offset + i]);
       }
+
+      return {
+        computedGas: gasComputer.memoryExpansion({
+          address: new BigNumber(memory.raw.length),
+        }).gasCost,
+        setPc: false,
+      };
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
-    gasCost: () => 1,
+    gasCost: () => 3,
   }),
   0x3a: new OpCode({
     name: 'GASPRICE',
@@ -655,7 +668,7 @@ export const Opcodes: Record<number, OpCode> = {
         memory.write(offset + i, uint[i]);
       }
       const computedGas = gasComputer.memoryExpansion({
-        address: new BigNumber(offset + 32),
+        address: new BigNumber(memory.raw.length),
       });
 
       return {

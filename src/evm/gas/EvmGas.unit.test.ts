@@ -5,6 +5,7 @@ import { Evm } from '../Evm';
 import { MnemonicParser } from '../MnemonicParser';
 import { Wei } from '../eth-units/Wei';
 import { getBufferFromHex } from '../../utils';
+import { ExposedEvm } from '../ExposedEvm';
 
 describe('EvmGas', () => {
   const sender = new Address();
@@ -78,28 +79,30 @@ describe('EvmGas', () => {
   });
 
   describe('MSTORE', () => {
-    const mnemonicParser = new MnemonicParser();
-    // Example from https://www.evm.codes/#55
-    const contract = mnemonicParser.parse({
-      script: `
+    it('should compute mstore correctly', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#55
+      const contract = mnemonicParser.parse({
+        script: `
             PUSH1 0xFF
             PUSH1 0
             MSTORE
           `,
+      });
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(16)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21012);
     });
-    const evm = getClassFromTestContainer(Evm)
-      .boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          sender,
-          gasLimit,
-          value: new Wei(new BigNumber(16)),
-          data: Buffer.alloc(0),
-        },
-      })
-      .execute();
-    expect(evm.totalGasCost).toBe(21012);
   });
 
   describe('Access sets', () => {
@@ -157,8 +160,8 @@ describe('EvmGas', () => {
     });
   });
 
-  describe('calldatacopy', () => {
-    it('copy', () => {
+  describe('CallDataCopy', () => {
+    it('example 1 single copy', () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#37
       const contract = mnemonicParser.parse({
@@ -166,12 +169,6 @@ describe('EvmGas', () => {
         // Example 1
         PUSH1 32
         PUSH1 0
-        PUSH1 0
-        CALLDATACOPY
-        
-        // Example 2
-        PUSH1 8
-        PUSH1 31
         PUSH1 0
         CALLDATACOPY
       `,
@@ -191,7 +188,183 @@ describe('EvmGas', () => {
           },
         })
         .execute();
+      expect(evm.totalGasCost).toBe(21530);
+    });
+
+    it('example 2 single copy', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#37
+      const contract = mnemonicParser.parse({
+        script: `
+        // Example 2
+        PUSH1 8
+        PUSH1 31
+        PUSH1 0
+        CALLDATACOPY      `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: getBufferFromHex(
+              '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+            ),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21530);
+    });
+
+    it('example 2 double copy', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#37
+      const contract = mnemonicParser.parse({
+        script: `
+        // Example 2
+        PUSH1 8
+        PUSH1 31
+        PUSH1 0
+        CALLDATACOPY      
+        
+        PUSH1 8
+        PUSH1 31
+        PUSH1 0
+        CALLDATACOPY      
+        `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: getBufferFromHex(
+              '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+            ),
+          },
+        })
+        .execute();
       expect(evm.totalGasCost).toBe(21545);
+    });
+
+    it('double copy', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#37
+      const contract = mnemonicParser.parse({
+        script: `
+        // Example 1
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        CALLDATACOPY
+        
+        // Example 2
+        PUSH1 8
+        PUSH1 31
+        PUSH1 0
+        CALLDATACOPY
+      `,
+      });
+
+      const evm = getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: getBufferFromHex(
+              '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+            ),
+          },
+        })
+        .execute();
+      expect(evm.memory.raw.toString('hex')).toBe(
+        'ff00000000000000ffffffffffffffffffffffffffffffffffffffffffffffff'
+      );
+      expect(evm.totalGasCost).toBe(21545);
+    });
+  });
+
+  describe('codecopy', () => {
+    it('should compute opcodes until gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+            // Put the beginning of the code to the expected value
+            PUSH30 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            PUSH32 0
+            
+            // Remove the values from the stack
+            POP
+            POP
+            
+            // Example 1
+            PUSH1 32
+            PUSH1 0
+            PUSH1 0
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21019);
+    });
+
+    it('should compute codecopy gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+            // Put the beginning of the code to the expected value
+            PUSH30 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            PUSH32 0
+            
+            // Remove the values from the stack
+            POP
+            POP
+            
+            // Example 1
+            PUSH1 32
+            PUSH1 0
+            PUSH1 0
+            CODECOPY
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21028);
     });
   });
 
