@@ -38,10 +38,12 @@ export class JumpTable {
     );
     simpleBuffer.concat(invalidFunctionRevert);
 
+    const revertIndex = length + invalidFunctionRevert.length - 2;
+
     if (this.functions.length === 1) {
       const buffer = this.constructFunctionCall({
         length: simpleBuffer.length + length,
-        fallThroughIndex: length + invalidFunctionRevert.length - 2,
+        fallThroughIndex: revertIndex,
         item: this.functions[0],
       });
       simpleBuffer.concat(buffer);
@@ -49,17 +51,31 @@ export class JumpTable {
     } else {
       const function1 = this.constructFunctionCall({
         length: simpleBuffer.length + length,
-        fallThroughIndex: (index) => index + length,
+        fallThroughIndex: (index) => index,
         item: this.functions[0],
       });
 
-      const function2 = this.constructFunctionCall({
-        length: simpleBuffer.length + function1.length + length,
-        fallThroughIndex: length + invalidFunctionRevert.length - 2,
-        item: this.functions[1],
+      simpleBuffer.concat(function1);
+
+      this.functions.slice(1, this.functions.length - 1).forEach((item) => {
+        const function2 = this.constructFunctionCall({
+          length: simpleBuffer.length + length,
+          fallThroughIndex: (index) => index,
+          item,
+        });
+
+        simpleBuffer.concat(function2);
       });
 
-      simpleBuffer.concat(function1);
+      // The last function should always revert if no other instructions are there.
+      const function2 = this.constructFunctionCall({
+        length: simpleBuffer.length + length,
+        // jump back to start.
+        // -2 because of the push instruction.
+        fallThroughIndex: revertIndex,
+        item: this.functions[this.functions.length - 1],
+      });
+
       simpleBuffer.concat(function2);
 
       return simpleBuffer.build();
@@ -120,7 +136,8 @@ export class JumpTable {
       typeof fallThroughIndex === 'number'
         ? fallThroughIndex
         : // TODO: This will be replaced by the dynamic push buffer
-          fallThroughIndex(length + createBuffer(0).length - 1) - 4
+          // This should be the length + the size of the current function.
+          fallThroughIndex(length + createBuffer(0).length)
     );
 
     return simpleBuffer.build();

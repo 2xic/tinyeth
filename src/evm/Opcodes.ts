@@ -718,6 +718,7 @@ export const Opcodes: Record<number, OpCode> = {
       isValidJump({
         pc,
         opCodeAtPc,
+        currentPc: evm.pc,
       });
 
       evm.setPc(pc);
@@ -740,6 +741,7 @@ export const Opcodes: Record<number, OpCode> = {
         isValidJump({
           pc,
           opCodeAtPc,
+          currentPc: evm.pc,
         });
 
         evm.setPc(pc);
