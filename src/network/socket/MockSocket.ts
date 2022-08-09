@@ -6,7 +6,7 @@ import { AbstractSocket } from './AbstractSocket';
 export class MockSocket implements AbstractSocket {
   private registeredCallback: Record<
     string,
-    (argumens: unknown) => Promise<void>
+    (argument: unknown) => Promise<void>
   > = {};
 
   public writtenData: Buffer[] = [];
@@ -16,10 +16,10 @@ export class MockSocket implements AbstractSocket {
     return this;
   }
 
-  public async emit(event: any, argumens: any) {
+  public async emit(event: any, argument: any) {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise<void>(async (resolve, reject) => {
-      await this.registeredCallback[event](argumens)
+      await this.registeredCallback[event](argument)
         .then(() => resolve())
         .catch((err) => reject(err));
     });

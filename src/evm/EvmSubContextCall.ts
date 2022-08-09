@@ -30,7 +30,7 @@ export class EvmSubContextCall {
       txContext: {
         value: new Wei(new BigNumber(value?.toNumber() || 0)),
         data,
-        nonce: 0, // context.nonce,
+        nonce: 0,
         sender: context.sender,
         gasLimit: context.gasLimit,
       },

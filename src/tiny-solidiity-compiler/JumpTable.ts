@@ -38,6 +38,8 @@ export class JumpTable {
     );
     simpleBuffer.concat(invalidFunctionRevert);
 
+    // jump back to start.
+    // -2 because of the push instruction.
     const revertIndex = length + invalidFunctionRevert.length - 2;
 
     if (this.functions.length === 1) {
@@ -49,34 +51,32 @@ export class JumpTable {
       simpleBuffer.concat(buffer);
       return simpleBuffer.build();
     } else {
-      const function1 = this.constructFunctionCall({
+      const firstFunction = this.constructFunctionCall({
         length: simpleBuffer.length + length,
         fallThroughIndex: (index) => index,
         item: this.functions[0],
       });
 
-      simpleBuffer.concat(function1);
+      simpleBuffer.concat(firstFunction);
 
       this.functions.slice(1, this.functions.length - 1).forEach((item) => {
-        const function2 = this.constructFunctionCall({
-          length: simpleBuffer.length + length,
-          fallThroughIndex: (index) => index,
-          item,
-        });
-
-        simpleBuffer.concat(function2);
+        simpleBuffer.concat(
+          this.constructFunctionCall({
+            length: simpleBuffer.length + length,
+            fallThroughIndex: (index) => index,
+            item,
+          })
+        );
       });
 
-      // The last function should always revert if no other instructions are there.
-      const function2 = this.constructFunctionCall({
+      const lastFunction = this.constructFunctionCall({
         length: simpleBuffer.length + length,
-        // jump back to start.
-        // -2 because of the push instruction.
+        // The last function should always revert if no other instructions are there.
         fallThroughIndex: revertIndex,
         item: this.functions[this.functions.length - 1],
       });
 
-      simpleBuffer.concat(function2);
+      simpleBuffer.concat(lastFunction);
 
       return simpleBuffer.build();
     }
@@ -132,13 +132,14 @@ export class JumpTable {
       return simpleBuffer;
     };
 
-    const simpleBuffer = createBuffer(
+    const calculatedFallThroughINdex =
       typeof fallThroughIndex === 'number'
         ? fallThroughIndex
         : // TODO: This will be replaced by the dynamic push buffer
           // This should be the length + the size of the current function.
-          fallThroughIndex(length + createBuffer(0).length)
-    );
+          fallThroughIndex(length + createBuffer(0).length);
+
+    const simpleBuffer = createBuffer(calculatedFallThroughINdex);
 
     return simpleBuffer.build();
   }

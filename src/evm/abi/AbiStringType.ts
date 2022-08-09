@@ -8,15 +8,8 @@ export class AbiStringType {
   ) {}
 
   public get value(): EncodingResults {
-    const lengthEncoding = this.length
-      ? ''
-      : new AbiUintType(this.input.length).value.encoding;
-    const encoding =
-      lengthEncoding +
-      [...this.input]
-        .map((item) => item.charCodeAt(0).toString(16))
-        .join('')
-        .padEnd(64, '0');
+    const encoding = this.lengthEncoding + this.itemEncoding;
+
     return {
       encoding,
       length: 0,
@@ -30,5 +23,16 @@ export class AbiStringType {
 
   public get isDynamic(): boolean {
     return this.length === undefined;
+  }
+
+  private get lengthEncoding() {
+    return this.length ? '' : new AbiUintType(this.input.length).value.encoding;
+  }
+
+  private get itemEncoding() {
+    return [...this.input]
+      .map((item) => item.charCodeAt(0).toString(16))
+      .join('')
+      .padEnd(64, '0');
   }
 }

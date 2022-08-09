@@ -7,6 +7,9 @@ import { EvmMockBlock } from './EvmMockBlock';
 
 @injectable()
 export class Network {
+  // TODO: This should also be encapsulated in a cleaner way
+  //      ref same note in contract.
+
   private _contracts: Record<string, Contract> = {};
 
   private _blocks: Record<string, EvmMockBlock> = {};

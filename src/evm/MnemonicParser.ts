@@ -21,8 +21,8 @@ export class MnemonicParser {
   private convert({ mnemonics }: ConvertInterface) {
     let bytesCodes = Buffer.alloc(0);
     for (const mnemonic of mnemonics) {
-      const opcode_arguments = mnemonic.split(' ');
-      const opcode = opcode_arguments[0];
+      const opcodeArguments = mnemonic.split(' ');
+      const opcode = opcodeArguments[0];
       if (opcode.startsWith('//')) {
         continue;
       } else if (!opcode.length) {
@@ -32,17 +32,10 @@ export class MnemonicParser {
       if (foundOpcode === undefined) {
         throw new Error('Unknown mnemonic ' + opcode);
       }
-      let converted_arguments = Buffer.from(
-        opcode_arguments
-          .slice(1, Opcodes[foundOpcode].length)
-          .map((item) =>
-            item.startsWith('0x')
-              ? getBufferFromHex(item).toString('hex')
-              : convertNumberToPadHex(item)
-          )
-          .join(''),
-        'hex'
-      );
+      let converted_arguments = this.getArguments({
+        opcodeArguments,
+        foundOpcode,
+      });
       const argumentsPadding = Opcodes[foundOpcode].length - 1;
       if (converted_arguments.length < argumentsPadding) {
         converted_arguments = Buffer.concat([
@@ -59,6 +52,26 @@ export class MnemonicParser {
       ]);
     }
     return bytesCodes;
+  }
+
+  private getArguments({
+    opcodeArguments,
+    foundOpcode,
+  }: {
+    opcodeArguments: string[];
+    foundOpcode: number;
+  }) {
+    return Buffer.from(
+      opcodeArguments
+        .slice(1, Opcodes[foundOpcode].length)
+        .map((item) =>
+          item.startsWith('0x')
+            ? getBufferFromHex(item).toString('hex')
+            : convertNumberToPadHex(item)
+        )
+        .join(''),
+      'hex'
+    );
   }
 }
 

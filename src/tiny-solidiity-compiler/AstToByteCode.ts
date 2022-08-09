@@ -83,6 +83,7 @@ export class AstToByteCode {
       */
       if (child instanceof ReturnNode) {
         if (child.isValue) {
+          // TODO: This should check for the type before the PUSH
           bufferOutput.concat(
             this.mnemonicParser.parse({
               script: `
@@ -114,6 +115,9 @@ export class AstToByteCode {
         return bufferOutput.build();
       } else if (child instanceof VariableOperatorNode) {
         // This can be moved to another function.
+        // In addition += -> is the add operator
+        // The same logic for loading and storing will be the same for all operators.
+        // So this logic should be in the macro.
         if (child.fields.operator == '+=') {
           bufferOutput.concat(
             this.mnemonicParser.parse({
@@ -131,7 +135,6 @@ export class AstToByteCode {
           throw new Error('Unknown operator');
         }
       } else {
-        //console.log(child);
         throw new Error('Unknown node');
       }
     }
@@ -146,8 +149,6 @@ export class AstToByteCode {
     program.operation((item, size) => {
       return item.jumpi(() => item.simpleRevert(), size);
     });
-    // Pop of the payment value
-    // program.operation((item) => item.pop());
 
     program.operation((item, size) => {
       const program = inputProgram;

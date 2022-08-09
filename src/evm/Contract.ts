@@ -10,9 +10,11 @@ import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { ForkedEvm } from './EvmSubContextCall';
 
 export class Contract {
-  private _address: string;
-  private _returnData?: Buffer;
-  private _isDeployed?: boolean;
+  private context: {
+    address?: string;
+    returnData?: Buffer;
+    isDeployed?: boolean;
+  } = {};
 
   constructor(
     private options: {
@@ -39,13 +41,34 @@ export class Contract {
           )}${salt?.toString('hex')}${dataHash.toString('hex')}`
         )
       );
-      this._address = '0x' + address.slice(12).toString('hex');
+      this.context.address = '0x' + address.slice(12).toString('hex');
     } else {
-      this._address =
+      this.context.address =
         '0x' + keccak256(getBufferFromHex(encoding)).slice(12).toString('hex');
     }
   }
 
+  public execute(options: ForkedEvm) {
+    const results = options.executor({
+      program: this.options.program,
+    });
+
+    const callResults = results.callingContextReturnData;
+
+    if (callResults && !this.context.isDeployed) {
+      this.context.returnData = callResults;
+      this.options.program = callResults;
+      this.context.isDeployed = true;
+    } else if (!this.context.isDeployed) {
+      this.options.program = Buffer.alloc(0);
+    }
+
+    return this;
+  }
+
+  // TODO: I don't like having these variables encapsulated like this.
+  // Ideally it should be settable inside, and exposed as readonly.
+  // Maybe you can do some trick with proxy.
   public get value() {
     return this.options.value;
   }
@@ -59,28 +82,10 @@ export class Contract {
   }
 
   public get address() {
-    return new Address(this._address);
-  }
-
-  public execute(options: ForkedEvm) {
-    const results = options.executor({
-      program: this.options.program,
-    });
-
-    const callResults = results.callingContextReturnData;
-
-    if (callResults && !this._isDeployed) {
-      this._returnData = callResults;
-      this.options.program = callResults || Buffer.alloc(0);
-      this._isDeployed = true;
-    } else if (!this._isDeployed) {
-      this.options.program = Buffer.alloc(0);
-    }
-
-    return this;
+    return new Address(this.context.address);
   }
 
   public get returnData() {
-    return this._returnData;
+    return this.context.returnData;
   }
 }

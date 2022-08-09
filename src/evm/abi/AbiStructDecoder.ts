@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { Address } from '../Address';
+import { abiDecodeArray } from './decoder/abiDecodeArray';
 
 export class AbiStructDecoder {
   public decode({
@@ -8,15 +9,7 @@ export class AbiStructDecoder {
     types,
   }: {
     encoding: string;
-    types: Array<
-      | 'ARRAY'
-      | 'UINT'
-      | 'ADDRESS'
-      | 'BYTES'
-      | 'DYNAMIC_BYTES'
-      | 'FUNCTION'
-      | 'ARRAY_BYTES'
-    >;
+    types: Array<AbiType>;
   }) {
     const results: Array<BigNumber | Buffer | Address | Array<unknown>> = [];
     let buffer = getBufferFromHex(encoding);
@@ -29,63 +22,21 @@ export class AbiStructDecoder {
 
     for (const type of types) {
       if (type === 'ARRAY') {
-        let location = parseInt(
-          buffer.slice(index, index + 32).toString('hex'),
-          16
-        );
-        const size = parseInt(
-          buffer.slice(location, location + 32).toString('hex'),
-          16
-        );
-        const array: unknown[] = [];
-        for (let i = 0; i < size; i++) {
-          if (type === 'ARRAY') {
-            location += 32;
-            const item = buffer.slice(location, location + 32);
-            array.push(item);
-          }
-        }
-        results.push(array);
-        index += 32;
+        const { newIndex, decodeResults } = abiDecodeArray({
+          index,
+          buffer,
+          type,
+        });
+        index = newIndex;
+        results.push(decodeResults);
       } else if (type === 'ARRAY_BYTES') {
-        let location = parseInt(
-          buffer.slice(index, index + 32).toString('hex'),
-          16
-        );
-        const array: unknown[] = [];
-
-        const size = parseInt(
-          buffer.slice(location, location + 32).toString('hex'),
-          16
-        );
-        location += 32;
-        const from =
-          parseInt(buffer.slice(location, location + 32).toString('hex'), 16) +
-          location +
-          32;
-        location += 32;
-
-        const to =
-          parseInt(buffer.slice(location, location + 32).toString('hex'), 16) +
-          location +
-          32;
-        location += 32 * (size > 2 ? size - 1 : 1);
-
-        if (1 < size) {
-          for (let i = 0; i < size; i++) {
-            // const _size = buffer.slice(location, location + 32).toString('hex');
-            location += 32;
-
-            const bytes = buffer.slice(location, location + 32).toString('hex');
-            location += 32;
-            array.push(bytes);
-          }
-        } else {
-          const bytes = buffer.slice(from, to);
-          location += 32;
-          array.push(bytes);
-        }
-        results.push(array);
+        const { newIndex, decodeResults } = abiDecodeArray({
+          index,
+          buffer,
+          type,
+        });
+        index = newIndex;
+        results.push(decodeResults);
       } else if (type === 'UINT' || type === 'ADDRESS') {
         if (type === 'ADDRESS') {
           results.push(
@@ -126,3 +77,12 @@ export class AbiStructDecoder {
     return results;
   }
 }
+
+export type AbiType =
+  | 'ARRAY'
+  | 'UINT'
+  | 'ADDRESS'
+  | 'BYTES'
+  | 'DYNAMIC_BYTES'
+  | 'FUNCTION'
+  | 'ARRAY_BYTES';

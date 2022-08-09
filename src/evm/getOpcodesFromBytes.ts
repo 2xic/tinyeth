@@ -8,11 +8,6 @@ export function getOpcodesFromBytes(input: Buffer) {
     const opcode = Opcodes[currentOpcode];
     if (!opcode) {
       opcodes.push('INVALID');
-      /*
-      throw new Error(
-        `No opcode found 0x${currentOpcode.toString(16)} (${currentOpcode})`
-      );
-      */
       buffer = buffer.slice(1);
     } else {
       const opcodeArguments = buffer.slice(1, opcode.length);

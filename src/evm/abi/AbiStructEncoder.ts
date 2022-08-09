@@ -24,6 +24,7 @@ export class AbiStructEncoder {
         itemIndex += referenceSize;
         return index;
       }
+
       itemIndex += getBufferFromHex(item.value.encoding).length;
       return item.value.encoding;
     });

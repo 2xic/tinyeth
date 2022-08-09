@@ -15,6 +15,7 @@ export class MemoryExpansionGas {
       const oldCost = this.memoryCost({
         memoryUsed: this.highestReferencedAddress,
       });
+
       // from the docs
       // The memory cost function is linear up to 724 bytes of memory used, at which point additional memory costs substantially more.
       // ^ research this function

@@ -14,16 +14,18 @@ export class AbiArrayType {
       };
     }
 
+    const encoding = items
+      .map((item) => {
+        if (item instanceof AbiUintType) {
+          return item.value.encoding;
+        } else {
+          throw Error('Unknown array datatype');
+        }
+      })
+      .join('');
+
     return {
-      encoding: items
-        .map((item) => {
-          if (item instanceof AbiUintType) {
-            return item.value.encoding;
-          } else {
-            throw Error('unknown');
-          }
-        })
-        .join(''),
+      encoding,
       length: 0,
     };
   }

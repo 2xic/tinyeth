@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js';
 import { Abi } from './Abi';
 import { AbiAddressType } from './AbiAddressType';
 import { AbiArrayType } from './AbiArrayType';

@@ -33,16 +33,18 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (todo) Implement EIP 1559
     - (todo) Add some tracking of the nonce to make things user friendly.
 
-- [ ] Implement the EVM (i.e should be able to run a simple contract based on the bytecode / mnemonic)
+- [x] Implement the "core" of the EVM
 
   Currently supports:
     - Most opcodes are more or less implemented (still some gas cost missing)
       - In other words, it's able to run most contracts.
     - Converts mnemonic into bytecode to make it easy to debug.
     - Support for the ABI, should be possible to encode calldata for most structs.
-    - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
+
+  todo / wip: 
     - (wip) gas cost/refund computation -> let's you see how much gas is used when executing contract.
         - There are only a few dynamic opcodes missing here.
+    - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
 
 - [ ] Data structures
     - Blocks
@@ -65,6 +67,7 @@ _Just something so I get a better understanding of the core parts of the protoco
       - This would make it easy to test things like state channels.
       - It also makes it super easy to obscure decode function calls
         - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
+
   - [ ] Account abstraction
     - https://medium.com/infinitism/erc-4337-account-abstraction-without-ethereum-protocol-changes-d75c9d94dc4as
 

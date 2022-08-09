@@ -5,7 +5,10 @@ import { Opcodes } from './Opcodes';
 import { Wei } from './eth-units/Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
-import { calculateDataGasCost, GAS_BASE_COST } from './gas/Gas';
+import {
+  calculateDataGasCost,
+  GAS_BASE_COST,
+} from './gas/calculateDataGasCost';
 import { EvmMemory } from './EvmMemory';
 import { injectable } from 'inversify';
 import { GasComputer } from './gas/GasComputer';
