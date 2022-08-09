@@ -73,6 +73,8 @@ export class Contract {
       this._returnData = callResults;
       this.options.program = callResults || Buffer.alloc(0);
       this._isDeployed = true;
+    } else if (!this._isDeployed) {
+      this.options.program = Buffer.alloc(0);
     }
 
     return this;

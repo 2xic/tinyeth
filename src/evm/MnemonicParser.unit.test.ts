@@ -68,4 +68,16 @@ describe('MnemonicParser', () => {
       )
     ).toBe(0);
   });
+
+  it('should correctly parse script to bytecode', () => {
+    // ADD opcode example from https://www.evm.codes/
+    const script = `
+      PUSH17 0x67600054600757FE5B60005260086018F3
+    `;
+    const parser = new MnemonicParser().parse({
+      script: script,
+    });
+
+    expect(parser.length).toBe(18);
+  });
 });

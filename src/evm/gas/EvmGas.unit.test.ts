@@ -103,6 +103,31 @@ describe('EvmGas', () => {
         .execute();
       expect(evm.totalGasCost).toBe(21012);
     });
+
+    it('should compute mstore correctly', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#55
+      const contract = mnemonicParser.parse({
+        script: `
+            PUSH13 0x63FFFFFFFF6000526004601CF3
+            PUSH1 0
+            MSTORE
+          `,
+      });
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(16)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21012);
+    });
   });
 
   describe('Access sets', () => {
@@ -412,6 +437,163 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(117039);
     });
 
+    it('should compute create gas cost from mstore', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `          
+          // Create an account with 0 wei and 4 FF as code
+          PUSH13 0x63FFFFFFFF6000526004601CF3
+          PUSH1 0
+          MSTORE
+          PUSH1 13
+          PUSH1 0
+          PUSH1 0
+          CREATE 
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(53021);
+    });
+
+    it('should compute two empty contracts and prepare the last contract', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          // Create an account with 0 wei and no code
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          CREATE
+          
+          // Create an account with 9 wei and no code
+          PUSH1 0
+          PUSH1 0
+          PUSH1 9
+          CREATE
+          
+          // Create an account with 0 wei and 4 FF as code
+          PUSH13 0x63FFFFFFFF6000526004601CF3
+          PUSH1 0
+          MSTORE
+          PUSH1 13
+          PUSH1 0
+          PUSH1 0
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(85039);
+    });
+
+    it('should compute the simplest create gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          // Create an account with 0 wei and no code
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          CREATE
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(53009);
+    });
+
+    it('should compute the simplest create with wei gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+            // Create an account with 9 wei and no code
+            PUSH1 0
+            PUSH1 0
+            PUSH1 9
+            CREATE
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(53009);
+    });
+
+    it('should compute the simplest create gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          // Create an account with 0 wei and no code
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          CREATE
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(53009);
+    });
+
     it('simple create', () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
@@ -446,9 +628,113 @@ describe('EvmGas', () => {
         .execute();
       expect(evm.totalGasCost).toBe(54645);
     });
+
+    it('create from store', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          // Create a contract that creates an exception if first slot of storage is 0
+          PUSH17 0x67600054600757FE5B60005260086018F3
+          PUSH1 0
+          MSTORE
+          PUSH1 17
+          PUSH1 15
+          PUSH1 0
+          CREATE   
+        `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(54639);
+    });
+
+    it('create two empty contracts', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+        // Create an account with 0 wei and no code
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        CREATE
+        
+        // Create an account with 9 wei and no code
+        PUSH1 0
+        PUSH1 0
+        PUSH1 9
+        CREATE
+        `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(85018);
+    });
   });
 
   describe('call', () => {
+    it('should execute correctly everything but delegatecall', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          // Create a contract that creates an exception if first slot of storage is 0
+          PUSH17 0x67600054600757FE5B60005260086018F3
+          PUSH1 0
+          MSTORE
+          PUSH1 17
+          PUSH1 15
+          PUSH1 0
+          CREATE
+          
+          // Call with storage slot 0 = 0, returns 0
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          DUP5
+          PUSH2 0xFFFF        
+          `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(54657);
+    });
+
     it('simple delegatecall', () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4

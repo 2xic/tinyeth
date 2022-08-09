@@ -26,6 +26,4 @@ export class EvmSubContext {
 
 interface SubContext {
   returnData?: Buffer;
-  gasCost?: number;
-  gasRefund?: number;
 }

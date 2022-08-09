@@ -56,11 +56,13 @@ export class Evm implements InterfaceEvm {
     return this._gasCost;
   }
 
-  public boot({ program, context, options }: EvmBootOptions) {
+  public boot({ program, context, options, isFork }: EvmBootOptions) {
     this.program = program;
     this.context = context;
     this.options = options;
-    this._gasCost = GAS_BASE_COST + calculateDataGasCost(context.data);
+    this._gasCost = isFork
+      ? 0
+      : GAS_BASE_COST + calculateDataGasCost(context.data);
     this._gasLeft = context.gasLimit.minus(this._gasCost);
     this.resetPc();
 

@@ -456,4 +456,52 @@ describe('evm', () => {
         .execute()
     ).toThrowError(Reverted);
   });
+
+  it('should execute a simple bytecode- contract without return', () => {
+    evm.boot({
+      program: Buffer.from('67600054600757FE5B60005260086018', 'hex'),
+      context: {
+        nonce: 1,
+        sender,
+        gasLimit,
+        value: new Wei(new BigNumber(0)),
+        data: Buffer.from('', 'hex'),
+      },
+    });
+    evm.execute();
+
+    expect(evm.gasCost()).toBe(21018);
+  });
+
+  it('should execute a simple bytecode- contract with return', () => {
+    evm.boot({
+      program: Buffer.from('67600054600757FE5B60005260086018F3', 'hex'),
+      context: {
+        nonce: 1,
+        sender,
+        gasLimit,
+        value: new Wei(new BigNumber(0)),
+        data: Buffer.from('', 'hex'),
+      },
+    });
+    evm.execute();
+
+    expect(evm.gasCost()).toBe(21018);
+  });
+
+  it('should execute the stop opcode', () => {
+    evm.boot({
+      program: Buffer.from('00000000000000000000000000', 'hex'),
+      context: {
+        nonce: 1,
+        sender,
+        gasLimit,
+        value: new Wei(new BigNumber(0)),
+        data: Buffer.from('', 'hex'),
+      },
+    });
+    evm.execute();
+
+    expect(evm.gasCost()).toBe(21000);
+  });
 });

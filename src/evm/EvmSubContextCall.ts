@@ -18,24 +18,25 @@ export class EvmSubContextCall {
     optionsSubContext: SubContext;
   }) {
     const { memory, stack, network, subContext, context } = evmContext;
+    const { argsOffset, argsSize, value, address, retSize, retOffset } =
+      optionsSubContext;
+
+    const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
+    const contract = network.get(address);
+
+    const forkedEvm = this.fork({
+      evmContext,
+      isFork: false,
+      txContext: {
+        value: new Wei(new BigNumber(value?.toNumber() || 0)),
+        data,
+        nonce: 0, // context.nonce,
+        sender: context.sender,
+        gasLimit: context.gasLimit,
+      },
+    });
+
     try {
-      const { argsOffset, argsSize, value, address, retSize, retOffset } =
-        optionsSubContext;
-
-      const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
-      const contract = network.get(address);
-
-      const forkedEvm = this.fork({
-        evmContext,
-        txContext: {
-          value: new Wei(new BigNumber(value?.toNumber() || 0)),
-          data,
-          nonce: 0, // context.nonce,
-          sender: context.sender,
-          gasLimit: context.gasLimit,
-        },
-      });
-
       contract.execute(forkedEvm);
 
       subContext.addSubContext({
@@ -49,7 +50,6 @@ export class EvmSubContextCall {
           .forEach((item, index) => {
             memory.write(retOffset.toNumber() + index, item);
           });
-        subContext.last.gasCost = forkedEvm.evm.gasCost();
       } else {
         throw new Error('Expected return data in sub-context');
       }
@@ -60,14 +60,20 @@ export class EvmSubContextCall {
         throw err;
       }
     }
+
+    return {
+      gasCost: forkedEvm.evm.gasCost(),
+    };
   }
 
   public fork({
     evmContext,
     txContext,
+    isFork = true,
   }: {
     evmContext: EvmContext;
     txContext: TxContext;
+    isFork?: boolean;
   }): ForkedEvm {
     const evm = getClassFromTestContainer(InterfaceEvm);
     evmContext.memory.raw.forEach((item, index) => {
@@ -81,6 +87,7 @@ export class EvmSubContextCall {
       executor: ({ program }: { program: Buffer }) => {
         evm
           .boot({
+            isFork,
             program,
             context: {
               value: txContext.value,

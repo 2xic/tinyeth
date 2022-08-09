@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { memo } from 'fast-check';
+import { bigInt, memo } from 'fast-check';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
@@ -422,7 +422,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
-    gasCost: ({ gasComputer, memory }) => {
+    gasCost: () => {
       return 0;
     },
   }),
@@ -447,9 +447,14 @@ export const Opcodes: Record<number, OpCode> = {
       }
 
       return {
-        computedGas: gasComputer.memoryExpansion({
-          address: new BigNumber(memory.raw.length),
-        }).gasCost,
+        computedGas:
+          3 *
+            wordSize({
+              address: new BigNumber(size),
+            }).toNumber() +
+          gasComputer.memoryExpansion({
+            address: new BigNumber(memory.raw.length),
+          }).gasCost,
         setPc: false,
       };
     },
@@ -541,7 +546,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const address = stack.pop();
-      const contract = network.get(new Address(address)); //.execute({});
+      const contract = network.get(new Address(address));
       const data = keccak256(contract.data);
 
       stack.push(new BigNumber(data.toString('hex'), 16));
@@ -869,6 +874,7 @@ export const Opcodes: Record<number, OpCode> = {
       context,
       evmSubContextCall,
       evmContext,
+      gasComputer,
     }) => {
       const value = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
@@ -883,6 +889,7 @@ export const Opcodes: Record<number, OpCode> = {
         },
         evmContext: evmContext,
       });
+
       const contract = new Contract({
         program: contractBytes,
         value: new BigNumber(value),
@@ -891,15 +898,17 @@ export const Opcodes: Record<number, OpCode> = {
 
       network.register({ contract });
       stack.push(contract.address.raw);
+      gasComputer.warmAddress({ address: contract.address });
 
-      const computedGas = 200 * contractBytes.length;
+      const codeDepositCost = 200 * contract.length;
+      const deploymentCost = forkedEvm.evm.gasCost();
+      const computedGas = codeDepositCost + deploymentCost;
 
       return {
         computedGas,
         setPc: false,
       };
     },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations
     gasCost: () => 32000,
   }),
   0xf1: new OpCode({
@@ -963,35 +972,32 @@ export const Opcodes: Record<number, OpCode> = {
   0xf3: new OpCode({
     name: 'RETURN',
     arguments: 1,
-    onExecute: ({ evm, stack, memory }) => {
+    onExecute: ({ evm, stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
       const size = stack.pop().toNumber();
 
       evm.setCallingContextReturnData(
         memory.read(offset, offset + size).slice(0, size)
       );
+
+      const computedGas = gasComputer.memoryExpansion({
+        address: new BigNumber(offset + size),
+      }).gasCost;
+
+      return {
+        computedGas,
+        setPc: false,
+      };
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
-    gasCost: () => 1,
+    gasCost: () => 0,
   }),
   0xf4: new OpCode({
     name: 'DELEGATECALL',
     arguments: 1,
     // TODO this is dynamic
-    /*    gasCost: ({ subContext, gasComputer }) => {
-      if (subContext.tryGetLast) {
-        return subContext.last.gasCost || 0;
-      }
-      return 0;
-    },*/
     gasCost: () => 0,
-    onExecute: ({
-      stack,
-      evmContext,
-      subContext,
-      evmSubContextCall,
-      gasComputer,
-    }) => {
+    onExecute: ({ stack, evmContext, evmSubContextCall, gasComputer }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -1000,7 +1006,7 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      evmSubContextCall.createSubContext({
+      const { gasCost } = evmSubContextCall.createSubContext({
         evmContext,
         optionsSubContext: {
           gas,
@@ -1016,7 +1022,15 @@ export const Opcodes: Record<number, OpCode> = {
         gasComputer.call({
           value: new BigNumber(0),
           address,
-        }).gasCost + (subContext.tryGetLast?.gasCost || 0);
+        }).gasCost +
+        gasCost +
+        gasComputer.memoryExpansion({
+          address: retOffset.plus(retSize),
+        }).gasCost;
+
+      gasComputer.warmAddress({
+        address,
+      });
 
       return {
         computedGas,

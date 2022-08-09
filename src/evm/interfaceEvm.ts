@@ -27,6 +27,7 @@ export interface EvmBootOptions {
   program: Buffer;
   context: TxContext;
   options?: DebugOptions;
+  isFork?: boolean;
 }
 
 export interface EvmContextWithSelfReference extends EvmContext {
