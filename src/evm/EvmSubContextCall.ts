@@ -44,13 +44,13 @@ export class EvmSubContextCall {
       });
       stack.push(new BigNumber(1));
 
-      if (subContext.last.returnData?.length) {
+      if (subContext.last.returnData?.length && optionsSubContext.retOffset) {
         subContext.last.returnData
           .slice(0, retSize.toNumber())
           .forEach((item, index) => {
             memory.write(retOffset.toNumber() + index, item);
           });
-      } else {
+      } else if (!optionsSubContext.retSize.isZero()) {
         throw new Error('Expected return data in sub-context');
       }
     } catch (err) {

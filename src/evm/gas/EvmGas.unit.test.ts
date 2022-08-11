@@ -394,6 +394,40 @@ describe('EvmGas', () => {
   });
 
   describe('create', () => {
+    it('should compute large mstore gas cost', () => {
+      const mnemonicParser = new MnemonicParser();
+      const contract = mnemonicParser.parse({
+        script: `
+        // Creates a constructor that creates a contract with 32 FF as code
+        PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH1 0
+        MSTORE
+        PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+        PUSH1 32
+        MSTORE
+        
+        // Create the contract with the constructor code above
+        PUSH1 41
+        PUSH1 0
+        PUSH1 0
+        CREATE // Puts the new contract address on the stack
+        `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(9)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(59451);
+    });
     it('should compute create gas cost', () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
@@ -735,6 +769,45 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(54657);
     });
 
+    it('delegatecall zero gas', () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#F4
+      const contract = mnemonicParser.parse({
+        script: `
+          PUSH1 0
+          PUSH1 0
+          MSTORE
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          CREATE
+          
+          // Call with storage slot 0 = 0, returns 0
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          PUSH1 0
+          DUP5
+          PUSH2 0x0
+          DELEGATECALL      
+        `,
+      });
+
+      const evm = getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(53139);
+    });
+
     it('simple delegatecall', () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
@@ -757,7 +830,7 @@ describe('EvmGas', () => {
           DUP5
           PUSH2 0xFFFF
           DELEGATECALL        
-          `,
+        `,
       });
 
       const evm = getClassFromTestContainer(Evm)

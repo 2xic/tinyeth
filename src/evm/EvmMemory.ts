@@ -22,9 +22,6 @@ export class EvmMemory {
 
   public read(offset: number, length: number) {
     this.expand(offset + length - 1);
-    this.memoryAccess.compute({
-      address: new BigNumber(offset + length),
-    });
     return this.memory.slice(offset, offset + length);
   }
 

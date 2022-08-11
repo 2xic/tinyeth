@@ -10,6 +10,7 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
+import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 import { wordSize } from './gas/wordSize';
 import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
@@ -300,14 +301,22 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'SHA3',
     arguments: 1,
     gasCost: 30,
-    onExecute: ({ stack, memory }) => {
+    onExecute: ({ stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
       const data = memory.read(offset, length);
       const hash = getBufferFromHex(keccak256(data));
       stack.push(new BigNumber(hash.toString('hex'), 16));
 
-      const computedGas = Math.floor((6 * (length + 31)) / 32);
+      const computedGas =
+        6 *
+          wordSize({
+            address: new BigNumber(length),
+          }).toNumber() +
+        gasComputer.memoryExpansion({
+          address: new BigNumber(offset + length),
+        }).gasCost;
+
       return {
         computedGas,
         setPc: false,
@@ -473,20 +482,23 @@ export const Opcodes: Record<number, OpCode> = {
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
     arguments: 1,
-    onExecute: ({ stack, network }) => {
+    onExecute: ({ stack, network, gasComputer }) => {
       const stackItem = stack.pop();
       const contract = network.get(new Address(stackItem));
       stack.push(new BigNumber(contract.length));
+
+      return {
+        setPc: false,
+        computedGas: gasComputer.account({ address: stackItem }).gasCost,
+      };
     },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
-    gasCost: () => 1,
+    gasCost: () => 0,
   }),
   0x3c: new OpCode({
     name: 'EXTCODECOPY',
     arguments: 1,
-    // TODO, this is dynamic
-    gasCost: () => 1,
-    onExecute: ({ stack, network, memory }) => {
+    gasCost: () => 0,
+    onExecute: ({ stack, network, memory, gasComputer }) => {
       const address = stack.pop();
       const destOffset = stack.pop().toNumber();
       const offset = stack.pop().toNumber();
@@ -502,6 +514,24 @@ export const Opcodes: Record<number, OpCode> = {
       for (let i = 0; i < delta; i++) {
         memory.write(destOffset + written++, 0);
       }
+
+      const memoryCost = gasComputer.memoryExpansion({
+        address: new BigNumber(offset + size),
+      }).gasCost;
+      const computedGas =
+        3 *
+          wordSize({
+            address: new BigNumber(size),
+          }).toNumber() +
+        memoryCost +
+        gasComputer.account({
+          address,
+        }).gasCost;
+
+      return {
+        setPc: false,
+        computedGas,
+      };
     },
   }),
   0x3d: new OpCode({
@@ -648,10 +678,17 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 3,
-    onExecute: ({ memory, stack }) => {
+    onExecute: ({ memory, stack, gasComputer }) => {
       const offset = stack.pop().toNumber();
       const read = memory.read32(offset);
       stack.push(new BigNumber(read.toString('hex'), 16));
+
+      return {
+        computedGas: gasComputer.memoryExpansion({
+          address: new BigNumber(memory.raw.length),
+        }).gasCost,
+        setPc: false,
+      };
     },
   }),
   0x52: new OpCode({
@@ -996,8 +1033,8 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'DELEGATECALL',
     arguments: 1,
     // TODO this is dynamic
-    gasCost: () => 0,
-    onExecute: ({ stack, evmContext, evmSubContextCall, gasComputer }) => {
+    gasCost: () => 100,
+    onExecute: ({ stack, evmContext, evmSubContextCall, evm, gasComputer }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -1006,31 +1043,47 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      const { gasCost } = evmSubContextCall.createSubContext({
-        evmContext,
-        optionsSubContext: {
-          gas,
-          address,
-          argsOffset,
-          argsSize,
-          retOffset,
-          retSize,
-        },
-      });
+      let computedGas = 0;
 
-      const computedGas =
-        gasComputer.call({
-          value: new BigNumber(0),
-          address,
-        }).gasCost +
-        gasCost +
-        gasComputer.memoryExpansion({
-          address: retOffset.plus(retSize),
-        }).gasCost;
+      if (!gas.isZero()) {
+        const { gasCost } = evmSubContextCall.createSubContext({
+          evmContext,
+          optionsSubContext: {
+            gas,
+            address,
+            argsOffset,
+            argsSize,
+            retOffset,
+            retSize,
+          },
+        });
 
-      gasComputer.warmAddress({
-        address,
-      });
+        computedGas =
+          gasComputer.call({
+            value: new BigNumber(0),
+            address,
+          }).gasCost +
+          computedGas +
+          gasCost +
+          gasComputer.memoryExpansion({
+            address: retOffset.plus(retSize),
+          }).gasCost +
+          gasComputer.memoryExpansion({
+            address: argsOffset.plus(argsSize),
+          }).gasCost;
+
+        const remainingGas = evm.gasCost() - 700;
+        const allBut64 = remainingGas - Math.floor(remainingGas / 64);
+        const gasSentWithCall = Math.min(gas.toNumber(), allBut64);
+
+        if (computedGas > gasSentWithCall) {
+          throw new Error('Too much gas');
+        }
+
+        gasComputer.warmAddress({
+          address,
+        });
+      }
 
       return {
         computedGas,

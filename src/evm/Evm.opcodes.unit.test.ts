@@ -695,6 +695,20 @@ describe('evm.codes', () => {
     {
       name: 'MSIZE',
       script: `
+        MSIZE // Initially 0
+        PUSH1 0
+        MLOAD // Read first word
+      `,
+      only: true,
+      value: new Wei(new BigNumber(0)),
+      gasCost: null, // 21011,
+      memory:
+        '0000000000000000000000000000000000000000000000000000000000000000',
+      stack: [0, 0],
+    },
+    {
+      name: 'MSIZE',
+      script: `
           MSIZE // Initially 0
           PUSH1 0
           MLOAD // Read first word
@@ -705,8 +719,8 @@ describe('evm.codes', () => {
           POP
           MSIZE // Now size is 3 words
         `,
-
-      gasCost: null, // TODO implement 21031,
+      value: new Wei(new BigNumber(0)),
+      gasCost: 21031,
       stack: [0, 0x20, 0x60],
     },
     {
@@ -959,6 +973,32 @@ describe('evm.codes', () => {
       },
     },
     {
+      name: 'EXTCODESIZE',
+      script: `    
+        // Creates a constructor that creates a contract with 32 FF as code
+        PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH1 0
+        MSTORE
+        PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+        PUSH1 32
+        MSTORE
+        
+        // Create the contract with the constructor code above
+        PUSH1 41
+        PUSH1 0
+        PUSH1 0
+        CREATE // Puts the new contract address on the stack
+        
+        // The address is on the stack, we can query the size
+        EXTCODESIZE  
+      `,
+      gasCost: 59551,
+      stack: [20],
+      validation: () => {
+        throw new Error('');
+      },
+    },
+    {
       name: 'EXTCODECOPY',
       script: `    
         // Creates a constructor that creates a contract with 32 FF as code
@@ -997,7 +1037,7 @@ describe('evm.codes', () => {
         DUP4
         EXTCODECOPY       
       `,
-      gasCost: null, // 21021,
+      gasCost: 59699,
       stack: null,
       memory:
         'ff00000000000000ffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000',
@@ -1054,7 +1094,6 @@ describe('evm.codes', () => {
         DELEGATECALL
       `,
       gasCost: null,
-      only: true,
       memory:
         '00000000000000000000000000000067600054600757fe5b60005260086018f3',
       stack: null,
@@ -1187,8 +1226,8 @@ describe('evm.codes', () => {
             nonce: 1,
             sender: options.sender || sender,
             gasLimit: options.gasLimit || gasLimit,
-            value: new Wei(new BigNumber(16)),
-            data: options.calldata || Buffer.from('', 'hex'),
+            value: options.value || new Wei(new BigNumber(16)),
+            data: options.calldata || Buffer.alloc(0),
           },
         })
         .execute();
@@ -1206,6 +1245,12 @@ describe('evm.codes', () => {
       }
     }
   );
+
+  it('should not only run one opcode test', () => {
+    if (singleCase.length) {
+      throw new Error('Enable all opcode tests :)');
+    }
+  });
 });
 
 interface EvmTestCaseOptions {
@@ -1219,4 +1264,5 @@ interface EvmTestCaseOptions {
   sender?: Address;
   validation?: (evm: ExposedEvm) => void;
   only?: boolean;
+  value?: Wei;
 }
