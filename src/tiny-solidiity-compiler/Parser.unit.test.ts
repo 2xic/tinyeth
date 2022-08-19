@@ -484,4 +484,3 @@ describe('Parser', () => {
 
   it.skip('should be able to preform if conditions with variables', () => {});
 });
-3

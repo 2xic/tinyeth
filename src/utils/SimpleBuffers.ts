@@ -12,4 +12,14 @@ export class SimpleBuffers {
   public get length() {
     return this.buffer.length;
   }
+
+  public overwrite(index: number, buffer: Buffer) {
+    for (let i = 0; i < buffer.length; i++) {
+      this.buffer[i + index] = buffer[i];
+    }
+  }
+
+  public get raw() {
+    return this.buffer;
+  }
 }
