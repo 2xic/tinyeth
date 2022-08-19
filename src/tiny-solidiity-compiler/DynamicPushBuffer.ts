@@ -18,4 +18,10 @@ It's the length of function1 + 1
 
 Function 2 will handle the revert, and it will just jump to some defined global index.
 
+-------------
+
+So this is actually relevant multiple places, currently I solved this by using the PC instruction, 
+but it should be easier to declare an + - offset based on the last PC.
+
+Maybe the most efficient solution is to use the PC instruction, but this should be investigated.
 */
