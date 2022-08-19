@@ -208,9 +208,9 @@ export class AstToByteCode {
                   PUSH1 ${variable1}
                   PUSH1 ${variable2}
                   EQ
-                  PUSH1 ${
-                    '0x40' /*bufferOutput.length*/ /* + childBuffer.length + 4*/
-                  }
+                  PC
+                  PUSH1 ${childBuffer.length + 5}
+                  ADD
                   JUMPI
             `,
           })
