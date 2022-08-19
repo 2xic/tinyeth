@@ -3,7 +3,6 @@ import { MnemonicParser } from '../evm/MnemonicParser';
 import { SimpleBuffers } from '../utils/SimpleBuffers';
 import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
 import { ConditionalNode } from './ast/ConditionalNode';
-import { FieldNode } from './ast/FieldNode';
 import { FunctionNode } from './ast/FunctionNode';
 import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
@@ -74,7 +73,7 @@ export class AstToByteCode {
       bufferOutput.concat(
         this.evmByteCodeMacros.jumpi(
           () => this.evmByteCodeMacros.simpleRevert(),
-          length + bufferOutput.length // + 5
+          length + bufferOutput.length
         )
       );
     }
@@ -187,57 +186,69 @@ export class AstToByteCode {
       }
     } else if (child instanceof ConditionalNode) {
       // TODO: Add a resolver to convert from storage variables (currently only supporting values)
-      const conditionalInputVariables = (
-        child.nodes[0] as ConditionalInputVariables
-      ).getVariables();
-      const { variable1, variable2, operator } = conditionalInputVariables;
+      const innerNode = child.nodes[0];
+      const conditionalInputVariables =
+        innerNode instanceof ConditionalInputVariables
+          ? innerNode.getVariables()
+          : null;
 
-      if (operator === '==') {
-        const childBuffer = new SimpleBuffers();
-        // return
+      if (!conditionalInputVariables) {
         this.convertNodeToByteCode({
           parentNode: child,
-          child: child.nodes[1],
-          bufferOutput: childBuffer,
-          variableTable,
-        });
-
-        bufferOutput.concat(
-          this.mnemonicParser.parse({
-            script: `
-                  PUSH1 ${variable1}
-                  PUSH1 ${variable2}
-                  EQ
-                  PC
-                  PUSH1 ${childBuffer.length + 5}
-                  ADD
-                  JUMPI
-            `,
-          })
-        );
-
-        bufferOutput.concat(childBuffer.build());
-
-        bufferOutput.concat(
-          this.mnemonicParser.parse({
-            script: `
-              JUMPDEST
-            `,
-          })
-        );
-
-        // else
-        this.convertNodeToByteCode({
-          parentNode: child,
-          child: child.nodes[1],
+          child: child.nodes[0],
           bufferOutput,
           variableTable,
         });
       } else {
-        throw new Error(`Unknown operator (${operator})`);
-      }
+        const { variable1, variable2, operator } = conditionalInputVariables;
 
-      //  throw new Error(JSON.stringify(child));
+        if (operator === '==') {
+          const childBuffer = new SimpleBuffers();
+          // innfer - if
+          this.convertNodeToByteCode({
+            parentNode: child,
+            child: child.nodes[1],
+            bufferOutput: childBuffer,
+            variableTable,
+          });
+
+          const elseBuffer = new SimpleBuffers();
+          // else
+          this.convertNodeToByteCode({
+            parentNode: child,
+            child: child.nodes[2],
+            bufferOutput: elseBuffer,
+            variableTable,
+          });
+
+          bufferOutput.concat(
+            this.mnemonicParser.parse({
+              script: `
+                    PUSH1 ${variable1}
+                    PUSH1 ${variable2}
+                    EQ
+                    PC
+                    PUSH1 ${childBuffer.length + 5}
+                    ADD
+                    JUMPI
+              `,
+            })
+          );
+          bufferOutput.concat(elseBuffer.build());
+
+          bufferOutput.concat(
+            this.mnemonicParser.parse({
+              script: `
+                JUMPDEST
+              `,
+            })
+          );
+
+          bufferOutput.concat(childBuffer.build());
+        } else {
+          throw new Error(`Unknown operator (${operator})`);
+        }
+      }
     } else {
       throw new Error(
         `Unknown node ${parentNode.constructor.name} -> ${child.constructor.name}`
