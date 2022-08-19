@@ -447,4 +447,36 @@ describe('AstToByteCode', () => {
       '0000000000000000000000000000000000000000000000000000000000000005'
     );
   });
+
+  it('should correctly deal with an if statement', () => {
+    const program = astToByteCode.compile({
+      script: `
+        contract ReturnContract {
+          function return1() public pure returns (uint8) {
+            if (1 == 1) {
+              return 2;
+            } else {
+              return 1;
+            }
+          }
+        }
+    `,
+    });
+
+    evm.boot({
+      program,
+      context: {
+        data: getBufferFromHex(new Abi().encodeFunction('return1')),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+      },
+    });
+    evm.execute();
+
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000002'
+    );
+  });
 });

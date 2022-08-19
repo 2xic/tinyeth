@@ -443,13 +443,12 @@ describe('Parser', () => {
     ).toThrowError();
   });
 
-  it('should correctly make sure a variable is decelerated', () => {
+  it('should correctly deal with if and else', () => {
     expect(() =>
       parser.parse({
         input: `
       contract SimpleContract {
         function return1() public {
-          // name is not decelerated ...
           if (2 == 1) {
             return 0;
           } else {
@@ -485,3 +484,4 @@ describe('Parser', () => {
 
   it.skip('should be able to preform if conditions with variables', () => {});
 });
+3

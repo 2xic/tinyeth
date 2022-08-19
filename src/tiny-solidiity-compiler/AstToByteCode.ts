@@ -1,7 +1,11 @@
 import { injectable } from 'inversify';
 import { MnemonicParser } from '../evm/MnemonicParser';
 import { SimpleBuffers } from '../utils/SimpleBuffers';
+import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
+import { ConditionalNode } from './ast/ConditionalNode';
+import { FieldNode } from './ast/FieldNode';
 import { FunctionNode } from './ast/FunctionNode';
+import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
 import { VariableNode } from './ast/VariableNode';
 import { VariableOperatorNode } from './ast/VariableOperatorNode';
@@ -27,7 +31,9 @@ export class AstToByteCode {
     if (!tree) {
       throw new Error('Invalid!');
     }
-    let output = this.evmByteCodeMacros.allocateMemory();
+    const output = new SimpleBuffers();
+    output.concat(this.evmByteCodeMacros.allocateMemory());
+
     const jumpTable = new JumpTable();
     const variableTable = new VariableTable();
 
@@ -48,9 +54,9 @@ export class AstToByteCode {
       }
     }
 
-    output = Buffer.concat([output, jumpTable.construct(output.length)]);
+    output.concat(jumpTable.construct(output.length));
 
-    return output;
+    return output.build();
   }
 
   private compileFunction({
@@ -74,71 +80,15 @@ export class AstToByteCode {
     }
 
     for (const child of node.nodes) {
-      /*
-        - This should be more strict
-          - view = no change to change
-          - Pure = no interaction with state
-          - Payable = allow state changes
-          - Support custom modifiers.
-      */
-      if (child instanceof ReturnNode) {
-        if (child.isValue) {
-          // TODO: This should check for the type before the PUSH
-          bufferOutput.concat(
-            this.mnemonicParser.parse({
-              script: `
-              PUSH1 ${child.fields.value}
-              PUSH1 0x0
-              MSTORE
-              PUSH1 32
-              PUSH1 0x0
-              return
-            `,
-            })
-          );
-        } else {
-          bufferOutput.concat(
-            this.mnemonicParser.parse({
-              script: `
-              PUSH1 ${variableTable.getSlot({ name: child.fields.value })}
-              SLOAD
-              PUSH1 0x0
-              MSTORE
-              PUSH1 32
-              PUSH1 0x0
-              return
-            `,
-            })
-          );
-        }
-
-        return bufferOutput.build();
-      } else if (child instanceof VariableOperatorNode) {
-        // This can be moved to another function.
-        // In addition += -> is the add operator
-        // The same logic for loading and storing will be the same for all operators.
-        // So this logic should be in the macro.
-        if (child.fields.operator == '+=') {
-          bufferOutput.concat(
-            this.mnemonicParser.parse({
-              script: `
-                PUSH1 ${variableTable.getSlot({ name: child.fields.name })}
-                SLOAD
-                PUSH1 ${child.fields.value}
-                ADD
-                PUSH1 $${variableTable.getSlot({ name: child.fields.name })}
-                SSTORE
-              `,
-            })
-          );
-        } else {
-          throw new Error('Unknown operator');
-        }
-      } else {
-        throw new Error('Unknown node');
-      }
+      this.convertNodeToByteCode({
+        parentNode: node,
+        child,
+        bufferOutput,
+        variableTable,
+      });
     }
-    throw new Error('Should not happen');
+
+    return bufferOutput.build();
   }
 
   public deployment({ program: inputProgram }: { program: Buffer }): Buffer {
@@ -161,5 +111,137 @@ export class AstToByteCode {
     });
 
     return program.output;
+  }
+
+  private convertNodeToByteCode({
+    parentNode,
+    child,
+    bufferOutput,
+    variableTable,
+  }: {
+    parentNode: Node;
+    child: Node;
+    bufferOutput: SimpleBuffers;
+    variableTable: VariableTable;
+  }) {
+    /*
+        - This should be more strict
+          - view = no change to change
+          - Pure = no interaction with state
+          - Payable = allow state changes
+          - Support custom modifiers.
+        TODO: Reflect maybe this (^) should instead be in the parser ? 
+      */
+    if (child instanceof ReturnNode) {
+      if (child.isValue) {
+        // TODO: This should check for the type before the PUSH
+        bufferOutput.concat(
+          this.mnemonicParser.parse({
+            script: `
+                PUSH1 ${child.fields.value}
+                PUSH1 0x0
+                MSTORE
+                PUSH1 32
+                PUSH1 0x0
+                return
+              `,
+          })
+        );
+      } else {
+        bufferOutput.concat(
+          this.mnemonicParser.parse({
+            script: `
+                PUSH1 ${variableTable.getSlot({ name: child.fields.value })}
+                SLOAD
+                PUSH1 0x0
+                MSTORE
+                PUSH1 32
+                PUSH1 0x0
+                return
+              `,
+          })
+        );
+      }
+
+      //      return bufferOutput.build();
+    } else if (child instanceof VariableOperatorNode) {
+      // This can be moved to another function.
+      // In addition += -> is the add operator
+      // The same logic for loading and storing will be the same for all operators.
+      // So this logic should be in the macro.
+      if (child.fields.operator == '+=') {
+        bufferOutput.concat(
+          this.mnemonicParser.parse({
+            script: `
+                  PUSH1 ${variableTable.getSlot({ name: child.fields.name })}
+                  SLOAD
+                  PUSH1 ${child.fields.value}
+                  ADD
+                  PUSH1 $${variableTable.getSlot({ name: child.fields.name })}
+                  SSTORE
+                `,
+          })
+        );
+      } else {
+        throw new Error(`Unknown operator (${child.fields.operator})`);
+      }
+    } else if (child instanceof ConditionalNode) {
+      // TODO: Add a resolver to convert from storage variables (currently only supporting values)
+      const conditionalInputVariables = (
+        child.nodes[0] as ConditionalInputVariables
+      ).getVariables();
+      const { variable1, variable2, operator } = conditionalInputVariables;
+
+      if (operator === '==') {
+        const childBuffer = new SimpleBuffers();
+        // return
+        this.convertNodeToByteCode({
+          parentNode: child,
+          child: child.nodes[1],
+          bufferOutput: childBuffer,
+          variableTable,
+        });
+
+        bufferOutput.concat(
+          this.mnemonicParser.parse({
+            script: `
+                  PUSH1 ${variable1}
+                  PUSH1 ${variable2}
+                  EQ
+                  PUSH1 ${
+                    '0x40' /*bufferOutput.length*/ /* + childBuffer.length + 4*/
+                  }
+                  JUMPI
+            `,
+          })
+        );
+
+        bufferOutput.concat(childBuffer.build());
+
+        bufferOutput.concat(
+          this.mnemonicParser.parse({
+            script: `
+              JUMPDEST
+            `,
+          })
+        );
+
+        // else
+        this.convertNodeToByteCode({
+          parentNode: child,
+          child: child.nodes[1],
+          bufferOutput,
+          variableTable,
+        });
+      } else {
+        throw new Error(`Unknown operator (${operator})`);
+      }
+
+      //  throw new Error(JSON.stringify(child));
+    } else {
+      throw new Error(
+        `Unknown node ${parentNode.constructor.name} -> ${child.constructor.name}`
+      );
+    }
   }
 }

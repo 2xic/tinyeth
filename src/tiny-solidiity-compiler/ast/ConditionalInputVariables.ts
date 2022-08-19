@@ -17,6 +17,22 @@ export class ConditionalInputVariables extends FieldNode<Variable> {
     }
   }
 
+  public getVariables() {
+    if ('variable' in this.fields) {
+      return {
+        variable1: this.fieldValues.variable,
+        variable2: undefined,
+        operator: undefined,
+      };
+    } else {
+      return {
+        variable1: this.fields.variable1,
+        variable2: this.fields.variable2,
+        operator: this.fields.operator,
+      };
+    }
+  }
+
   private isStaticVariable(input: string) {
     return this.isNumber(input) || input === 'true';
   }
