@@ -21,8 +21,11 @@ export class EvmMemory {
   }
 
   public read(offset: number, length: number) {
-    this.expand(offset + length - 1);
-    return this.memory.slice(offset, offset + length);
+    const readMax = offset + length;
+    if (this.memory.length < readMax) {
+      this.expand(readMax);
+    }
+    return this.memory.slice(offset, readMax);
   }
 
   public write(offset: number, value: number) {

@@ -699,12 +699,28 @@ describe('evm.codes', () => {
         PUSH1 0
         MLOAD // Read first word
       `,
-      only: true,
       value: new Wei(new BigNumber(0)),
-      gasCost: null, // 21011,
+      gasCost: 21011,
       memory:
         '0000000000000000000000000000000000000000000000000000000000000000',
       stack: [0, 0],
+    },
+    {
+      name: 'MSIZE',
+      script: `
+          MSIZE // Initially 0
+          PUSH1 0
+          MLOAD // Read first word
+          POP
+          MSIZE // Now size is 1 word
+          PUSH1 0x39
+          MLOAD // Read part of third word
+        `,
+      value: new Wei(new BigNumber(0)),
+      memory:
+        '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      gasCost: 21027,
+      stack: [0, 0x20, 0x0],
     },
     {
       name: 'MSIZE',
@@ -1152,6 +1168,22 @@ describe('evm.codes', () => {
         expect(stack.length).toBe(4);
         expect(network.contracts.length).toBe(3);
       },
+    },
+    {
+      name: 'CREATE',
+      script: `
+        PUSH17 0x67600054600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+      `,
+      gasCost: null,
+      memory:
+        '00000000000000000000000000000067600054600757fe5b60005260086018f3',
+      stack: null,
     },
     {
       name: 'CALLCODE',

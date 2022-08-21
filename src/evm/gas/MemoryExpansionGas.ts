@@ -13,7 +13,7 @@ export class MemoryExpansionGas {
 
       const newCost = this.memoryCost({ memoryUsed: newWordSize });
       const oldCost = this.memoryCost({
-        memoryUsed: this.highestReferencedAddress,
+        memoryUsed: wordSize({ address: this.highestReferencedAddress }),
       });
 
       // from the docs

@@ -683,10 +683,12 @@ export const Opcodes: Record<number, OpCode> = {
       const read = memory.read32(offset);
       stack.push(new BigNumber(read.toString('hex'), 16));
 
+      const computedGas = gasComputer.memoryExpansion({
+        address: new BigNumber(memory.raw.length),
+      }).gasCost;
+
       return {
-        computedGas: gasComputer.memoryExpansion({
-          address: new BigNumber(memory.raw.length),
-        }).gasCost,
+        computedGas,
         setPc: false,
       };
     },

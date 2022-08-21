@@ -23,19 +23,26 @@ export class GasComputer {
   }
 
   public sstore(context: SstoreContext): GasComputeResults {
-    return this.computeSstoreGas.compute(context);
+    return this.validateGasResults(this.computeSstoreGas.compute(context));
   }
 
   public memoryExpansion(context: MemoryExpansionContext): GasComputeResults {
-    return this.memoryExpansionGas.compute(context);
+    return this.validateGasResults(this.memoryExpansionGas.compute(context));
   }
 
   public account(context: AccountAccessContext) {
-    return this.accountAccess.compute(context);
+    return this.validateGasResults(this.accountAccess.compute(context));
   }
 
   public call(context: CallContext) {
-    return this.callGasCompute.compute(context);
+    return this.validateGasResults(this.callGasCompute.compute(context));
+  }
+
+  private validateGasResults(options: GasComputeResults) {
+    if (options.gasCost < 0) {
+      throw new Error('Gas cost is negative.');
+    }
+    return options;
   }
 }
 
