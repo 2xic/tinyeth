@@ -480,6 +480,35 @@ describe('Parser', () => {
     ).toThrowError(UndeclaredVariableError);
   });
 
+  it('should correctly deal with nested if statements', () => {
+    const tree = parser.parse({
+      input: `
+        contract SimpleContract {
+          function return1() public {
+            if (1 == 1) {
+              if (1 == 1) {
+                return 0;
+              }  
+            }
+          }
+        }
+      `,
+    });
+    const contractNode = tree as ContractNode;
+    expect(contractNode).toBeInstanceOf(ContractNode);
+    expect(contractNode.fields.name).toBe('SimpleContract');
+
+    const functionNode = contractNode.nodes[0] as FunctionNode;
+    expect(functionNode.fields.name).toBe('return1');
+
+    const firstConditionalNode = functionNode.nodes[0] as ConditionalNode;
+    expect(firstConditionalNode).toBeInstanceOf(ConditionalNode);
+
+    const nestedIfConditionalNode = firstConditionalNode
+      .nodes[1] as ConditionalNode;
+    expect(nestedIfConditionalNode).toBeInstanceOf(ConditionalNode);
+  });
+
   it.skip('should be able to allocate storage and update variables', () => {});
 
   it.skip('should be able to preform if conditions with variables', () => {});

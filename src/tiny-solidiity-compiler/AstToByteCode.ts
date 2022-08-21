@@ -203,23 +203,26 @@ export class AstToByteCode {
         const { variable1, variable2, operator } = conditionalInputVariables;
 
         if (operator === '==') {
-          const childBuffer = new SimpleBuffers();
-          // innfer - if
+          const innerIfBuffer = new SimpleBuffers();
           this.convertNodeToByteCode({
             parentNode: child,
             child: child.nodes[1],
-            bufferOutput: childBuffer,
+            bufferOutput: innerIfBuffer,
             variableTable,
           });
 
           const elseBuffer = new SimpleBuffers();
-          // else
-          this.convertNodeToByteCode({
-            parentNode: child,
-            child: child.nodes[2],
-            bufferOutput: elseBuffer,
-            variableTable,
-          });
+          let delta = -5;
+          const elseNode = child.nodes[2];
+          if (elseNode) {
+            this.convertNodeToByteCode({
+              parentNode: child,
+              child: elseNode,
+              bufferOutput: elseBuffer,
+              variableTable,
+            });
+            delta = 5;
+          }
 
           bufferOutput.concat(
             this.mnemonicParser.parse({
@@ -228,7 +231,7 @@ export class AstToByteCode {
                     PUSH1 ${variable2}
                     EQ
                     PC
-                    PUSH1 ${childBuffer.length + 5}
+                    PUSH1 ${innerIfBuffer.length + delta}
                     ADD
                     JUMPI
               `,
@@ -243,8 +246,7 @@ export class AstToByteCode {
               `,
             })
           );
-
-          bufferOutput.concat(childBuffer.build());
+          bufferOutput.concat(innerIfBuffer.build());
         } else {
           throw new Error(`Unknown operator (${operator})`);
         }

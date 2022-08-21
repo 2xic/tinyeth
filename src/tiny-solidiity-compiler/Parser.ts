@@ -157,11 +157,13 @@ export class Parser {
       .thenOptionalPath([elseStatement])
       .construct(ConditionalNode);
 
-    const ifStatement = new Syntax(new SpecificKeyword('if'))
+    const ifConstruction = new Syntax(new SpecificKeyword('if'));
+
+    const ifStatement = ifConstruction
       .then(conditionalArguments)
       .then(new SpecificKeyword('{'))
       .thenRecursive(
-        [variablesDeceleration, returnStatement],
+        [ifConstruction, variablesDeceleration, returnStatement],
         // TODO: Is this a good abstraction ?
         // stop token and start token for recursion?
         new StopToken('}')
