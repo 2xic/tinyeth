@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { bigInt, memo } from 'fast-check';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
@@ -10,7 +9,6 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
-import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 import { wordSize } from './gas/wordSize';
 import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';

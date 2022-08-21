@@ -9,6 +9,7 @@ export class SimpleSerialize {
     const output = new SimpleBuffers();
     const variableLengths: Array<[number, Types]> = [];
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [_, value] of Object.entries(structure)) {
       if (value instanceof Uint) {
         const byteValue = convertNumberToBuffer(value.value, 4);

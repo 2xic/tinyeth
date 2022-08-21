@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { Uint } from '../../rlp/types/Uint';
 
 export class AbiUintType extends Uint {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(value: number | BigNumber | string, n = 256) {
     super({
       input: new BigNumber(value),

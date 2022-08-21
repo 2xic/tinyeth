@@ -47,19 +47,22 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
 
 - [ ] Data structures
-    - Blocks
+    - (added mvp) Blocks
         - https://github.com/ethereum/go-ethereum/blob/4766b1107fadcd5f31c96b0744a2a788c6e4a01c/core/types/block_test.go#L35
-    - Transactions (done - ish)
+    - (added mvp) Simple serialize
+      - This is basically works the same way as the abi. You need a schema to encode, and to decode. It also uses variable lengths and fixed lengths variables with the same way to deal with offset of the dynamic variables.
+      - https://ethereum.org/en/developers/docs/data-structures-and-encoding/ssz
+    - (ok) Transactions
     - Accounts
     - Merkle Patricia Trie
     - Ethhash ? 
-    - Simple serialize
-      - https://ethereum.org/en/developers/docs/data-structures-and-encoding/ssz
 
 - "Research" and further learning
-  - [ ] Tiny solidity compiler
+  - [ ] (wip) Tiny solidity compiler
+
+      Starting to take some shape, but still very rough around the edges. The syntax parser will be refactored to make the syntax mapping more intuitive (soon).
       - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
-          - No fancy optimizer.
+          - In other words no fancy optimizer.
       - https://docs.soliditylang.org/en/v0.8.15/grammar.html
       - What could be interesting is diving into static analysis of solidity programs
         - Or dynamic analysis, by doing some cool fuzzing ? 
@@ -73,7 +76,7 @@ _Just something so I get a better understanding of the core parts of the protoco
 
   - [ ] Play wargames with this implementation
     - https://github.com/fvictorio/evm-puzzles
-      - Completed
+      - Completed (see `EvmPuzzle.unit.test.ts`)
     - https://ethernaut.openzeppelin.com/
     - https://www.damnvulnerabledefi.xyz/
     - https://github.com/karmacoma-eth/pinball-ctf

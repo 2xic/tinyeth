@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { Address } from '../Address';
 import { AccessSets } from './AccessSets';
 import { AccountAccessContext, AccountAccessGas } from './AccountAccessGas';
 import { CallContext, CallGasCompute } from './CallGasCompute';
@@ -18,8 +19,8 @@ export class GasComputer {
     private accessSets: AccessSets
   ) {}
 
-  public warmAddress({ address }: { address: any }) {
-    this.accessSets.touchAddress({ address });
+  public warmAddress({ address }: { address: Address }) {
+    this.accessSets.touchAddress({ address: address.raw });
   }
 
   public sstore(context: SstoreContext): GasComputeResults {

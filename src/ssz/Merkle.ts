@@ -1,4 +1,3 @@
-import { Type } from 'typescript';
 import { convertNumberToBuffer } from '../utils/convertNumberToBuffer';
 import { createFixedSizeBuffer } from '../utils/createFixedSizeBuffer';
 import { sha3_256 } from '../utils/sha3_256';

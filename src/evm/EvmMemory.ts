@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 

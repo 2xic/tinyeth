@@ -341,24 +341,12 @@ describe('Parser', () => {
     const secondConditionalNode = firstConditionalNode
       .nodes[2] as ConditionalNode;
     expect(secondConditionalNode).toBeInstanceOf(ConditionalNode);
-    expect(
-      (
-        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
-          .fields as any
-      ).variable1
-    ).toBe('1');
-    expect(
-      (
-        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
-          .fields as any
-      ).variable2
-    ).toBe('2');
-    expect(
-      (
-        (secondConditionalNode.nodes[0] as ConditionalInputVariables)
-          .fields as any
-      ).operator
-    ).toBe('==');
+    const variables = (
+      secondConditionalNode.nodes[0] as ConditionalInputVariables
+    ).getVariables();
+    expect(variables.variable1).toBe('1');
+    expect(variables.variable2).toBe('2');
+    expect(variables.operator).toBe('==');
 
     const thirdConditionalNode = secondConditionalNode
       .nodes[2] as ConditionalNode;
