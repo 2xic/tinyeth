@@ -14,3 +14,5 @@ scripts/*.json
 scripts/dumps/*.json
 geth-data
 *.key
+.env
+cache

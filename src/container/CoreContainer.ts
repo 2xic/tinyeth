@@ -69,6 +69,9 @@ import { EvmProgram } from '../tiny-solidiity-compiler/EvmProgram';
 import { EvmByteCodeMacros } from '../tiny-solidiity-compiler/EvmBytecodeMacros';
 import { MnemonicParser } from '../evm/MnemonicParser';
 import { CallGasCompute } from '../evm/gas/CallGasCompute';
+import { Evm } from '../evm/Evm';
+import { ExposedEvm } from '../evm/ExposedEvm';
+import { InterfaceEvm } from '../evm/interfaceEvm';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -152,6 +155,10 @@ export class CoreContainer {
     container.bind(RlpDecoder).toSelf();
 
     container.bind(GetRandomBytesInteractor).toSelf();
+
+    container.bind(ExposedEvm).toSelf();
+    container.bind(Evm).toSelf();
+    container.bind(InterfaceEvm).to(ExposedEvm);
 
     container.bind(EvmStack).toSelf();
     container.bind(Network).toSelf();
