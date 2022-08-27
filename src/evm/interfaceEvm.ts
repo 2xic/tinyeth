@@ -1,6 +1,6 @@
 import { Evm, TxContext } from './Evm';
 import { EvmAccountState } from './EvmAccountState';
-import { EvmKeyValueStorage } from './EvmKeyValueStorage';
+import { EvmStorage } from './EvmStorage';
 import { EvmMemory } from './EvmMemory';
 import { EvmStack } from './EvmStack';
 import { EvmSubContext } from './EvmSubContext';
@@ -12,7 +12,7 @@ import { Network } from './Network';
 export abstract class InterfaceEvm {
   public abstract get memory(): EvmMemory;
 
-  public abstract get storage(): EvmKeyValueStorage;
+  public abstract get storage(): EvmStorage;
 
   public abstract boot(options: EvmBootOptions): InterfaceEvm;
 
@@ -39,7 +39,7 @@ export interface EvmContext {
   stack: EvmStack;
   network: Network;
   memory: EvmMemory;
-  storage: EvmKeyValueStorage;
+  storage: EvmStorage;
   accessSets: AccessSets;
   gasComputer: GasComputer;
   byteIndex: number;

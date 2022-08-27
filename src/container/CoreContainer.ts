@@ -49,7 +49,7 @@ import { EvmMemory } from '../evm/EvmMemory';
 import { GasComputer } from '../evm/gas/GasComputer';
 import { ComputeSstoreGas } from '../evm/gas/ComputeSstoreGas';
 import { AccessSets } from '../evm/gas/AccessSets';
-import { EvmKeyValueStorage } from '../evm/EvmKeyValueStorage';
+import { EvmStorage } from '../evm/EvmStorage';
 import { MemoryExpansionGas } from '../evm/gas/MemoryExpansionGas';
 import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 import { EvmSubContext } from '../evm/EvmSubContext';
@@ -166,7 +166,7 @@ export class CoreContainer {
     container.bind(GasComputer).toSelf();
     container.bind(ComputeSstoreGas).toSelf();
     container.bind(AccessSets).toSelf();
-    container.bind(EvmKeyValueStorage).toSelf();
+    container.bind(EvmStorage).toSelf();
     container.bind(MemoryExpansionGas).toSelf();
     container.bind(AccountAccessGas).toSelf();
     container.bind(EvmSubContextCall).toSelf();

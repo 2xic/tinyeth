@@ -12,7 +12,7 @@ import {
 import { EvmMemory } from './EvmMemory';
 import { injectable } from 'inversify';
 import { GasComputer } from './gas/GasComputer';
-import { EvmKeyValueStorage } from './EvmKeyValueStorage';
+import { EvmStorage } from './EvmStorage';
 import { AccessSets } from './gas/AccessSets';
 import { Address } from './Address';
 import { EvmSubContext } from './EvmSubContext';
@@ -26,7 +26,6 @@ import {
   InterfaceEvm,
 } from './interfaceEvm';
 import { EvmErrorTrace } from './EvmErrorTrace';
-import { Contract } from './Contract';
 
 @injectable()
 export class Evm implements InterfaceEvm {
@@ -34,7 +33,7 @@ export class Evm implements InterfaceEvm {
     protected stack: EvmStack,
     protected network: Network,
     public memory: EvmMemory,
-    public storage: EvmKeyValueStorage,
+    public storage: EvmStorage,
     protected gasComputer: GasComputer,
     protected accessSets: AccessSets,
     protected subContext: EvmSubContext,
@@ -221,36 +220,6 @@ export class Evm implements InterfaceEvm {
 
   public get gasLeft() {
     return this._gasLeft;
-  }
-
-  // TODO: should add proper deployment support, and interaction.
-  public deploy({ contractBytes }: { contractBytes: Buffer }) {
-    const forkedEvm = this.evmSubContextCall.fork({
-      txContext: this.context,
-      evmContext: {
-        evm: this,
-        stack: this.stack,
-        network: this.network,
-        storage: this.storage,
-        memory: this.memory,
-        gasComputer: this.gasComputer,
-        accessSets: this.accessSets,
-        byteIndex: this.pc,
-        context: this.context,
-        subContext: this.subContext,
-        evmSubContextCall: this.evmSubContextCall,
-        evmAccountState: this.evmAccountState,
-      },
-    });
-    const contract = new Contract({
-      program: contractBytes,
-      value: new BigNumber(0),
-      context: this.context,
-    }).execute(forkedEvm);
-
-    this.network.register({ contract });
-
-    return contract.address;
   }
 }
 

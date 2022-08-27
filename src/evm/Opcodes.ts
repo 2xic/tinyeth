@@ -1166,7 +1166,9 @@ export const Opcodes: Record<number, OpCode> = {
 
       evm.setCallingContextReturnData(memory.read(offset, length));
 
-      throw new Reverted('Ran Reverted opcode');
+      throw new Reverted(
+        `Ran Reverted opcode ${memory.read(offset, length).toString('utf-8')}`
+      );
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 1,

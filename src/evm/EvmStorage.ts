@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 
 @injectable()
-export class EvmKeyValueStorage {
+export class EvmStorage {
   public storage: Record<string, BigNumber> = {};
 
   public write({ key, value }: { key: BigNumber; value: BigNumber }) {

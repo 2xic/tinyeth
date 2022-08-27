@@ -3,7 +3,7 @@ import { Logger } from '../utils/Logger';
 import { Evm } from './Evm';
 import { EvmAccountState } from './EvmAccountState';
 import { EvmErrorTrace } from './EvmErrorTrace';
-import { EvmKeyValueStorage } from './EvmKeyValueStorage';
+import { EvmStorage } from './EvmStorage';
 import { EvmMemory } from './EvmMemory';
 import { EvmStack } from './EvmStack';
 import { EvmSubContext } from './EvmSubContext';
@@ -19,7 +19,7 @@ export class ExposedEvm extends Evm implements InterfaceEvm {
     public stack: EvmStack,
     public network: Network,
     public memory: EvmMemory,
-    public storage: EvmKeyValueStorage,
+    public storage: EvmStorage,
     public gasComputer: GasComputer,
     public accessSets: AccessSets,
     public subContext: EvmSubContext,
