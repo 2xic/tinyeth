@@ -46,19 +46,19 @@ describe('evm', () => {
 
     evm.step();
     expect(evm.stack.toString()).toBe([0x1, 0x1, 0x0].toString());
-    expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0);
+    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0);
 
     expect(evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([0x1].toString());
-    expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
 
     expect(evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
 
     expect(evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
   });
 
   it('should execute a simple contract', () => {
@@ -77,7 +77,7 @@ describe('evm', () => {
 
     expect(evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.read({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
   });
 
   it('should correctly run simple CREATE opcode contract', () => {

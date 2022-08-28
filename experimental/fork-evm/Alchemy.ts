@@ -17,6 +17,16 @@ export class Alchemy {
         return textResults;
     }
 
+    public async getStorageAt({ address, key }: { address: string; key: string }) {
+        const textResults = await this.sendRequestsIfNotCached<{
+            result: string;
+        }>({
+            method: 'eth_getStorageAt',
+            params: [address, `0x${Number(key).toString(16)}`, this.blockNumber]
+        })
+
+        return textResults;
+    }
 
     private async sendRequestsIfNotCached<Response>({
         method,

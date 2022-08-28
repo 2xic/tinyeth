@@ -31,7 +31,7 @@ export class ComputeSstoreGas {
       gasCost += 2100;
     }
 
-    if (this.storage.read({ key }).isEqualTo(value)) {
+    if (this.storage.readSync({ key }).isEqualTo(value)) {
       gasCost += 100;
     } else {
       if (this.storage.isEqualOriginal({ key })) {
@@ -46,7 +46,7 @@ export class ComputeSstoreGas {
       } else {
         gasCost += 100;
         if (!this.storage.isOriginallyZero({ key })) {
-          if (this.storage.read({ key }).isEqualTo(0)) {
+          if (this.storage.readSync({ key }).isEqualTo(0)) {
             gasRefund -= 4800;
           } else if (value.isEqualTo(0)) {
             gasRefund += 4800;

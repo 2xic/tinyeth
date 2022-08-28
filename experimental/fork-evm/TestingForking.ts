@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Alchemy } from "./Alchemy";
-import { ForkingContainer, getBufferFromHex, ProductionContainer } from "../../dist";
+import { EvmStorageForking, ForkingContainer, getBufferFromHex, ProductionContainer } from "../../dist";
 import { Evm } from "../../dist/evm/Evm";
 import { Address } from "../../dist/evm/Address";
 import { Wei } from "../../dist/evm/eth-units/Wei";
@@ -19,11 +19,27 @@ const testingAddress = '0xb2ed12f121995cb55ddfc2f268d1901aec05a8de';
     const evmCode = await new Alchemy().getContractCode({
         address: testingAddress
     });
+    const storageValue = await new Alchemy().getStorageAt({
+        address: testingAddress,
+        key: '17978774291734825892607321453239800186494799842507858885805654573319060105575'
+    })
+    console.log(storageValue)
 
     const container = new ForkingContainer().create({
         loggingEnabled: true,
     })
     const evm = container.get(Evm);
+  /*  container.get(EvmStorageForking).setRequester(
+        {
+            callback: async (key) => {
+                const storageValue = (await new Alchemy().getStorageAt({
+                    address: testingAddress,
+                    key: key, //'17978774291734825892607321453239800186494799842507858885805654573319060105575'
+                })).result.slice(2)
+                return new BigNumber(storageValue, 16)
+            }
+        }
+    )*/
 
     const program  = getBufferFromHex(evmCode.result);
     console.log(program.toString('hex'))
@@ -42,6 +58,7 @@ const testingAddress = '0xb2ed12f121995cb55ddfc2f268d1901aec05a8de';
         }
     });
     evm.execute();
+    console.log(evm.callingContextReturnData)
 })()
 
 

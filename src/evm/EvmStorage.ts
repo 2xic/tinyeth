@@ -10,7 +10,15 @@ export class EvmStorage {
     this.storage[key.toString(16)] = value;
   }
 
-  public read({ key }: { key: BigNumber | number }): BigNumber {
+  public async read({ key }: { key: BigNumber | number }): Promise<BigNumber> {
+    return this.readSync({ key });
+  }
+
+  public hasKey({ key }: { key: BigNumber | number }) {
+    return key.toString(16) in this.storage;
+  }
+
+  public readSync({ key }: { key: BigNumber | number }): BigNumber {
     return this.storage[key.toString(16)] || new BigNumber(0);
   }
 
@@ -22,7 +30,7 @@ export class EvmStorage {
 
   public isOriginallyZero({ key }: { key: BigNumber }) {
     // Should check the original storage.
-    return this.read({ key }).isEqualTo(0);
+    return this.readSync({ key }).isEqualTo(0);
   }
 
   public forEach(callback: (key: BigNumber, value: BigNumber) => void) {
