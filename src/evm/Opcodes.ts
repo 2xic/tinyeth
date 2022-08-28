@@ -205,9 +205,13 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a & b));
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const and = BigInt(a.toString()) & BigInt(b.toString());
+      const results = new SignedUnsignedNumberConverter().convert(
+        new BigNumber(and.toString())
+      );
+      stack.push(results);
     },
   }),
   0x17: new OpCode({
@@ -215,18 +219,26 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a | b));
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const or = BigInt(a.toString()) | BigInt(b.toString());
+      const results = new SignedUnsignedNumberConverter().convert(
+        new BigNumber(or.toString())
+      );
+      stack.push(results);
     },
   }),
   0x18: new OpCode({
     name: 'XOR',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a ^ b));
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const xor = BigInt(a.toString()) ^ BigInt(b.toString());
+      const results = new SignedUnsignedNumberConverter().convert(
+        new BigNumber(xor.toString())
+      );
+      stack.push(results);
     },
     gasCost: 3,
   }),

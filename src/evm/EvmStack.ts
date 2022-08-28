@@ -35,6 +35,10 @@ export class EvmStack {
     return this.stack.length;
   }
 
+  public get raw() {
+    return this.stack;
+  }
+
   public toString() {
     return this.stack.toString();
   }

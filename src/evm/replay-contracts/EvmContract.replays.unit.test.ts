@@ -6,6 +6,7 @@ import { getBufferFromHex } from '../../utils';
 import fs from 'fs';
 import path from 'path';
 import { ExposedEvm } from '../ExposedEvm';
+import { Opcodes } from '../Opcodes';
 
 function replayFile(evm: ExposedEvm, filePath: string) {
   const fileData: Array<{
@@ -16,25 +17,38 @@ function replayFile(evm: ExposedEvm, filePath: string) {
   }> = JSON.parse(
     fs.readFileSync(path.join(__dirname, filePath)).toString('utf-8')
   );
+  let lastStackState: BigNumber[] = [];
+  const breakPoint = undefined;
   for (let index = 1; index < fileData.length; index++) {
     const state = fileData[index];
+    lastStackState = evm.stack.raw;
     evm.step();
 
     expect(evm.pc).toBe(parseInt(state.pc, 16));
-    //    expect(evm.stack.length).toBe(state.stack.length);
 
-    let stackError = false;
-    for (let i = 0; i < evm.stack.length; i++) {
-      stackError =
-        evm.stack.get(evm.stack.length - i - 1).toNumber() !==
-        parseInt(state.stack[i], 16);
+    const stateStack = state.stack.filter((item) => !!item.length).reverse();
+
+    let stackError = evm.stack.length !== stateStack.length;
+    for (let i = 0; i < evm.stack.length && !stackError; i++) {
+      stackError = evm.stack.get(i).toNumber() !== parseInt(stateStack[i], 16);
       if (stackError) {
         break;
       }
     }
 
     if (stackError) {
-      throw new Error(`Error at pc ${state.pc}`);
+      throw new Error(
+        `Error at pc ${state.pc}. Previous opcodes ${
+          Opcodes[evm.program[evm.pc - 1]].mnemonic
+        }
+
+        ${lastStackState.length} ${stateStack.length}
+        
+        ${lastStackState.map((item) => item.toString(16))}
+
+        ${stateStack.map((item) => item.toString())}
+        `
+      );
     }
   }
 }

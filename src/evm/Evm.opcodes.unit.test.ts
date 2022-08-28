@@ -5,6 +5,7 @@ import { EvmAccountState } from './EvmAccountState';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './eth-units/Wei';
+import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 /*
     The test mnemonic code here is are all from https://www.evm.codes/
@@ -24,6 +25,65 @@ describe('evm.codes', () => {
       address: sender,
       balance: new BigNumber(42),
     });
+  });
+
+  it('should correctly execute negative SUB', () => {
+    evm.stack.push(new BigNumber(1));
+    evm.stack.push(
+      new BigNumber('10000000000000000000000000000000000000000', 16)
+    );
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        SUB
+    `,
+    });
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+
+    expect(evm.stack.get(0).toString(16)).toBe(
+      'ffffffffffffffffffffffffffffffffffffffff'
+    );
+  });
+
+  it('should correctly execute negative AND', () => {
+    evm.stack.push(
+      new BigNumber('ffffffffffffffffffffffffffffffffffffffff', 16)
+    );
+    evm.stack.push(
+      new BigNumber('ba12222222228d8ba445958a75a0704d566bf2c8', 16)
+    );
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        AND
+    `,
+    });
+    evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.stack.get(0).toString(16)).toBe(
+      'ba12222222228d8ba445958a75a0704d566bf2c8'
+    );
   });
 
   it('should correctly execute SWAP16', () => {
