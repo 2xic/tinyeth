@@ -12,7 +12,7 @@ describe('EvmGas', () => {
   const gasLimit = new BigNumber(0xffffff);
 
   describe('sstore', () => {
-    it('should correctly compute the gas cost of SSTORE', () => {
+    it('should correctly compute the gas cost of SSTORE', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -23,7 +23,7 @@ describe('EvmGas', () => {
                 SSTORE
             `,
       });
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -38,7 +38,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(43126);
     });
 
-    it('should correctly compute the gas cost of warm SSTORE', () => {
+    it('should correctly compute the gas cost of warm SSTORE', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -49,7 +49,7 @@ describe('EvmGas', () => {
                 SSTORE
             `,
       });
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -79,7 +79,7 @@ describe('EvmGas', () => {
   });
 
   describe('MSTORE', () => {
-    it('should compute mstore correctly', () => {
+    it('should compute mstore correctly', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -89,7 +89,7 @@ describe('EvmGas', () => {
             MSTORE
           `,
       });
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -104,7 +104,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(21012);
     });
 
-    it('should compute mstore correctly', () => {
+    it('should compute mstore correctly', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -114,7 +114,7 @@ describe('EvmGas', () => {
             MSTORE
           `,
       });
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -131,7 +131,7 @@ describe('EvmGas', () => {
   });
 
   describe('Access sets', () => {
-    it('should correctly calculate cold access', () => {
+    it('should correctly calculate cold access', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -141,7 +141,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -156,7 +156,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(23603);
     });
 
-    it('should correctly calculate hot access', () => {
+    it('should correctly calculate hot access', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#55
       const contract = mnemonicParser.parse({
@@ -169,7 +169,7 @@ describe('EvmGas', () => {
             `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -186,7 +186,7 @@ describe('EvmGas', () => {
   });
 
   describe('CallDataCopy', () => {
-    it('example 1 single copy', () => {
+    it('example 1 single copy', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#37
       const contract = mnemonicParser.parse({
@@ -199,7 +199,7 @@ describe('EvmGas', () => {
       `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -216,7 +216,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(21530);
     });
 
-    it('example 2 single copy', () => {
+    it('example 2 single copy', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#37
       const contract = mnemonicParser.parse({
@@ -228,7 +228,7 @@ describe('EvmGas', () => {
         CALLDATACOPY      `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -245,7 +245,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(21530);
     });
 
-    it('example 2 double copy', () => {
+    it('example 2 double copy', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#37
       const contract = mnemonicParser.parse({
@@ -263,7 +263,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -280,7 +280,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(21545);
     });
 
-    it('double copy', () => {
+    it('double copy', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#37
       const contract = mnemonicParser.parse({
@@ -299,7 +299,7 @@ describe('EvmGas', () => {
       `,
       });
 
-      const evm = getClassFromTestContainer(ExposedEvm)
+      const evm = await getClassFromTestContainer(ExposedEvm)
         .boot({
           program: contract,
           context: {
@@ -321,7 +321,7 @@ describe('EvmGas', () => {
   });
 
   describe('codecopy', () => {
-    it('should compute opcodes until gas cost', () => {
+    it('should compute opcodes until gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -341,7 +341,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -356,7 +356,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(21019);
     });
 
-    it('should compute codecopy gas cost', () => {
+    it('should compute codecopy gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -377,7 +377,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -394,7 +394,7 @@ describe('EvmGas', () => {
   });
 
   describe('create', () => {
-    it('should compute large mstore gas cost', () => {
+    it('should compute large mstore gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: `
@@ -414,7 +414,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -428,7 +428,7 @@ describe('EvmGas', () => {
         .execute();
       expect(evm.totalGasCost).toBe(59451);
     });
-    it('should compute create gas cost', () => {
+    it('should compute create gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -456,7 +456,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -471,7 +471,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(117039);
     });
 
-    it('should compute create gas cost from mstore', () => {
+    it('should compute create gas cost from mstore', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -487,7 +487,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -502,7 +502,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(53021);
     });
 
-    it('should compute two empty contracts and prepare the last contract', () => {
+    it('should compute two empty contracts and prepare the last contract', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -529,7 +529,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -544,7 +544,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(85039);
     });
 
-    it('should compute the simplest create gas cost', () => {
+    it('should compute the simplest create gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -557,7 +557,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -572,7 +572,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(53009);
     });
 
-    it('should compute the simplest create with wei gas cost', () => {
+    it('should compute the simplest create with wei gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -585,7 +585,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -600,7 +600,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(53009);
     });
 
-    it('should compute the simplest create gas cost', () => {
+    it('should compute the simplest create gas cost', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -613,7 +613,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -628,7 +628,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(53009);
     });
 
-    it('simple create', () => {
+    it('simple create', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -648,7 +648,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -663,7 +663,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(54645);
     });
 
-    it('create from store', () => {
+    it('create from store', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -679,7 +679,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -694,7 +694,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(54639);
     });
 
-    it('create two empty contracts', () => {
+    it('create two empty contracts', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -713,7 +713,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -730,7 +730,7 @@ describe('EvmGas', () => {
   });
 
   describe('call', () => {
-    it('should execute correctly everything but delegatecall', () => {
+    it('should execute correctly everything but delegatecall', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -754,7 +754,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -769,7 +769,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(54657);
     });
 
-    it('delegatecall zero gas', () => {
+    it('delegatecall zero gas', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -793,7 +793,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -808,7 +808,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(53139);
     });
 
-    it('simple delegatecall', () => {
+    it('simple delegatecall', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -833,7 +833,7 @@ describe('EvmGas', () => {
         `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -848,7 +848,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(120292);
     });
 
-    it('delegatecall', () => {
+    it('delegatecall', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
@@ -887,7 +887,7 @@ describe('EvmGas', () => {
           `,
       });
 
-      const evm = getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {

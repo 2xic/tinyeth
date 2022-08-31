@@ -9,7 +9,7 @@ export class OpCode {
       onExecute?: (
         context: EvmContextWithSelfReference,
         opcode: OpCode
-      ) => ExecutionResults | void;
+      ) => UnionResults | Promise<UnionResults>;
       gasCost: number | ((context: EvmContextWithSelfReference) => number);
     }
   ) {}
@@ -42,3 +42,5 @@ export interface ExecutionResults {
   setPc: boolean;
   computedGas: number;
 }
+
+type UnionResults = ExecutionResults | void;

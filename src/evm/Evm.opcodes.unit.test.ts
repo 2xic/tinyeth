@@ -27,7 +27,7 @@ describe('evm.codes', () => {
     });
   });
 
-  it('should correctly execute negative SUB', () => {
+  it('should correctly execute negative SUB', async () => {
     evm.stack.push(new BigNumber(1));
     evm.stack.push(
       new BigNumber('10000000000000000000000000000000000000000', 16)
@@ -38,7 +38,7 @@ describe('evm.codes', () => {
         SUB
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -56,7 +56,7 @@ describe('evm.codes', () => {
     );
   });
 
-  it('should correctly execute negative AND', () => {
+  it('should correctly execute negative AND', async () => {
     evm.stack.push(
       new BigNumber('ffffffffffffffffffffffffffffffffffffffff', 16)
     );
@@ -69,7 +69,7 @@ describe('evm.codes', () => {
         AND
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -86,7 +86,7 @@ describe('evm.codes', () => {
     );
   });
 
-  it('should correctly execute SWAP16', () => {
+  it('should correctly execute SWAP16', async () => {
     // example from https://www.evm.codes/#9f
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -114,7 +114,7 @@ describe('evm.codes', () => {
         SWAP16
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -132,7 +132,7 @@ describe('evm.codes', () => {
     );
   });
 
-  it('should correctly execute DUP16', () => {
+  it('should correctly execute DUP16', async () => {
     // example from https://www.evm.codes/#8f
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -159,7 +159,7 @@ describe('evm.codes', () => {
         DUP16
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -177,7 +177,7 @@ describe('evm.codes', () => {
     );
   });
 
-  it('should correctly execute DIV', () => {
+  it('should correctly execute DIV', async () => {
     // example from https://www.evm.codes/#04
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -193,7 +193,7 @@ describe('evm.codes', () => {
         DIV
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -209,7 +209,7 @@ describe('evm.codes', () => {
     expect(evm.stack.toString()).toBe([1, 0].toString());
   });
 
-  it.skip('should correctly execute SDIV', () => {
+  it.skip('should correctly execute SDIV', async () => {
     // example from https://www.evm.codes/#05
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -225,7 +225,7 @@ describe('evm.codes', () => {
         SDIV
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -241,7 +241,7 @@ describe('evm.codes', () => {
     expect(evm.stack.toString()).toBe([1, 2].toString());
   });
 
-  it('should correctly execute MOD', () => {
+  it('should correctly execute MOD', async () => {
     // example from https://www.evm.codes/#06
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -257,7 +257,7 @@ describe('evm.codes', () => {
         MOD
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -273,7 +273,7 @@ describe('evm.codes', () => {
     expect(evm.stack.toString()).toBe([1, 2].toString());
   });
 
-  it('should correctly execute MULMOD', () => {
+  it('should correctly execute MULMOD', async () => {
     // example from https://www.evm.codes/#09
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -291,7 +291,7 @@ describe('evm.codes', () => {
       MULMOD
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -307,7 +307,7 @@ describe('evm.codes', () => {
     expect(evm.stack.toString()).toBe([4, 9].toString());
   });
 
-  it('should correctly execute EXP', () => {
+  it('should correctly execute EXP', async () => {
     // example from https://www.evm.codes/#0a
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
@@ -323,7 +323,7 @@ describe('evm.codes', () => {
       EXP
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -339,7 +339,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21132);
   });
 
-  it('should correctly execute LT', () => {
+  it('should correctly execute LT', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -354,7 +354,7 @@ describe('evm.codes', () => {
       LT
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -370,7 +370,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly execute GT', () => {
+  it('should correctly execute GT', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -385,7 +385,7 @@ describe('evm.codes', () => {
       GT
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -401,7 +401,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly execute SLT', () => {
+  it('should correctly execute SLT', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -416,7 +416,7 @@ describe('evm.codes', () => {
       SLT
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -432,7 +432,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly execute SGT', () => {
+  it('should correctly execute SGT', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -447,7 +447,7 @@ describe('evm.codes', () => {
       SGT
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -463,7 +463,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly execute AND', () => {
+  it('should correctly execute AND', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -478,7 +478,7 @@ describe('evm.codes', () => {
       AND
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -494,7 +494,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly execute OR', () => {
+  it('should correctly execute OR', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -509,7 +509,7 @@ describe('evm.codes', () => {
       OR
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -525,7 +525,7 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
-  it('should correctly run DELEGATECALL', () => {
+  it('should correctly run DELEGATECALL', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -548,7 +548,7 @@ describe('evm.codes', () => {
       DELEGATECALL   
     `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -1306,12 +1306,12 @@ describe('evm.codes', () => {
 
   it.each<EvmTestCaseOptions>(singleCase.length ? singleCase : evmTestCases)(
     'Test of opcodes $name',
-    (options) => {
+    async (options) => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: options.script,
       });
-      evm
+      await evm
         .boot({
           program: contract,
           context: {
@@ -1338,7 +1338,7 @@ describe('evm.codes', () => {
     }
   );
 
-  it('should not only run one opcode test', () => {
+  it('should not only run one opcode test', async () => {
     if (singleCase.length) {
       throw new Error('Enable all opcode tests :)');
     }

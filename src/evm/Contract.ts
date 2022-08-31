@@ -48,8 +48,8 @@ export class Contract {
     }
   }
 
-  public execute(options: ForkedEvm) {
-    const results = options.executor({
+  public async execute(options: ForkedEvm) {
+    const results = await options.executor({
       program: this.options.program,
     });
 

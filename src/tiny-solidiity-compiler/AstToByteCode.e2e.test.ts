@@ -19,7 +19,7 @@ describe('AstToByteCode', () => {
     evm = container.get(Evm) as ExposedEvm;
   });
 
-  it('should correctly compile, and deploy contract', () => {
+  it('should correctly compile, and deploy contract', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -41,13 +41,13 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
   });
 
-  it('should not be able to pay a non-payable function', () => {
+  it('should not be able to pay a non-payable function', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -70,10 +70,10 @@ describe('AstToByteCode', () => {
       },
     });
 
-    expect(() => evm.execute()).toThrowError(Reverted);
+    await expect(() => evm.execute()).rejects.toThrowError(Reverted);
   });
 
-  it('should revert trying to call non existing function', () => {
+  it('should revert trying to call non existing function', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -94,10 +94,10 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    expect(() => evm.execute()).toThrowError(Reverted);
+    await expect(() => evm.execute()).rejects.toThrowError(Reverted);
   });
 
-  it('should correctly increment a variable', () => {
+  it('should correctly increment a variable', async () => {
     const program = astToByteCode.compile({
       script: `
         contract Counter {
@@ -122,21 +122,21 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
     expect(Object.entries(evm.storage.storage).length).toBe(1);
     evm.resetPc();
 
-    evm.execute();
+    await evm.execute();
 
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
     );
   });
 
-  it('should correctly handle two functions', () => {
+  it('should correctly handle two functions', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -162,7 +162,7 @@ describe('AstToByteCode', () => {
       },
     });
     const lastPc = evm.pc;
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
@@ -177,14 +177,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
     );
   });
 
-  it('should correctly handle three functions', () => {
+  it('should correctly handle three functions', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -214,7 +214,7 @@ describe('AstToByteCode', () => {
       },
     });
     const lastPc = evm.pc;
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
@@ -229,7 +229,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
@@ -245,14 +245,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000003'
     );
   });
 
-  it('should correctly handle four functions', () => {
+  it('should correctly handle four functions', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -286,7 +286,7 @@ describe('AstToByteCode', () => {
       },
     });
     const lastPc = evm.pc;
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
@@ -301,7 +301,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
@@ -317,7 +317,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000003'
@@ -333,14 +333,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000004'
     );
   });
 
-  it('should correctly handle five functions', () => {
+  it('should correctly handle five functions', async () => {
     const program = astToByteCode.compile({
       script: `
           contract ReturnContract {
@@ -378,7 +378,7 @@ describe('AstToByteCode', () => {
       },
     });
     const lastPc = evm.pc;
-    evm.execute();
+    await evm.execute();
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
@@ -393,7 +393,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
@@ -409,7 +409,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000003'
@@ -425,7 +425,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000004'
@@ -441,14 +441,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
     expect(evm.pc).not.toBe(lastPc);
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000005'
     );
   });
 
-  it('should correctly deal with an if statement', () => {
+  it('should correctly deal with an if statement', async () => {
     const program = astToByteCode.compile({
       script: `
         contract ReturnContract {
@@ -473,14 +473,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
     );
   });
 
-  it('should correctly deal with an else statement', () => {
+  it('should correctly deal with an else statement', async () => {
     const program = astToByteCode.compile({
       script: `
         contract ReturnContract {
@@ -505,14 +505,14 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000001'
     );
   });
 
-  it('should correctly deal nested if statements', () => {
+  it('should correctly deal nested if statements', async () => {
     const program = astToByteCode.compile({
       script: `
         contract ReturnContract {
@@ -538,7 +538,7 @@ describe('AstToByteCode', () => {
         sender: new Address(),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'

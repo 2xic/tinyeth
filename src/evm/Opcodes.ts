@@ -748,7 +748,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, storage }) => {
       const key = stack.pop();
-      stack.push(storage.read({ key }));
+      stack.push(storage.readSync({ key }));
     },
     // TODO this is dynamic
     gasCost: () => 3,
@@ -916,7 +916,7 @@ export const Opcodes: Record<number, OpCode> = {
   0xf0: new OpCode({
     name: 'CREATE',
     arguments: 1,
-    onExecute: ({
+    onExecute: async ({
       stack,
       memory,
       network,
@@ -939,7 +939,7 @@ export const Opcodes: Record<number, OpCode> = {
         evmContext: evmContext,
       });
 
-      const contract = new Contract({
+      const contract = await new Contract({
         program: contractBytes,
         value: new BigNumber(value),
         context,
@@ -965,7 +965,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
+    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const value = stack.pop();
@@ -975,7 +975,7 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      evmSubContextCall.createSubContext({
+      await evmSubContextCall.createSubContext({
         evmContext,
         optionsSubContext: {
           gas,
@@ -994,7 +994,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
+    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const value = stack.pop();
@@ -1004,7 +1004,7 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      evmSubContextCall.createSubContext({
+      await evmSubContextCall.createSubContext({
         evmContext,
         optionsSubContext: {
           gas,
@@ -1046,7 +1046,13 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 100,
-    onExecute: ({ stack, evmContext, evmSubContextCall, evm, gasComputer }) => {
+    onExecute: async ({
+      stack,
+      evmContext,
+      evmSubContextCall,
+      evm,
+      gasComputer,
+    }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -1058,7 +1064,7 @@ export const Opcodes: Record<number, OpCode> = {
       let computedGas = 0;
 
       if (!gas.isZero()) {
-        const { gasCost } = evmSubContextCall.createSubContext({
+        const { gasCost } = await evmSubContextCall.createSubContext({
           evmContext,
           optionsSubContext: {
             gas,
@@ -1108,7 +1114,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({
+    onExecute: async ({
       stack,
       memory,
       network,
@@ -1127,7 +1133,7 @@ export const Opcodes: Record<number, OpCode> = {
         txContext: context,
         evmContext: evmContext,
       });
-      const contract = new Contract({
+      const contract = await new Contract({
         program: contractBytes,
         value: new BigNumber(value),
         context,
@@ -1147,7 +1153,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: ({ stack, evmSubContextCall, evmContext }) => {
+    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -1156,7 +1162,7 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      evmSubContextCall.createSubContext({
+      await evmSubContextCall.createSubContext({
         evmContext,
         optionsSubContext: {
           gas,

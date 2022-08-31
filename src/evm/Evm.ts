@@ -80,7 +80,7 @@ export class Evm implements InterfaceEvm {
     this._callingContextReturnData = undefined;
   }
 
-  public step(): boolean {
+  public async step(): Promise<boolean> {
     if (!this.isRunning || !this.context) {
       return false;
     }
@@ -110,7 +110,7 @@ export class Evm implements InterfaceEvm {
     };
     let results: ExecutionResults | void;
     try {
-      results = opcode.execute({
+      results = await opcode.execute({
         ...evmContext,
         evmContext,
       });
@@ -152,9 +152,9 @@ export class Evm implements InterfaceEvm {
     return true;
   }
 
-  public execute(options?: { stopAtOpcode?: number; stopAtPc?: number }) {
+  public async execute(options?: { stopAtOpcode?: number; stopAtPc?: number }) {
     while (this.isRunning) {
-      this.step();
+      await this.step();
       if (options?.stopAtOpcode == this.currentOpcodeNumber) {
         break;
       } else if (options?.stopAtPc === this.pc) {

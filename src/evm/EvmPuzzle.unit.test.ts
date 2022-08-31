@@ -10,8 +10,8 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
   const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 
-  it('should be possible to run puzzle 1 contract', () => {
-    getClassFromTestContainer(Evm)
+  it('should be possible to run puzzle 1 contract', async () => {
+    await getClassFromTestContainer(Evm)
       .boot({
         program: Buffer.from('3456FDFDFDFDFDFD5B00', 'hex'),
         context: {
@@ -25,9 +25,9 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       .execute();
   });
 
-  it('should be possible to run puzzle 2 contract', () => {
+  it('should be possible to run puzzle 2 contract', async () => {
     const contract = Buffer.from('34380356FDFD5B00FDFD', 'hex');
-    const evm = getClassFromTestContainer(Evm)
+    const evm = await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -43,9 +43,9 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.pc).toBe(0x07);
   });
 
-  it('should be possible to run puzzle 3 contract', () => {
+  it('should be possible to run puzzle 3 contract', async () => {
     const contract = Buffer.from('3656FDFD5B00', 'hex');
-    const evm = getClassFromTestContainer(Evm)
+    const evm = await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -60,10 +60,10 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it('should be possible run puzzle 4 contract', () => {
+  it('should be possible run puzzle 4 contract', async () => {
     const contract = Buffer.from('34381856FDFDFDFDFDFD5B00', 'hex');
     const value = contract.length ^ 0xa;
-    const evm = getClassFromTestContainer(Evm)
+    const evm = await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -78,9 +78,9 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it('should be possible run puzzle 5 contract', () => {
+  it('should be possible run puzzle 5 contract', async () => {
     const contract = Buffer.from('34800261010014600C57FDFD5B00FDFD', 'hex');
-    const evm = getClassFromTestContainer(Evm)
+    const evm = await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -95,9 +95,9 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it('should be possible run puzzle 6 contract', () => {
+  it('should be possible run puzzle 6 contract', async () => {
     const contract = Buffer.from('60003556FDFDFDFDFDFD5B00', 'hex');
-    const evm = getClassFromTestContainer(Evm)
+    const evm = await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -115,12 +115,12 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.isRunning).toBe(false);
   });
 
-  it('should have correct contract 7 state', () => {
+  it('should have correct contract 7 state', async () => {
     const contract = Buffer.from(
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
     );
-    const evm = getClassFromTestContainer(ExposedEvm)
+    const evm = await getClassFromTestContainer(ExposedEvm)
       .boot({
         program: contract,
         context: {
@@ -140,7 +140,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.stack.length).toBe(1);
     expect(evm.stack.get(0).toNumber()).toBe(1);
 
-    evm.execute({
+    await evm.execute({
       stopAtPc: 0x11,
     });
     expect(evm.stack.length).toBe(2);
@@ -148,12 +148,12 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     expect(evm.stack.pop().toNumber()).toBe(0x1);
   });
 
-  it('should be possible run puzzle 7 contract', () => {
+  it('should be possible run puzzle 7 contract', async () => {
     const contract = Buffer.from(
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
     );
-    getClassFromTestContainer(Evm)
+    await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -170,12 +170,12 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       .execute();
   });
 
-  it('should be possible run puzzle 8 contract', () => {
+  it('should be possible run puzzle 8 contract', async () => {
     const contract = Buffer.from(
       '36600080373660006000F0600080808080945AF1600014601B57FD5B00',
       'hex'
     );
-    getClassFromTestContainer(Evm)
+    await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -189,12 +189,12 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       .execute();
   });
 
-  it('should be possible run puzzle 9 contract', () => {
+  it('should be possible run puzzle 9 contract', async () => {
     const contract = Buffer.from(
       '36600310600957FDFD5B343602600814601457FD5B00',
       'hex'
     );
-    getClassFromTestContainer(Evm)
+    await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {
@@ -208,7 +208,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
       .execute();
   });
 
-  it('should be possible run puzzle 10 contract', () => {
+  it('should be possible run puzzle 10 contract', async () => {
     const contract = Buffer.from(
       '38349011600857FD5B3661000390061534600A0157FDFDFDFD5B00',
       'hex'
@@ -216,7 +216,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
     // calldata length > value
     // calldata % 3 == 0
     // callValue + 0a == pc
-    getClassFromTestContainer(Evm)
+    await getClassFromTestContainer(Evm)
       .boot({
         program: contract,
         context: {

@@ -23,7 +23,7 @@ describe('evm', () => {
     });
   });
 
-  it('should step through a simple contract', () => {
+  it('should step through a simple contract', async () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     evm.boot({
       program: Buffer.from('6001600081905550', 'hex'),
@@ -35,33 +35,33 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.step();
+    await evm.step();
     expect(evm.stack.toString()).toBe([0x1].toString());
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.toString()).toBe([0x1, 0x0].toString());
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.toString()).toBe([0x1, 0x0, 0x1].toString());
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.toString()).toBe([0x1, 0x1, 0x0].toString());
     expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0);
 
-    expect(evm.step()).toBe(true);
+    expect(await evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([0x1].toString());
     expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
 
-    expect(evm.step()).toBe(true);
+    expect(await evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([].toString());
     expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
 
-    expect(evm.step()).toBe(false);
+    expect(await evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
     expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
   });
 
-  it('should execute a simple contract', () => {
+  it('should execute a simple contract', async () => {
     // example from https://eattheblocks.com/understanding-the-ethereum-virtual-machine/
     evm.boot({
       program: Buffer.from('6001600081905550', 'hex'),
@@ -73,15 +73,15 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.execute();
+    await evm.execute();
 
-    expect(evm.step()).toBe(false);
+    expect(await evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
     expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
   });
 
-  it('should correctly run simple CREATE opcode contract', () => {
-    evm
+  it('should correctly run simple CREATE opcode contract', async () => {
+    await await evm
       .boot({
         program: Buffer.from('600060006000F0', 'hex'),
         context: {
@@ -99,7 +99,7 @@ describe('evm', () => {
     expect(contracts[0].length).toBe(0);
   });
 
-  it('should correctly run complicated CREATE opcode', () => {
+  it('should correctly run complicated CREATE opcode', async () => {
     // https://www.evm.codes/playground?callValue=9&unit=Wei&codeType=Mnemonic&code='%2F%2F%20Createznzccount%20withq%20weiznd%204%20FFzs%20codev3qx63FFFFFFFF60005260046000F3~0yMSTORE~13~0~0yCREATE%20'~v%20z%20ay%5CnvyPUSH1q%200%01qvyz~_
     evm.boot({
       program: Buffer.from(
@@ -114,33 +114,33 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.step();
+    await evm.step();
     expect(evm.stack.length).toBe(1);
     expect(evm.stack.get(0).toString(16)).toBe(
       '63FFFFFFFF60005260046000F3'.toLocaleLowerCase()
     );
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(1).toString()).toBe('0');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
 
     expect(evm.memory.raw.slice(0, 32).toString('hex')).toBe(
       '0000000000000000000000000000000000000063ffffffff60005260046000f3'
     );
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('d');
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
 
     expect(evm.stack.get(0).toString(16)).toBe('d');
     expect(evm.stack.get(1).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
 
     expect(evm.stack.get(0).toString(16)).toBe('d');
     expect(evm.stack.get(1).toString(16)).toBe('0');
@@ -150,7 +150,7 @@ describe('evm', () => {
       '0000000000000000000000000000000000000063ffffffff60005260046000f3'
     );
 
-    evm.step();
+    await evm.step();
 
     const contracts = evm.network.contracts;
     expect(evm.stack.length).toBe(1);
@@ -162,7 +162,7 @@ describe('evm', () => {
     // expect(contracts[0].length).toBe(4);
   });
 
-  it('should correctly run the puzzle 7 contract opcodes', () => {
+  it('should correctly run the puzzle 7 contract opcodes', async () => {
     const contract = Buffer.from(
       '36600080373660006000F03B600114601357FD5B00',
       'hex'
@@ -177,64 +177,64 @@ describe('evm', () => {
         gasLimit,
       },
     });
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(1).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(2).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(3);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.length).toBe(0);
     expect(evm.memory.raw.filter((item) => item !== 0).length).toBe(0);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(1).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.get(1).toString(16)).toBe('0');
     expect(evm.stack.get(2).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(3);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.get(1).toString(16)).toBe('1');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.length).toBe(1);
 
-    evm.step();
+    await evm.step();
     expect(evm.stack.get(0).toString(16)).toBe('0');
     expect(evm.stack.get(1).toString(16)).toBe('13');
     expect(evm.stack.length).toBe(2);
 
-    evm.step();
+    await evm.step();
     expect(evm.isRunning).toBe(true);
 
-    expect(() => evm.step()).toThrowError(StackUnderflow);
+    await expect(() => evm.step()).rejects.toThrowError(StackUnderflow);
   });
 
-  it('should correctly run REVERT opcode', () => {
+  it('should correctly run REVERT opcode', async () => {
     const contract = Buffer.from(
       '7FFF0100000000000000000000000000000000000000000000000000000000000060005260026000FD',
       'hex'
@@ -249,11 +249,11 @@ describe('evm', () => {
         gasLimit,
       },
     });
-    expect(() => evm.execute()).toThrow(Reverted);
+    await expect(() => evm.execute()).rejects.toThrow(Reverted);
     expect(evm.callingContextReturnData?.toString('hex')).toBe('ff01');
   });
 
-  it('should correctly run CREATE and EXTCODESIZE opcode', () => {
+  it('should correctly run CREATE and EXTCODESIZE opcode', async () => {
     const code = [
       '7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', // PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       '6000', // PUSH1 0
@@ -268,7 +268,7 @@ describe('evm', () => {
       '3B', // EXTCODESIZE
     ].join('');
     const contract = Buffer.from(code, 'hex');
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -284,10 +284,10 @@ describe('evm', () => {
     expect(evm.stack.get(0).toString()).toBe('32');
   });
 
-  it('should correctly run swap 1', () => {
+  it('should correctly run swap 1', async () => {
     const code = ['6001', '6001', '6002', '90'].join('');
     const contract = Buffer.from(code, 'hex');
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -304,12 +304,12 @@ describe('evm', () => {
     expect(evm.stack.pop().toString()).toBe('1');
   });
 
-  it('should correctly run swap 5', () => {
+  it('should correctly run swap 5', async () => {
     const code = ['6002', '6000', '6000', '6000', '6000', '6001', '94'].join(
       ''
     );
     const contract = Buffer.from(code, 'hex');
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -324,10 +324,10 @@ describe('evm', () => {
     expect(evm.stack.toString()).toBe([1, 0, 0, 0, 0, 2].toString());
   });
 
-  it('should correctly compute the gas cost of simple transactions', () => {
+  it('should correctly compute the gas cost of simple transactions', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -342,10 +342,10 @@ describe('evm', () => {
     expect(evm.totalGasCost).toBe(21003);
   });
 
-  it('should correctly compute the gas cost of simple transactions with zero data', () => {
+  it('should correctly compute the gas cost of simple transactions with zero data', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -360,10 +360,10 @@ describe('evm', () => {
     expect(evm.totalGasCost).toBe(21011);
   });
 
-  it('should correctly compute the gas cost of simple transactions with non zero data', () => {
+  it('should correctly compute the gas cost of simple transactions with non zero data', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({ script: 'push1 1' });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -378,7 +378,7 @@ describe('evm', () => {
     expect(evm.totalGasCost).toBe(21023);
   });
 
-  it('should correctly run block related opcodes', () => {
+  it('should correctly run block related opcodes', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
@@ -394,7 +394,7 @@ describe('evm', () => {
         BASEFEE
        `,
     });
-    evm
+    await evm
       .boot({
         program: contract,
         context: {
@@ -427,8 +427,8 @@ describe('evm', () => {
     );
   });
 
-  it('should correctly revert', () => {
-    evm
+  it('should correctly revert', async () => {
+    await evm
       .boot({
         program: Buffer.from('600035600757FE5B', 'hex'),
         context: {
@@ -441,7 +441,7 @@ describe('evm', () => {
       })
       .execute();
 
-    expect(() =>
+    await expect(() =>
       evm
         .boot({
           program: Buffer.from('600035600757FE5B', 'hex'),
@@ -454,10 +454,10 @@ describe('evm', () => {
           },
         })
         .execute()
-    ).toThrowError(Reverted);
+    ).rejects.toThrowError(Reverted);
   });
 
-  it('should execute a simple bytecode- contract without return', () => {
+  it('should execute a simple bytecode- contract without return', async () => {
     evm.boot({
       program: Buffer.from('67600054600757FE5B60005260086018', 'hex'),
       context: {
@@ -468,12 +468,12 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.gasCost()).toBe(21018);
   });
 
-  it('should execute a simple bytecode- contract with return', () => {
+  it('should execute a simple bytecode- contract with return', async () => {
     evm.boot({
       program: Buffer.from('67600054600757FE5B60005260086018F3', 'hex'),
       context: {
@@ -484,12 +484,12 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.gasCost()).toBe(21018);
   });
 
-  it('should execute the stop opcode', () => {
+  it('should execute the stop opcode', async () => {
     evm.boot({
       program: Buffer.from('00000000000000000000000000', 'hex'),
       context: {
@@ -500,7 +500,7 @@ describe('evm', () => {
         data: Buffer.from('', 'hex'),
       },
     });
-    evm.execute();
+    await evm.execute();
 
     expect(evm.gasCost()).toBe(21000);
   });

@@ -10,7 +10,7 @@ import { Wei } from './eth-units/Wei';
 
 @injectable()
 export class EvmSubContextCall {
-  public createSubContext({
+  public async createSubContext({
     evmContext,
     optionsSubContext,
   }: {
@@ -37,7 +37,7 @@ export class EvmSubContextCall {
     });
 
     try {
-      contract.execute(forkedEvm);
+      await contract.execute(forkedEvm);
 
       subContext.addSubContext({
         returnData: contract.returnData,
@@ -84,8 +84,8 @@ export class EvmSubContextCall {
     });
 
     return {
-      executor: ({ program }: { program: Buffer }) => {
-        evm
+      executor: async ({ program }: { program: Buffer }) => {
+        await evm
           .boot({
             isFork,
             program,
@@ -109,7 +109,7 @@ export class EvmSubContextCall {
 }
 
 export interface ForkedEvm {
-  executor: ({ program }: { program: Buffer }) => InterfaceEvm;
+  executor: ({ program }: { program: Buffer }) => Promise<InterfaceEvm>;
   evm: InterfaceEvm;
 }
 
