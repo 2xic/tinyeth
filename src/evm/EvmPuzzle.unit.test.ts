@@ -17,6 +17,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(8)),
           data: Buffer.from('', 'hex'),
@@ -33,6 +34,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(4)),
           data: Buffer.from('', 'hex'),
@@ -51,6 +53,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(4)),
           data: Buffer.from('AAAAAAAA', 'hex'),
@@ -69,6 +72,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(value)),
           data: Buffer.from('', 'hex'),
@@ -86,6 +90,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -103,6 +108,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from(
@@ -126,6 +132,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: getBufferFromHex('60016000526001601ff3'),
@@ -159,6 +166,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: getBufferFromHex('60016000526001601ff3'),
@@ -181,6 +189,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('60056000526001601ff3', 'hex'),
@@ -200,6 +209,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(2)),
           data: getBufferFromHex('0xffffffff'),
@@ -222,6 +232,7 @@ describe('https://github.com/fvictorio/evm-puzzles', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(15)),
           data: getBufferFromHex('0x100000'),

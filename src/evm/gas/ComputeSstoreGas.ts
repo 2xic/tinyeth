@@ -4,6 +4,7 @@ import { AccessSets } from './AccessSets';
 import { OutOfGasError } from '../errors/OutOfGasError';
 import { EvmStorage } from '../EvmStorage';
 import { GasComputeResults } from './GasComputer';
+import { Address } from '../Address';
 
 @injectable()
 export class ComputeSstoreGas {
@@ -31,11 +32,17 @@ export class ComputeSstoreGas {
       gasCost += 2100;
     }
 
-    if (this.storage.readSync({ key }).isEqualTo(value)) {
+    if (
+      this.storage
+        .readSync({ key, address: new Address(address) })
+        .isEqualTo(value)
+    ) {
       gasCost += 100;
     } else {
       if (this.storage.isEqualOriginal({ key })) {
-        if (this.storage.isOriginallyZero({ key })) {
+        if (
+          this.storage.isOriginallyZero({ key, address: new Address(address) })
+        ) {
           gasCost += 20000;
         } else {
           gasCost += 2900;
@@ -45,13 +52,24 @@ export class ComputeSstoreGas {
         }
       } else {
         gasCost += 100;
-        if (!this.storage.isOriginallyZero({ key })) {
-          if (this.storage.readSync({ key }).isEqualTo(0)) {
+        if (
+          !this.storage.isOriginallyZero({ key, address: new Address(address) })
+        ) {
+          if (
+            this.storage
+              .readSync({ key, address: new Address(address) })
+              .isEqualTo(0)
+          ) {
             gasRefund -= 4800;
           } else if (value.isEqualTo(0)) {
             gasRefund += 4800;
           } else if (this.storage.isEqualOriginal({ key })) {
-            if (this.storage.isOriginallyZero({ key })) {
+            if (
+              this.storage.isOriginallyZero({
+                key,
+                address: new Address(address),
+              })
+            ) {
               gasRefund += 19900;
             } else {
               gasRefund += 2800;

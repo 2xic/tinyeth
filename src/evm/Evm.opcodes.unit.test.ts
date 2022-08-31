@@ -5,7 +5,6 @@ import { EvmAccountState } from './EvmAccountState';
 import { ExposedEvm } from './ExposedEvm';
 import { MnemonicParser } from './MnemonicParser';
 import { Wei } from './eth-units/Wei';
-import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 /*
     The test mnemonic code here is are all from https://www.evm.codes/
@@ -44,6 +43,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -75,6 +75,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -120,6 +121,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -165,6 +167,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -199,6 +202,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -231,6 +235,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -263,6 +268,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -297,6 +303,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -329,6 +336,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -360,6 +368,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -391,6 +400,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -422,6 +432,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -453,6 +464,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -484,6 +496,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -515,6 +528,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -554,6 +568,7 @@ describe('evm.codes', () => {
         context: {
           nonce: 1,
           sender,
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -1317,6 +1332,7 @@ describe('evm.codes', () => {
           context: {
             nonce: 1,
             sender: options.sender || sender,
+            receiver: new Address(),
             gasLimit: options.gasLimit || gasLimit,
             value: options.value || new Wei(new BigNumber(16)),
             data: options.calldata || Buffer.alloc(0),

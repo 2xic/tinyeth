@@ -39,6 +39,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -67,6 +68,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
 
@@ -92,6 +94,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await expect(() => evm.execute()).rejects.toThrowError(Reverted);
@@ -120,6 +123,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -159,6 +163,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     const lastPc = evm.pc;
@@ -175,6 +180,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -211,6 +217,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     const lastPc = evm.pc;
@@ -227,6 +234,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -243,6 +251,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -283,6 +292,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     const lastPc = evm.pc;
@@ -299,6 +309,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -315,6 +326,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -331,6 +343,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -375,6 +388,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     const lastPc = evm.pc;
@@ -391,6 +405,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -407,6 +422,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -423,6 +439,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -439,6 +456,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -471,6 +489,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -503,6 +522,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();
@@ -536,6 +556,7 @@ describe('AstToByteCode', () => {
         nonce: 0,
         gasLimit: new BigNumber(0),
         sender: new Address(),
+        receiver: new Address(),
       },
     });
     await evm.execute();

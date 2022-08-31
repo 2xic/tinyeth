@@ -746,9 +746,10 @@ export const Opcodes: Record<number, OpCode> = {
   0x54: new OpCode({
     name: 'SLOAD',
     arguments: 1,
-    onExecute: ({ stack, storage }) => {
+    onExecute: async ({ stack, storage, context }) => {
       const key = stack.pop();
-      stack.push(storage.readSync({ key }));
+      const value = await storage.read({ key, address: context.receiver });
+      stack.push(value);
     },
     // TODO this is dynamic
     gasCost: () => 3,
@@ -905,7 +906,7 @@ export const Opcodes: Record<number, OpCode> = {
     toOpcode: 0xa4,
     baseName: 'LOG',
     deltaStart: 0,
-    arguments: () => 0,
+    arguments: (delta) => 2 + delta,
     iteratedExecuteConstruction: () => () => {
       // This should not change the EVM state, but need to add gas adjustments
       // It's used for events.

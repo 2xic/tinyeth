@@ -228,5 +228,6 @@ export interface TxContext {
   data: Buffer;
   nonce: number;
   sender: Address;
+  receiver: Address;
   gasLimit: BigNumber;
 }

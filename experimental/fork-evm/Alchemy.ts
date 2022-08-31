@@ -2,8 +2,13 @@ import 'dotenv/config';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
+import { EvmExternalStorageRequests } from '../../dist/evm';
+import BigNumber from 'bignumber.js';
+import { Address } from '../../dist/evm/Address';
+import { injectable } from 'inversify';
 
-export class Alchemy {
+@injectable()
+export class Alchemy implements EvmExternalStorageRequests {
     private blockNumber = 'latest';
 
     public async getContractCode({ address }: { address: string }) {
@@ -17,15 +22,15 @@ export class Alchemy {
         return textResults;
     }
 
-    public async getStorageAt({ address, key }: { address: string; key: string }) {
+    public async getStorageAt({ address, key }: { address: Address; key: string }) {
         const textResults = await this.sendRequestsIfNotCached<{
             result: string;
         }>({
             method: 'eth_getStorageAt',
-            params: [address, `0x${Number(key).toString(16)}`, this.blockNumber]
+            params: [address.toString(), `0x${Number(key).toString(16)}`, this.blockNumber]
         })
 
-        return textResults;
+        return new BigNumber(textResults.result);
     }
 
     private async sendRequestsIfNotCached<Response>({

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
+import { Address } from './Address';
 
 @injectable()
 export class EvmStorage {
@@ -10,15 +11,27 @@ export class EvmStorage {
     this.storage[key.toString(16)] = value;
   }
 
-  public async read({ key }: { key: BigNumber | number }): Promise<BigNumber> {
-    return this.readSync({ key });
+  public async read({
+    key,
+    address,
+  }: {
+    key: BigNumber | number;
+    address: Address;
+  }): Promise<BigNumber> {
+    return this.readSync({ key, address });
   }
 
   public hasKey({ key }: { key: BigNumber | number }) {
     return key.toString(16) in this.storage;
   }
 
-  public readSync({ key }: { key: BigNumber | number }): BigNumber {
+  public readSync({
+    key,
+    address,
+  }: {
+    key: BigNumber | number;
+    address: Address;
+  }): BigNumber {
     return this.storage[key.toString(16)] || new BigNumber(0);
   }
 
@@ -28,9 +41,15 @@ export class EvmStorage {
     return true;
   }
 
-  public isOriginallyZero({ key }: { key: BigNumber }) {
+  public isOriginallyZero({
+    key,
+    address,
+  }: {
+    key: BigNumber;
+    address: Address;
+  }) {
     // Should check the original storage.
-    return this.readSync({ key }).isEqualTo(0);
+    return this.readSync({ key, address }).isEqualTo(0);
   }
 
   public forEach(callback: (key: BigNumber, value: BigNumber) => void) {

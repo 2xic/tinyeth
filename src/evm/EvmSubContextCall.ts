@@ -31,6 +31,7 @@ export class EvmSubContextCall {
         value: new Wei(new BigNumber(value?.toNumber() || 0)),
         data,
         nonce: 0,
+        receiver: context.receiver,
         sender: context.sender,
         gasLimit: context.gasLimit,
       },
@@ -94,6 +95,7 @@ export class EvmSubContextCall {
               data: txContext.data,
               nonce: 0,
               // Root
+              receiver: txContext.receiver,
               sender: evmContext.context.sender,
               gasLimit: evmContext.context.gasLimit,
             },

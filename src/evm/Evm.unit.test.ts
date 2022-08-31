@@ -30,6 +30,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(8)),
         data: Buffer.from('', 'hex'),
@@ -46,19 +47,27 @@ describe('evm', () => {
 
     await evm.step();
     expect(evm.stack.toString()).toBe([0x1, 0x1, 0x0].toString());
-    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0);
+    expect(
+      evm.storage.readSync({ key: 0x0, address: new Address() }).toNumber()
+    ).toBe(0);
 
     expect(await evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([0x1].toString());
-    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(
+      evm.storage.readSync({ key: 0x0, address: new Address() }).toNumber()
+    ).toBe(0x1);
 
     expect(await evm.step()).toBe(true);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(
+      evm.storage.readSync({ key: 0x0, address: new Address() }).toNumber()
+    ).toBe(0x1);
 
     expect(await evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(
+      evm.storage.readSync({ key: 0x0, address: new Address() }).toNumber()
+    ).toBe(0x1);
   });
 
   it('should execute a simple contract', async () => {
@@ -68,6 +77,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(8)),
         data: Buffer.from('', 'hex'),
@@ -77,7 +87,9 @@ describe('evm', () => {
 
     expect(await evm.step()).toBe(false);
     expect(evm.stack.toString()).toBe([].toString());
-    expect(evm.storage.readSync({ key: 0x0 }).toNumber()).toBe(0x1);
+    expect(
+      evm.storage.readSync({ key: 0x0, address: new Address() }).toNumber()
+    ).toBe(0x1);
   });
 
   it('should correctly run simple CREATE opcode contract', async () => {
@@ -87,6 +99,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(8)),
           data: Buffer.from('', 'hex'),
@@ -109,6 +123,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(8)),
         data: Buffer.from('', 'hex'),
@@ -170,6 +185,7 @@ describe('evm', () => {
     evm.boot({
       program: contract,
       context: {
+        receiver: new Address(),
         nonce: 1,
         value: new Wei(new BigNumber(16)),
         data: Buffer.from('', 'hex'),
@@ -242,6 +258,7 @@ describe('evm', () => {
     evm.boot({
       program: contract,
       context: {
+        receiver: new Address(),
         nonce: 1,
         value: new Wei(new BigNumber(16)),
         data: Buffer.from('', 'hex'),
@@ -274,6 +291,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -293,6 +312,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -315,6 +336,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -333,6 +356,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('', 'hex'),
@@ -351,6 +376,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('0000', 'hex'),
@@ -369,6 +396,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('0001', 'hex'),
@@ -400,6 +429,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.alloc(0),
@@ -434,6 +465,8 @@ describe('evm', () => {
         context: {
           nonce: 1,
           sender,
+
+          receiver: new Address(),
           gasLimit,
           value: new Wei(new BigNumber(16)),
           data: Buffer.from('0001', 'hex'),
@@ -448,6 +481,8 @@ describe('evm', () => {
           context: {
             nonce: 1,
             sender,
+
+            receiver: new Address(),
             gasLimit,
             value: new Wei(new BigNumber(16)),
             data: Buffer.from('', 'hex'),
@@ -463,6 +498,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(0)),
         data: Buffer.from('', 'hex'),
@@ -479,6 +515,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(0)),
         data: Buffer.from('', 'hex'),
@@ -495,6 +532,7 @@ describe('evm', () => {
       context: {
         nonce: 1,
         sender,
+        receiver: new Address(),
         gasLimit,
         value: new Wei(new BigNumber(0)),
         data: Buffer.from('', 'hex'),
