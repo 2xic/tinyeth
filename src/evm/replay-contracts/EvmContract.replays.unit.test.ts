@@ -3,57 +3,10 @@ import { getClassFromTestContainer } from '../../container/getClassFromTestConta
 import { Address } from '../Address';
 import { Wei } from '../eth-units/Wei';
 import { getBufferFromHex } from '../../utils';
-import fs from 'fs';
-import path from 'path';
 import { ExposedEvm } from '../ExposedEvm';
-import { Opcodes } from '../Opcodes';
+import { ReplayContractTestUtils } from './ReplayContractTestUtils';
 
-async function replayFile(evm: ExposedEvm, filePath: string) {
-  const fileData: Array<{
-    pc: string;
-    memory: string;
-    stack: string[];
-    storage: Record<string, string>;
-  }> = JSON.parse(
-    fs.readFileSync(path.join(__dirname, filePath)).toString('utf-8')
-  );
-  let lastStackState: BigNumber[] = [];
-  const breakPoint = undefined;
-  for (let index = 1; index < fileData.length; index++) {
-    const state = fileData[index];
-    lastStackState = evm.stack.raw;
-    await evm.step();
-
-    expect(evm.pc).toBe(parseInt(state.pc, 16));
-
-    const stateStack = state.stack.filter((item) => !!item.length).reverse();
-
-    let stackError = evm.stack.length !== stateStack.length;
-    for (let i = 0; i < evm.stack.length && !stackError; i++) {
-      stackError = evm.stack.get(i).toNumber() !== parseInt(stateStack[i], 16);
-      if (stackError) {
-        break;
-      }
-    }
-
-    if (stackError) {
-      throw new Error(
-        `Error at pc ${state.pc}. Previous opcodes ${
-          Opcodes[evm.program[evm.pc - 1]].mnemonic
-        }
-
-        ${lastStackState.length} ${stateStack.length}
-        
-        ${lastStackState.map((item) => item.toString(16))}
-
-        ${stateStack.map((item) => item.toString())}
-        `
-      );
-    }
-  }
-}
-
-describe('EvmReplay', () => {
+describe.skip('EvmReplay', () => {
   const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 
@@ -68,11 +21,12 @@ describe('EvmReplay', () => {
         sender,
         gasLimit,
         value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
         data: getBufferFromHex(
           '0x095ea7b3000000000000000000000000ba12222222228d8ba445958a75a0704d566bf2c8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
         ),
       },
     });
-    await replayFile(evm, 'example-1.json');
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, 'example-1.json', {});
   });
 });

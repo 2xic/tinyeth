@@ -15,6 +15,8 @@ const testingAddress = '0xb2ed12f121995cb55ddfc2f268d1901aec05a8de';
         address: testingAddress
     });
 
+    throw new Error(evmCode.result)
+
     const container = new ForkingContainer().create({
         loggingEnabled: true,
     })

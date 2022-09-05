@@ -542,4 +542,56 @@ describe('evm', () => {
 
     expect(evm.gasCost()).toBe(21000);
   });
+
+  it('should correctly set the pc after a LOG0 opcode', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+      LOG0 0 0  
+      PUSH1 1
+    ` 
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.stack.toString()).toBe("1")
+    expect(evm.pc).toBe(4)
+  })
+
+  it('should correctly set the pc after a LOG4 opcode', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+      LOG4 0 0 0 0 0 0
+      PUSH1 1
+    ` 
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.stack.toString()).toBe("1")
+    expect(evm.pc).toBe(8)
+  })
 });
