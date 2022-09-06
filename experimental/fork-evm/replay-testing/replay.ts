@@ -1,10 +1,6 @@
 import BigNumber from "bignumber.js";
-import { getBufferFromHex, getClassFromTestContainer, ReplayContractTestUtils } from "../../../dist";
-import { Address } from "../../../dist/evm/Address";
+import { ExposedEvm, Address, getBufferFromHex, getClassFromTestContainer, ReplayContractTestUtils } from "../../../dist";
 import { Wei } from "../../../dist/evm/eth-units/Wei";
-//import { getClassFromTestContainer } from "../../../src/container/getClassFromTestContainer";
-import { ExposedEvm } from "../../../src/evm/ExposedEvm";
-//import { ReplayContractTestUtils } from "../../../src/evm/replay-contracts/ReplayContractTestUtils";
 
 (async () => {
     const gasLimit = new BigNumber(0xffffff);
@@ -16,7 +12,7 @@ import { ExposedEvm } from "../../../src/evm/ExposedEvm";
         program: contract,
         context: {
             nonce: 1,
-            sender: new Address(),
+            sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
             gasLimit,
             value: new Wei(new BigNumber(0)),
             receiver: new Address(),
@@ -26,5 +22,4 @@ import { ExposedEvm } from "../../../src/evm/ExposedEvm";
         },
     });
     await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, 'example-1.json', {});
-
 })()
