@@ -3,6 +3,7 @@ import { MnemonicParser } from '../evm/MnemonicParser';
 import { SimpleBuffers } from '../utils/SimpleBuffers';
 import { ConditionalInputVariables } from './ast/ConditionalInputVariables';
 import { ConditionalNode } from './ast/ConditionalNode';
+import { FunctionInputVariables } from './ast/FunctionInputVariables';
 import { FunctionNode } from './ast/FunctionNode';
 import { Node } from './ast/Node';
 import { ReturnNode } from './ast/ReturnNode';
@@ -40,13 +41,18 @@ export class AstToByteCode {
     for (const node of tree.nodes) {
       if (node instanceof FunctionNode) {
         jumpTable.add({
-          name: node.fieldValues.name,
+          functionDefinition: {
+            name: node.fieldValues.name,
+          },
           functionCode: ({ length }) =>
             this.compileFunction({ variableTable, node, length }),
         });
       } else if (node instanceof VariableNode) {
         variableTable.add({
           name: node.fields.name,
+          metadata: {
+            location: 'inline',
+          },
         });
       } else {
         throw new Error(`Not supported. ${node}`);
@@ -131,7 +137,30 @@ export class AstToByteCode {
           - Support custom modifiers.
         TODO: Reflect maybe this (^) should instead be in the parser ? 
       */
-    if (child instanceof ReturnNode) {
+    if (child instanceof FunctionInputVariables) {
+      variableTable.add({
+        name: child.getVariables().variable,
+        metadata: {
+          location: 'function',
+          offset: 4,
+        },
+      });
+
+      bufferOutput.concat(
+        this.mnemonicParser.parse({
+          script: `
+            PUSH1 $${variableTable.getSlot({
+              name: child.getVariables().variable,
+            })}
+            PUSH1 1
+            CALLDATALOAD 
+            // PUSH1 3
+            // SHR            
+            SSTORE
+        `,
+        })
+      );
+    } else if (child instanceof ReturnNode) {
       if (child.isValue) {
         // TODO: This should check for the type before the PUSH
         bufferOutput.concat(

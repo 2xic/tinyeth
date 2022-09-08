@@ -47,6 +47,7 @@ _Just something so I get a better understanding of the core parts of the protoco
     - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
 
 - [ ] Data structures
+    https://arxiv.org/pdf/2108.05513.pdf nice recourse
     - (added mvp) Blocks
         - https://github.com/ethereum/go-ethereum/blob/4766b1107fadcd5f31c96b0744a2a788c6e4a01c/core/types/block_test.go#L35
     - (added mvp) Simple serialize

@@ -7,6 +7,18 @@ export class Abi {
     return keccak256(Buffer.from(name, 'ascii')).slice(0, 4).toString('hex');
   }
 
+  /*
+  public encodeFunctionArguments({
+    name,
+    functionArguments,
+  }: {
+    name: string;
+    functionArguments?: FunctionTypes[];
+  }): string {
+    return this.encodeFunction(`${name}(${functionArguments?.join(',')})`);
+  }
+  */
+
   public encodeFunctionWithSignature(
     name: string,
     data: Uint | AbiStructEncoder
@@ -35,3 +47,5 @@ export class Abi {
     return options.arguments.encoding;
   }
 }
+
+export type FunctionTypes = 'uint8';

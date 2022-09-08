@@ -6,6 +6,7 @@ import { Reverted } from '../evm/errors/Reverted';
 import { Wei } from '../evm/eth-units/Wei';
 import { Evm } from '../evm/Evm';
 import { ExposedEvm } from '../evm/ExposedEvm';
+import { Uint } from '../rlp/types/Uint';
 import { getBufferFromHex } from '../utils';
 import { AstToByteCode } from './AstToByteCode';
 
@@ -14,7 +15,9 @@ describe('AstToByteCode', () => {
   let evm: ExposedEvm;
 
   beforeEach(() => {
-    const container = new UnitTestContainer().create();
+    const container = new UnitTestContainer().create({
+      loggingEnabled: true,
+    });
     astToByteCode = container.get(AstToByteCode);
     evm = container.get(Evm) as ExposedEvm;
   });
@@ -563,6 +566,109 @@ describe('AstToByteCode', () => {
 
     expect(evm.callingContextReturnData?.toString('hex')).toBe(
       '0000000000000000000000000000000000000000000000000000000000000002'
+    );
+  });
+
+  it('should correctly deal with calldata long', async () => {
+    const program = astToByteCode.compile({
+      script: `
+        contract ReturnContract {
+          function return1(uint8 value) public pure returns (uint8) {
+            if (1 == 2) {
+              return 2;
+            } else {
+              return 1;
+            }
+          }
+        }
+    `,
+    });
+
+    evm.boot({
+      program,
+      context: {
+        data: getBufferFromHex(
+          // TODO: this is the wrong encoding because we don't include the arguments
+          '0x797fa60d000000000000000000000000000000000000000000000000000000000000000a'
+        ),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+        receiver: new Address(),
+      },
+      options: {
+        debug: true,
+      },
+    });
+    await evm.execute();
+
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000001'
+    );
+  });
+
+  it('should correctly deal with input arguments', async () => {
+    const program = astToByteCode.compile({
+      script: `
+        contract ReturnContract {
+          function return1(uint8 value) public pure returns (uint8) {
+            return value;
+          }
+        }
+    `,
+    });
+
+    evm.boot({
+      program,
+      context: {
+        data: getBufferFromHex(new Abi().encodeFunction('return1')),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+        receiver: new Address(),
+      },
+    });
+    await evm.execute();
+
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it('should correctly deal with input arguments when they are set', async () => {
+    const program = astToByteCode.compile({
+      script: `
+        contract ReturnContract {
+          function return1(uint8 value) public pure returns (uint8) {
+            return value;
+          }
+        }
+    `,
+    });
+
+    evm.boot({
+      program,
+      context: {
+        // TODO: this is the wrong encoding because we don't include the arguments
+        data: getBufferFromHex(
+          '0x797fa60d0000000000000000000000000000000000000000000000000000000000000000'
+        ),
+        value: new Wei(new BigNumber(0)),
+        nonce: 0,
+        gasLimit: new BigNumber(0),
+        sender: new Address(),
+        receiver: new Address(),
+      },
+      options: {
+        debug: true,
+      },
+    });
+    await evm.execute();
+
+    expect(evm.callingContextReturnData?.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000010'
     );
   });
 });

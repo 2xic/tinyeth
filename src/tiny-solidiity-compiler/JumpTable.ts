@@ -1,20 +1,20 @@
-import { Abi } from '../evm';
+import { Abi, FunctionTypes } from '../evm';
 import { MnemonicParser } from '../evm/MnemonicParser';
 import { SimpleBuffers } from '../utils/SimpleBuffers';
 
 export class JumpTable {
   private functions: Array<
-    [string, (options: BuildFunctionOptions) => Buffer]
+    [FunctionDefinition, (options: BuildFunctionOptions) => Buffer]
   > = [];
 
   public add({
-    name,
+    functionDefinition,
     functionCode,
   }: {
-    name: string;
+    functionDefinition: FunctionDefinition;
     functionCode: (options: BuildFunctionOptions) => Buffer;
   }) {
-    this.functions.push([name, functionCode]);
+    this.functions.push([functionDefinition, functionCode]);
   }
 
   public construct(length: number): Buffer {
@@ -87,16 +87,14 @@ export class JumpTable {
     item,
     fallThroughIndex,
   }: {
-    item: [string, (options: BuildFunctionOptions) => Buffer];
+    item: [FunctionDefinition, (options: BuildFunctionOptions) => Buffer];
     length: number;
     fallThroughIndex: number | ((index: number) => number);
   }) {
     const createBuffer = (fallThroughIndexValue: number) => {
       const simpleBuffer = new SimpleBuffers();
 
-      const functionCheck = this.addFunctionCheck({
-        name: item[0],
-      });
+      const functionCheck = this.addFunctionCheck(item[0]);
 
       simpleBuffer.concat(functionCheck);
 
@@ -144,7 +142,7 @@ export class JumpTable {
     return simpleBuffer.build();
   }
 
-  private addFunctionCheck({ name }: { name: string }) {
+  private addFunctionCheck(functionDefinition: FunctionDefinition) {
     // TODO: You don't need to recall this, you can store the value on the stack with DUP1
     return new MnemonicParser().parse({
       script: `
@@ -154,7 +152,10 @@ export class JumpTable {
         PUSH1 0xe0
         SHR 
         DUP1 
-        PUSH4 0x${new Abi().encodeFunction(name)}
+        PUSH4 0x${new Abi().encodeFunction(
+          // TODO: this should consider the arguments
+          functionDefinition.name
+        )}
         EQ
     `,
     });
@@ -163,4 +164,9 @@ export class JumpTable {
 
 interface BuildFunctionOptions {
   length: number;
+}
+
+interface FunctionDefinition {
+  name: string;
+  arguments?: FunctionTypes[];
 }

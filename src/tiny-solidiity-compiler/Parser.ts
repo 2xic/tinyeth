@@ -19,6 +19,7 @@ import { StopToken } from './tokens/StopToken';
 import { StringToken } from './tokens/StringToken';
 import { TokenName } from './tokens/TokenName';
 import { Types } from './tokens/Types';
+import { FunctionInputVariables } from './ast/FunctionInputVariables';
 
 @injectable()
 export class Parser {
@@ -82,9 +83,15 @@ export class Parser {
   private constructSyntax(): Record<string, Syntax[]> {
     const syntaxStorage: Record<string, Syntax[]> = {};
 
-    const functionArguments = new Syntax(new SpecificKeyword('(')).then(
-      new SpecificKeyword(')')
-    );
+    const functionArguments = new Syntax(
+      new SpecificKeyword('(')
+    ).thenOptionalPath([
+      new Syntax(new SpecificKeyword(')')),
+      new Syntax(new TokenName(new StringToken(), 'type'))
+        .then(new TokenName(new StringToken(), 'variable1'))
+        .then(new SpecificKeyword(')'))
+        .construct(FunctionInputVariables),
+    ]);
 
     const unnamedArguments = new Syntax(new SpecificKeyword('(')).thenRecursive(
       new Syntax(new Types()),
@@ -233,7 +240,6 @@ export class Parser {
     /**
      * Syntax missing
      *  library definitions
-     *  if / else conditions
      *  make function payable
      *  assembly keyword
      * +++ https://docs.soliditylang.org/en/v0.8.15/grammar.html
