@@ -26,7 +26,9 @@ export class ReplayContractTestUtils {
       await evm.step();
 
       if (evm.pc !== parseInt(state.pc, 16)) {
-        throw new Error(`Error in pc location 0x${evm.pc.toString(16)}`);
+        throw new Error(
+          `Error in pc location 0x${evm.pc.toString(16)} vs 0x${state.pc}`
+        );
       }
 
       if (breakPoint === evm.pc) {
@@ -43,6 +45,8 @@ export class ReplayContractTestUtils {
       this.verifyMemory({
         state,
         evm,
+        previousPc,
+        lastStackState,
       });
 
       this.verifyStorage({
@@ -68,6 +72,7 @@ export class ReplayContractTestUtils {
     const stateStack = state.stack.filter((item) => !!item.length).reverse();
 
     let stackError = evm.stack.length !== stateStack.length;
+
     for (let i = 0; i < evm.stack.length && !stackError; i++) {
       stackError = evm.stack.get(i).toNumber() !== parseInt(stateStack[i], 16);
       if (stackError) {
@@ -77,6 +82,7 @@ export class ReplayContractTestUtils {
     const { opcode, opcodeArguments } = this.getPreviousOpcodeAndArguments({
       evm,
       previousPc,
+      lastStackState,
     });
 
     if (stackError) {
@@ -119,6 +125,7 @@ export class ReplayContractTestUtils {
     const { opcode, opcodeArguments } = this.getPreviousOpcodeAndArguments({
       evm,
       previousPc,
+      lastStackState,
     });
 
     if (isError) {
@@ -142,17 +149,33 @@ export class ReplayContractTestUtils {
     }
   }
 
-  private verifyMemory({ state, evm }: { state: State; evm: ExposedEvm }) {
+  private verifyMemory({
+    state,
+    evm,
+    previousPc,
+    lastStackState,
+  }: {
+    state: State;
+    evm: ExposedEvm;
+    previousPc: number;
+    lastStackState: BigNumber[];
+  }) {
     const sameLength =
       state.memory.length === evm.memory.raw.toString('hex').length;
     const sameValues = [...state.memory].every((item, index) => {
       return evm.memory.raw.toString('hex')[index] == item;
     });
     const isError = !sameLength || !sameValues;
+    const { opcode, opcodeArguments } = this.getPreviousOpcodeAndArguments({
+      evm,
+      previousPc,
+      lastStackState,
+    });
 
     if (isError) {
-      throw new Error(`
-          Error with memory layout
+      throw new Error(`Error at pc ${
+        state.pc
+      }. Previous opcodes ${opcode} Arguments : ${opcodeArguments}
 
           Truth
           ${state.memory}
@@ -166,15 +189,18 @@ export class ReplayContractTestUtils {
   private getPreviousOpcodeAndArguments({
     evm,
     previousPc,
+    lastStackState,
   }: {
     evm: ExposedEvm;
     previousPc: number;
+    lastStackState: BigNumber[];
   }) {
     const opcode = Opcodes[evm.program[previousPc]];
     return {
       opcode: opcode.mnemonic,
-      opcodeArguments: evm.program
-        .slice(previousPc, previousPc + opcode.length + 1)
+      opcodeArguments: lastStackState
+        .slice(lastStackState.length - opcode.length - 1, lastStackState.length)
+        .map((item) => item.toString(16))
         .join(', '),
     };
   }

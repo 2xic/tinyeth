@@ -180,6 +180,168 @@ describe('evm.codes', () => {
     );
   });
 
+  it('should correctly execute MSTORE with offset 0x80 and max value', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        PUSh32 0x80
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+    );
+  });
+
+  it('should correctly execute MSTORE with offset 0x80 with zero', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0x0
+        PUSh32 0x80
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it('should correctly execute MSTORE with offset 0x80 with 1', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0x01
+        PUSh32 0x80
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001'
+    );
+  });
+
+  it('should correctly execute MSTORE with zero offset', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        PUSh32 0x0
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+    );
+  });
+
+  it('should correctly execute MSTORE with 0x10 offset', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        PUSh32 0x10
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      '00000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000'
+    );
+  });
+
+  it('should correctly execute MSTORE with 0x32 offset', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        PUSh32 0x32
+        MSTORE
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.memory.raw.toString('hex')).toBe(
+      '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000'
+    );
+  });
+
   it('should correctly execute DIV', async () => {
     // example from https://www.evm.codes/#04
     const mnemonicParser = new MnemonicParser();

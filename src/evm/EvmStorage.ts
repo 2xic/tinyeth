@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
+import { padHex } from '../utils/';
 import { Address } from './Address';
 
 @injectable()
@@ -8,7 +9,7 @@ export class EvmStorage {
   public storage: Record<string, BigNumber> = {};
 
   public write({ key, value }: { key: BigNumber; value: BigNumber }) {
-    this.storage[key.toString(16)] = value;
+    this.storage[this.convertKey({ key })] = value;
   }
 
   public async read({
@@ -32,7 +33,7 @@ export class EvmStorage {
     key: BigNumber | number;
     address: Address;
   }): BigNumber {
-    return this.storage[key.toString(16)] || new BigNumber(0);
+    return this.storage[this.convertKey({ key })] || new BigNumber(0);
   }
 
   public isEqualOriginal({ key }: { key: BigNumber }) {
@@ -56,5 +57,9 @@ export class EvmStorage {
     return Object.entries(this.storage).map((item) => {
       callback(new BigNumber(item[0]), item[1]);
     });
+  }
+
+  private convertKey({ key }: { key: BigNumber | number }) {
+    return padHex(key.toString(16));
   }
 }

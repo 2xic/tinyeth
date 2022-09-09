@@ -721,6 +721,7 @@ export const Opcodes: Record<number, OpCode> = {
       for (let i = 0; i < 32; i++) {
         memory.write(offset + i, uint[i]);
       }
+
       const computedGas = gasComputer.memoryExpansion({
         address: new BigNumber(memory.raw.length),
       });

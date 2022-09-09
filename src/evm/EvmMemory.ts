@@ -33,9 +33,11 @@ export class EvmMemory {
   }
 
   private expand(offset: number) {
-    const delta = 32 + (offset % 32 == 0 ? 0 : 32);
-    if (this.memory.length <= offset) {
-      this.memory = Buffer.concat([this.memory, Buffer.alloc(delta, 0)]);
+    while (this.memory.length <= offset) {
+      const delta = 32 + (offset % 32 == 0 ? 0 : 32);
+      if (this.memory.length <= offset) {
+        this.memory = Buffer.concat([this.memory, Buffer.alloc(delta, 0)]);
+      }
     }
   }
 

@@ -3,7 +3,9 @@ export function convertNumberToPadHex(number: number | string) {
     typeof number === 'string' ? parseInt(number) : number
   ).toString(16);
 
-  return convertedNumber.length % 2 == 0
-    ? convertedNumber
-    : `0${convertedNumber}`;
+  return padHex(convertedNumber);
+}
+
+export function padHex(input: string) {
+  return input.length % 2 == 0 ? input : `0${input}`;
 }
