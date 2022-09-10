@@ -701,6 +701,35 @@ describe('evm.codes', () => {
     expect(evm.totalGasCost).toBe(21018);
   });
 
+  it('should correctly execute LOG3', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        LOG3
+        PUSH1 55
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.from('', 'hex'),
+        },
+      })
+      .execute();
+    expect(evm.stack.toString()).toBe([0x37].toString());
+  });
+
   it('should correctly run DELEGATECALL', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({

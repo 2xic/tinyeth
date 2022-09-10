@@ -25,9 +25,20 @@ export class ReplayContractTestUtils {
 
       await evm.step();
 
-      if (evm.pc !== parseInt(state.pc, 16)) {
+      const isFinished = !state.pc && !evm.isRunning;
+
+      if (!isFinished && evm.pc !== parseInt(state.pc, 16)) {
         throw new Error(
-          `Error in pc location 0x${evm.pc.toString(16)} vs 0x${state.pc}`
+          `
+          Error in pc location 0x${evm.pc.toString(16)} vs 0x${state.pc}. 
+          \n
+          Previous pc 0x${previousPc.toString(16)} vs 0x${
+            fileData[index - 1].pc
+          }
+          Previous opcode ${Opcodes[evm.program[previousPc]].mnemonic}
+
+          is evm running ? ${evm.isRunning}
+          `
         );
       }
 

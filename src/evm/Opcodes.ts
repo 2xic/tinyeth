@@ -907,11 +907,14 @@ export const Opcodes: Record<number, OpCode> = {
     toOpcode: 0xa4,
     baseName: 'LOG',
     deltaStart: 0,
-    arguments: (delta) => 2 + delta,
-    iteratedExecuteConstruction: () => () => {
-      // This should not change the EVM state, but need to add gas adjustments
-      // It's used for events.
-    },
+    arguments: 1,
+    iteratedExecuteConstruction:
+      (index) =>
+      ({ stack }) => {
+        for (let i = 0; i < index + 2; i++) {
+          stack.pop();
+        }
+      },
     // TODO: Implement gas
     gasCost: 3,
   }),
@@ -1027,9 +1030,7 @@ export const Opcodes: Record<number, OpCode> = {
       const offset = stack.pop().toNumber();
       const size = stack.pop().toNumber();
 
-      evm.setCallingContextReturnData(
-        memory.read(offset, offset + size).slice(0, size)
-      );
+      evm.setCallingContextReturnData(memory.read(offset, size).slice(0, size));
 
       const computedGas = gasComputer.memoryExpansion({
         address: new BigNumber(offset + size),
