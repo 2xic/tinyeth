@@ -6,7 +6,7 @@ import { getBufferFromHex } from '../../utils';
 import { ExposedEvm } from '../ExposedEvm';
 import { ReplayContractTestUtils } from './ReplayContractTestUtils';
 
-describe.skip('EvmReplay', () => {
+describe('EvmReplay', () => {
   const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 

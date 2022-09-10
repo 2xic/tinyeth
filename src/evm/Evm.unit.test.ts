@@ -547,7 +547,9 @@ describe('evm', () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
-      LOG0 0 0  
+      PUSH1 0 
+      PUSH1 0
+      LOG0  
       PUSH1 1
     ` 
     });
@@ -566,14 +568,20 @@ describe('evm', () => {
       })
       .execute();
     expect(evm.stack.toString()).toBe("1")
-    expect(evm.pc).toBe(4)
+    expect(evm.pc).toBe(7)
   })
 
   it('should correctly set the pc after a LOG4 opcode', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({
       script: `
-      LOG4 0 0 0 0 0 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      PUSH1 0
+      LOG4
       PUSH1 1
     ` 
     });
@@ -592,6 +600,6 @@ describe('evm', () => {
       })
       .execute();
     expect(evm.stack.toString()).toBe("1")
-    expect(evm.pc).toBe(8)
+    expect(evm.pc).toBe(15)
   })
 });

@@ -35,11 +35,25 @@ export class ReplayContractTestUtils {
           Previous pc 0x${previousPc.toString(16)} vs 0x${
             fileData[index - 1].pc
           }
-          Previous opcode ${Opcodes[evm.program[previousPc]].mnemonic}
+          Previous opcode ${
+            Opcodes[evm.program[previousPc]].mnemonic
+          } and ${index} index
 
           is evm running ? ${evm.isRunning}
           `
         );
+      }
+
+      if (evm.gasCost() !== state.gasUsage) {
+        throw new Error(`
+        Error in gas computation at previous opcode ${
+          Opcodes[evm.program[previousPc]].mnemonic
+        }
+
+        PC 0x${previousPc.toString(16)} and ${index} index
+
+        Gas difference ${evm.gasCost()} vs ${state.gasUsage}
+        `);
       }
 
       if (breakPoint === evm.pc) {
@@ -207,12 +221,24 @@ export class ReplayContractTestUtils {
     lastStackState: BigNumber[];
   }) {
     const opcode = Opcodes[evm.program[previousPc]];
+    const opcodeArguments = opcode.mnemonic.startsWith('PUSH')
+      ? [...evm.program.slice(previousPc, previousPc + opcode.length)]
+          .map((item: number): string => {
+            const value = item.toString();
+            return value;
+          })
+          .join(', ')
+      : lastStackState
+          .slice(
+            lastStackState.length - opcode.length - 1,
+            lastStackState.length
+          )
+          .map((item) => item.toString(16))
+          .join(', ');
+
     return {
       opcode: opcode.mnemonic,
-      opcodeArguments: lastStackState
-        .slice(lastStackState.length - opcode.length - 1, lastStackState.length)
-        .map((item) => item.toString(16))
-        .join(', '),
+      opcodeArguments,
     };
   }
 }
@@ -222,4 +248,5 @@ interface State {
   memory: string;
   stack: string[];
   storage: Record<string, string>;
+  gasUsage?: number;
 }

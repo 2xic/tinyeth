@@ -1,5 +1,6 @@
 import { Evm } from './Evm';
 import { EvmStack } from './EvmStack';
+import { GasComputer } from './gas/GasComputer';
 import { ExecutionResults, OpCode } from './OpCode';
 
 export function CreateOpCodeWIthVariableArgumentLength(options: {
@@ -12,9 +13,11 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
   ) => ({
     evm,
     stack,
+    gasComputer,
   }: {
     evm: Evm;
     stack: EvmStack;
+    gasComputer: GasComputer;
   }) => void | ExecutionResults;
   arguments: number | ((index: number) => number);
   deltaStart?: number;

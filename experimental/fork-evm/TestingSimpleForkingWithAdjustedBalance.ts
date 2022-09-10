@@ -8,7 +8,7 @@ import BigNumber from "bignumber.js";
 import { bigInt } from 'fast-check';
 import { Alchemy } from './Alchemy';
 
-const testingAddress = '0xb2ed12f121995cb55ddfc2f268d1901aec05a8de';
+const testingAddress = '0x1f98415757620b543a52e61c46b32eb19261f984';
 
 (async () => {
     const evmCode = await new Alchemy().getContractCode({

@@ -409,7 +409,7 @@ export const Opcodes: Record<number, OpCode> = {
         )
       );
     },
-    gasCost: () => 1,
+    gasCost: () => 3,
   }),
   0x36: new OpCode({
     name: 'CALLDATASIZE',
@@ -417,7 +417,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, context }) => {
       stack.push(new BigNumber(context.data.length));
     },
-    gasCost: 3,
+    gasCost: 2,
   }),
   0x37: new OpCode({
     name: 'CALLDATACOPY',
@@ -909,14 +909,26 @@ export const Opcodes: Record<number, OpCode> = {
     deltaStart: 0,
     arguments: 1,
     iteratedExecuteConstruction:
-      (index) =>
-      ({ stack }) => {
-        for (let i = 0; i < index + 2; i++) {
+      (topicCount) =>
+      ({ stack, gasComputer }) => {
+        const offset = stack.pop();
+        const size = stack.pop();
+        for (let i = 0; i < topicCount; i++) {
           stack.pop();
         }
+
+        const memoryExpansion = gasComputer.memoryExpansion({
+          address: offset.plus(size),
+        }).gasCost;
+        const computedGas =
+          375 * (topicCount + 1) + 8 * size.toNumber() + memoryExpansion;
+
+        return {
+          computedGas,
+          setPc: false,
+        };
       },
-    // TODO: Implement gas
-    gasCost: 3,
+    gasCost: 0,
   }),
   0xf0: new OpCode({
     name: 'CREATE',
