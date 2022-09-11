@@ -783,6 +783,82 @@ describe('evm.codes', () => {
       expect(evm.gasCost()).toBe(32867)
   });
 
+  it('should correctly run ADD operator with negative values', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+        PUSH32 0x00000000000000000000000000000000000000000000000000000000000006e0
+        ADD
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.alloc(0),
+        },
+      })
+      .execute();
+      expect(evm.stack.raw.toString()).toBe([0x6c0].toString())
+  });
+
+  it('should correctly run GAS opcode', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+        PUSH32 0x00000000000000000000000000000000000000000000000000000000000006e0
+        ADD
+        GAS
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit: new BigNumber(0xffffffffffff),
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.alloc(0),
+        },
+      })
+      .execute();
+      expect(evm.stack.raw.toString()).toBe([0x6c0, 0xffffffffadec].toString())
+  });
+
+  it('should correctly run SUB operator with negative values', async () => {
+    const mnemonicParser = new MnemonicParser();
+    const contract = mnemonicParser.parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+        PUSH32 0x00000000000000000000000000000000000000000000000000000000000006e0
+        SUB
+    `,
+    });
+    await evm
+      .boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          sender,
+          receiver: new Address(),
+          gasLimit,
+          value: new Wei(new BigNumber(16)),
+          data: Buffer.alloc(0),
+        },
+      })
+      .execute();
+      expect(evm.stack.raw.toString()).toBe([0x700].toString())
+  });
+
   it('should correctly run DELEGATECALL', async () => {
     const mnemonicParser = new MnemonicParser();
     const contract = mnemonicParser.parse({

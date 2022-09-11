@@ -18,6 +18,8 @@ export abstract class InterfaceEvm {
 
   public abstract get callingContextReturnData(): Buffer | undefined;
 
+  public abstract get isSubContext(): boolean;
+
   public abstract execute(): Promise<InterfaceEvm>;
 
   public abstract gasCost(): number;
@@ -28,6 +30,7 @@ export interface EvmBootOptions {
   context: TxContext;
   options?: DebugOptions;
   isFork?: boolean;
+  isSubContext?: boolean;
 }
 
 export interface EvmContextWithSelfReference extends EvmContext {

@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { injectable } from 'inversify';
 import { Address } from './Address';
 import { Contract } from './Contract';
-import { EvmMockBlock } from './EvmMockBlock';
+import { EvmBlock, EvmMockBlock } from './EvmMockBlock';
 
 @injectable()
 export class Network {
@@ -14,22 +14,28 @@ export class Network {
 
   private _blocks: Record<string, EvmMockBlock> = {};
 
-  private _currentBlock: EvmMockBlock;
+  private _currentBlock?: EvmMockBlock;
 
   constructor() {
-    this._blocks[42] = new EvmMockBlock({
-      blockHash:
-        '29045A592007D0C246EF02C2223570DA9522D0CF0F73282C79A1BC8F0BB2C238',
-      timeStamp: dayjs('2022-01-01'),
-      height: 42,
-      coinbase: new Address('5B38Da6a701c568545dCfcB03FcB875f56beddC4'),
-      gasLimit: 0xffffffffffff,
-      difficulty: new BigNumber('10995000000000000'),
-      chainId: 1,
-      gasPrice: 222,
-      baseFee: 1024,
+    this.setBlock({
+      block: {
+        blockHash:
+          '29045A592007D0C246EF02C2223570DA9522D0CF0F73282C79A1BC8F0BB2C238',
+        timeStamp: dayjs('2022-01-01'),
+        height: 42,
+        coinbase: new Address('5B38Da6a701c568545dCfcB03FcB875f56beddC4'),
+        gasLimit: 0xffffffffffff,
+        difficulty: new BigNumber('10995000000000000'),
+        chainId: 1,
+        gasPrice: 222,
+        baseFee: 1024,
+      },
     });
-    this._currentBlock = this._blocks[42];
+  }
+
+  public setBlock({ block }: { block: EvmBlock }) {
+    this._blocks[block.height] = new EvmMockBlock(block);
+    this._currentBlock = this._blocks[block.height];
   }
 
   public register({ contract }: { contract: Contract }) {
@@ -58,6 +64,9 @@ export class Network {
   }
 
   public get block(): EvmMockBlock {
+    if (!this._currentBlock) {
+      throw new Error('No current block set');
+    }
     return this._currentBlock;
   }
 }

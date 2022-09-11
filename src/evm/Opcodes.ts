@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { createNoSubstitutionTemplateLiteral } from 'typescript';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
@@ -16,6 +17,12 @@ import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 // TODO: see if there is away around this.
 BigNumber.set({ EXPONENTIAL_AT: 1024 });
 
+/*
+  TODO: 
+    - All mathematical operators should use BigNumber directly
+    - They should use the SignedUnsignedNumberConverter.
+*/
+
 export const Opcodes: Record<number, OpCode> = {
   0x0: new OpCode({
     name: 'STOP',
@@ -29,9 +36,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'ADD',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a + b));
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      stack.push(a.plus(b));
     },
     gasCost: 3,
   }),
@@ -39,9 +46,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'MUL',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a * b));
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
+      stack.push(a.multipliedBy(b));
     },
     gasCost: 5,
   }),
@@ -49,8 +56,8 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'SUB',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop();
-      const b = stack.pop();
+      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
+      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
       stack.push(a.minus(b));
     },
     gasCost: 3,
@@ -841,16 +848,10 @@ export const Opcodes: Record<number, OpCode> = {
   0x5a: new OpCode({
     name: 'GAS',
     arguments: 1,
-    gasCost: () => 2,
-    onExecute: (context, gasOpcode) => {
+    gasCost: 2,
+    onExecute: (context, opcode) => {
       const { stack, evm } = context;
-      stack.push(
-        evm.gasLeft.minus(
-          gasOpcode.computeGasCost({
-            ...context,
-          })
-        )
-      );
+      stack.push(evm.gasLeft.minus(opcode.staticGasCost));
     },
   }),
   0x5b: new OpCode({

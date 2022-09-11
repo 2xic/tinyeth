@@ -54,14 +54,23 @@ export class Evm implements InterfaceEvm {
   private context!: TxContext;
   private options?: DebugOptions;
 
+  private _isSubContext = false;
+
   public gasCost(): number {
     return this._gasCost;
   }
 
-  public boot({ program, context, options, isFork }: EvmBootOptions) {
+  public boot({
+    program,
+    context,
+    options,
+    isFork,
+    isSubContext,
+  }: EvmBootOptions) {
     this.program = program;
     this.context = context;
     this.options = options;
+    this._isSubContext = isSubContext || false;
     this._gasCost = isFork
       ? 0
       : GAS_BASE_COST + calculateDataGasCost(context.data);
@@ -121,16 +130,13 @@ export class Evm implements InterfaceEvm {
       throw err;
     }
 
-    this._gasCost += opcode.computeGasCost({
+    const gasCost = opcode.computeGasCost({
       ...evmContext,
       evmContext,
     });
-    this._gasLeft = this._gasLeft.minus(
-      opcode.computeGasCost({
-        ...evmContext,
-        evmContext,
-      })
-    );
+
+    this._gasCost += gasCost;
+    this._gasLeft = this._gasLeft.minus(gasCost);
 
     let updatedPc = false;
     if (results) {
@@ -220,6 +226,10 @@ export class Evm implements InterfaceEvm {
 
   public get gasLeft() {
     return this._gasLeft;
+  }
+
+  public get isSubContext(): boolean {
+    return this._isSubContext;
   }
 }
 

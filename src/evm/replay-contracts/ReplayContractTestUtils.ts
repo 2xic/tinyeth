@@ -109,10 +109,19 @@ export class ReplayContractTestUtils {
       previousPc,
       lastStackState,
     });
+    const { opcode: currentOpcode } = this.getPreviousOpcodeAndArguments({
+      evm,
+      previousPc,
+      lastStackState,
+    });
 
     if (stackError) {
       throw new Error(
-        `Error at pc ${state.pc}. Previous opcodes ${opcode} ${opcodeArguments}
+        ` Error at pc 0x${state.pc} 0x${evm.pc.toString(16)}. 
+          Current opcode ${currentOpcode}
+          
+          Previous opcodes ${opcode} ${opcodeArguments}
+          Previous pc 0x${previousPc.toString(16)}
 
           ${lastStackState.length} ${stateStack.length}
           
@@ -121,6 +130,9 @@ export class ReplayContractTestUtils {
 
           Our EVM
           ${lastStackState.map((item) => item.toString(16))}
+
+          Current state
+          ${evm.stack.raw.map((item) => item.toString(16))}
           `
       );
     }

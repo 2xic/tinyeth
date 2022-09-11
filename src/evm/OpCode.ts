@@ -29,6 +29,13 @@ export class OpCode {
     return this.options.name;
   }
 
+  public get staticGasCost() {
+    if (typeof this.options.gasCost === 'number') {
+      return this.options.gasCost;
+    }
+    throw new Error('Gas is not static');
+  }
+
   public computeGasCost(context: EvmContextWithSelfReference) {
     const gas = this.options.gasCost;
     if (typeof gas === 'number') {

@@ -7,3 +7,4 @@ export * from './ExposedEvm';
 export * from './EvmExternalStorageRequests';
 export * from './replay-contracts/ReplayContractTestUtils';
 export * from './Address';
+export * from './Network';

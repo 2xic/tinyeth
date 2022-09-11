@@ -5,19 +5,7 @@ import { Address } from './Address';
 
 @injectable()
 export class EvmMockBlock {
-  constructor(
-    private options: {
-      blockHash: string;
-      timeStamp: Dayjs;
-      height: number;
-      coinbase: Address;
-      difficulty: BigNumber;
-      gasLimit: number;
-      gasPrice: number;
-      chainId: number;
-      baseFee: number;
-    }
-  ) {}
+  constructor(private options: EvmBlock) {}
 
   public get hash(): BigNumber {
     const value = this.options.blockHash.toLowerCase().trim();
@@ -55,4 +43,16 @@ export class EvmMockBlock {
   public get gasPrice() {
     return this.options.gasPrice;
   }
+}
+
+export interface EvmBlock {
+  blockHash: string;
+  timeStamp: Dayjs;
+  height: number;
+  coinbase: Address;
+  difficulty: BigNumber;
+  gasLimit: number;
+  gasPrice: number;
+  chainId: number;
+  baseFee: number;
 }

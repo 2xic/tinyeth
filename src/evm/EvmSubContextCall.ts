@@ -89,6 +89,7 @@ export class EvmSubContextCall {
         await evm
           .boot({
             isFork,
+            isSubContext: true,
             program,
             context: {
               value: txContext.value,
