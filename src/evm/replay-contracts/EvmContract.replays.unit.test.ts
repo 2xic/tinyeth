@@ -5,6 +5,7 @@ import { Wei } from '../eth-units/Wei';
 import { getBufferFromHex } from '../../utils';
 import { ExposedEvm } from '../ExposedEvm';
 import { ReplayContractTestUtils } from './ReplayContractTestUtils';
+import path from 'path';
 
 describe('EvmReplay', () => {
   const sender = new Address();
@@ -18,8 +19,8 @@ describe('EvmReplay', () => {
       program: contract,
       context: {
         nonce: 1,
-        sender,
         gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
         value: new Wei(new BigNumber(0)),
         receiver: new Address(),
         data: getBufferFromHex(
@@ -27,6 +28,6 @@ describe('EvmReplay', () => {
         ),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, 'example-1.json', {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-1.json'), {});
   });
 });

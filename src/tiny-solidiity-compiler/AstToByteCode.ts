@@ -149,13 +149,11 @@ export class AstToByteCode {
       bufferOutput.concat(
         this.mnemonicParser.parse({
           script: `
+            PUSH1 4
+            CALLDATALOAD
             PUSH1 $${variableTable.getSlot({
               name: child.getVariables().variable,
             })}
-            PUSH1 1
-            CALLDATALOAD 
-            // PUSH1 3
-            // SHR            
             SSTORE
         `,
         })

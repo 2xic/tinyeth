@@ -406,15 +406,15 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ context, stack }) => {
       const index = stack.pop().toNumber();
-      stack.push(
-        new BigNumber(
-          context.data
-            .slice(index, index + 32)
-            .toString('hex')
-            .padEnd(64, '0'),
-          16
-        )
+      const value = new BigNumber(
+        context.data
+          .slice(index, index + 32)
+          .toString('hex')
+          .padEnd(64, '0'),
+        16
       );
+      console.log(value.toString(16));
+      stack.push(value);
     },
     gasCost: () => 3,
   }),
