@@ -12,6 +12,7 @@
     "build": "tsc --incremental",
     "test-watch": "npm run build && jest --watch",
     "test": "npm run unit",
+    "test-report": "npm run build && jest --reporters=\"default\" --collectCoverage --reporters=jest-junit",
     "vitest": "vitest run",
     "bun-test": "bun wiptest",
     "unit": "npm run build && jest",
@@ -19,6 +20,15 @@
     "lint": "npx eslint ./ --fix",
     "clean": "rm -rf ./dist/",
     "install": "npm run build"
+  },
+  "jest-junit": {
+    "outputDirectory": "reports",
+    "outputName": "jest-junit.xml",
+    "ancestorSeparator": " › ",
+    "uniqueOutputName": "false",
+    "suiteNameTemplate": "{filepath}",
+    "classNameTemplate": "{classname}",
+    "titleTemplate": "{title}"
   },
   "author": "",
   "license": "ISC",
@@ -66,6 +76,7 @@
     "fast-check": "^3.0.1",
     "inversify": "^6.0.1",
     "ip6addr": "^0.2.5",
+    "jest-junit": "^14.0.1",
     "js-sha3": "^0.8.0",
     "jsfuzz": "^1.0.15",
     "keccak": "^3.0.2",
@@ -75,8 +86,8 @@
     "typescript": "^4.4.2",
     "typescript-logging": "^1.0.0"
   },
-  "engines" : { 
-    "node" : ">=18.3.0"
+  "engines": {
+    "node": ">=18.3.0"
   },
   "volta": {
     "node": "18.3.0"

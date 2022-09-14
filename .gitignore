@@ -16,3 +16,5 @@ geth-data
 *.key
 .env
 cache
+coverage
+reports
