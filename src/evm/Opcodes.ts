@@ -4,6 +4,7 @@ import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { keccak256 } from '../utils/keccak256';
+import { padBuffer32 } from '../utils/padBuffer32';
 import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
@@ -434,9 +435,11 @@ export const Opcodes: Record<number, OpCode> = {
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
 
-      for (let i = 0; i < length; i++) {
-        memory.write(dataOffset + i, context.data[offset + i]);
+      let value = context.data.slice(offset, offset + length);
+      if (value.length < length) {
+        value = Buffer.concat([value, Buffer.alloc(length - value.length)]);
       }
+      memory.write32(dataOffset, value);
 
       return {
         computedGas:
@@ -725,9 +728,7 @@ export const Opcodes: Record<number, OpCode> = {
         'hex'
       );
 
-      for (let i = 0; i < 32; i++) {
-        memory.write(offset + i, uint[i]);
-      }
+      memory.write32(offset, uint);
 
       const computedGas = gasComputer.memoryExpansion({
         address: new BigNumber(memory.raw.length),
@@ -1210,7 +1211,7 @@ export const Opcodes: Record<number, OpCode> = {
   0xfe: new OpCode({
     name: 'INVALID',
     arguments: 1,
-    gasCost: () => 2,
+    gasCost: () => 0,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     onExecute: () => {
       throw new Reverted('Ran INVALID opcode');

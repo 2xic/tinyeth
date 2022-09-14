@@ -1,0 +1,126 @@
+[
+    {
+      "memory": "",
+      "stack": [
+        ""
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21000,
+      "pc": "00"
+    },
+    {
+      "memory": "",
+      "stack": [
+        "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21003,
+      "pc": "21"
+    },
+    {
+      "memory": "",
+      "stack": [
+        "0",
+        "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21006,
+      "pc": "23"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "stack": [
+        ""
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21012,
+      "pc": "24"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "stack": [
+        "ff60005260206000f30000000000000000000000000000000000000000000000"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21015,
+      "pc": "45"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "stack": [
+        "20",
+        "ff60005260206000f30000000000000000000000000000000000000000000000"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21018,
+      "pc": "47"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        ""
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21024,
+      "pc": "48"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        "29"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21027,
+      "pc": "4a"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        "0",
+        "29"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21030,
+      "pc": "4c"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        "0",
+        "0",
+        "29"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 21033,
+      "pc": "4e"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        "230fc3fe9249c6f698bfefea56debde9e1de2934"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 59451,
+      "pc": "4f"
+    },
+    {
+      "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
+      "stack": [
+        "20"
+      ],
+      "returnValue": "",
+      "storage": {},
+      "gasUsage": 59551
+    }
+  ]

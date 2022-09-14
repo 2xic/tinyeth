@@ -50,9 +50,9 @@ export class ReplayContractTestUtils {
           Opcodes[evm.program[previousPc]].mnemonic
         }
 
-        PC 0x${previousPc.toString(16)} and ${index} index
+        PC 0x${previousPc.toString(16)} and ${index}th state index
 
-        Gas difference ${evm.gasCost()} vs ${state.gasUsage}
+        Gas difference ${evm.gasCost()} vs ${state.gasUsage} (truth)
         `);
       }
 

@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { roundToClosest32 } from '../utils/roundToClosest32';
 import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 
 // TODO: should be restricted to 32 bit size
@@ -27,17 +28,22 @@ export class EvmMemory {
     return this.memory.slice(offset, readMax);
   }
 
+  public write32(offset: number, value: Buffer) {
+    this.expand(offset + value.length);
+    for (let i = 0; i < value.length; i++) {
+      this.write(offset + i, value[i]);
+    }
+  }
+
   public write(offset: number, value: number) {
     this.expand(offset);
     this.memory[offset] = value;
   }
 
   private expand(offset: number) {
-    while (this.memory.length <= offset) {
-      const delta = 32 + (offset % 32 == 0 ? 0 : 32);
-      if (this.memory.length <= offset) {
-        this.memory = Buffer.concat([this.memory, Buffer.alloc(delta, 0)]);
-      }
+    if (this.memory.length <= offset) {
+      const delta = roundToClosest32(offset - this.memory.length);
+      this.memory = Buffer.concat([this.memory, Buffer.alloc(delta, 0)]);
     }
   }
 

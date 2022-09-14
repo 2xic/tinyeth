@@ -6,6 +6,7 @@ import { getBufferFromHex } from '../../utils';
 import { ExposedEvm } from '../ExposedEvm';
 import { ReplayContractTestUtils } from './ReplayContractTestUtils';
 import path from 'path';
+import { MnemonicParser } from '../MnemonicParser';
 
 describe('EvmReplay', () => {
   const sender = new Address();
@@ -29,5 +30,41 @@ describe('EvmReplay', () => {
       },
     });
     await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-1.json'), {});
+  });
+
+  it.skip('should correctly replay the second replay file', async () => {
+    const contract = new MnemonicParser().parse({
+      script: `
+      
+      // Creates a constructor that creates a contract with 32 FF as code
+      PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      PUSH1 0
+      MSTORE
+      PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+      PUSH1 32
+      MSTORE
+      
+      // Create the contract with the constructor code above
+      PUSH1 41
+      PUSH1 0
+      PUSH1 0
+      CREATE // Puts the new contract address on the stack
+      
+      // The address is on the stack, we can query the size
+      EXTCODESIZE 
+      `
+    })
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
+        value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
+        data: Buffer.alloc(0),
+      },
+    });
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-2.json'), {});
   });
 });

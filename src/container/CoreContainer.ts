@@ -186,6 +186,8 @@ export class CoreContainer {
     container.bind(EvmProgram).toSelf();
     container.bind(EvmByteCodeMacros).toSelf();
 
+    container.bind(Container).toConstantValue(container);
+
     return container;
   }
 }

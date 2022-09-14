@@ -131,11 +131,13 @@ export class AstToByteCode {
   }) {
     /*
         - This should be more strict
-          - view = no change to change
+          - View = no change to change
           - Pure = no interaction with state
           - Payable = allow state changes
           - Support custom modifiers.
         TODO: Reflect maybe this (^) should instead be in the parser ? 
+              Like, I think we could add a syntax validator to the AST, and it would
+              probably be easier.
       */
     if (child instanceof FunctionInputVariables) {
       variableTable.add({
