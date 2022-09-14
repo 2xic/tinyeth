@@ -6,9 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2     # checkout the repo
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
       - run: npm ci                   # install packages
       - run: npm test                 # run tests (configured to use jest-junit reporter)
-
       - name: Test Report
         uses: phoenix-actions/test-reporting@v8
         id: test-report               # Set ID reference for step
