@@ -35,10 +35,11 @@ export class ReplayContractTestUtils {
           Previous pc 0x${previousPc.toString(16)} vs 0x${
             fileData[index - 1].pc
           }
-          Previous opcode ${
-            Opcodes[evm.program[previousPc]].mnemonic
+          Previous opcode ${Opcodes[evm.program[previousPc]].mnemonic} vs  ${
+            Opcodes[evm.program[parseInt(state.pc, 16)]].mnemonic
           } and ${index} index
 
+          
           is evm running ? ${evm.isRunning}
           `
         );
@@ -49,7 +50,8 @@ export class ReplayContractTestUtils {
         Error in gas computation at previous opcode ${
           Opcodes[evm.program[previousPc]].mnemonic
         }
-
+        vs  ${Opcodes[evm.program[parseInt(state.pc, 16)]].mnemonic}
+         
         PC 0x${previousPc.toString(16)} and ${index}th state index
 
         Gas difference ${evm.gasCost()} vs ${state.gasUsage} (truth)
@@ -99,6 +101,10 @@ export class ReplayContractTestUtils {
     let stackError = evm.stack.length !== stateStack.length;
 
     for (let i = 0; i < evm.stack.length && !stackError; i++) {
+      if (stateStack[i] === '<32>') {
+        continue;
+      }
+
       stackError = evm.stack.get(i).toNumber() !== parseInt(stateStack[i], 16);
       if (stackError) {
         break;

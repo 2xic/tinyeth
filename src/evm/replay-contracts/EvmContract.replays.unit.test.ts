@@ -32,12 +32,39 @@ describe('EvmReplay', () => {
     await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-1.json'), {});
   });
 
-  it.skip('should correctly replay the second replay file', async () => {
+  it('should correctly replay the second replay file minor contract', async () => {
+    const contract = new MnemonicParser().parse({
+      script: `
+        PUSH32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        PUSH1 0x00
+        MSTORE	
+        PUSH1 0x20
+        PUSH1 0x00	
+        RETURN
+      `
+    })
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
+        value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
+        data: Buffer.alloc(0),
+      },
+    });
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-2-deployment.json'), {});
+    evm.execute();
+    expect(evm.gasCost()).toBe(21018);
+  })
+
+  it('should correctly replay the second replay file', async () => {
     const contract = new MnemonicParser().parse({
       script: `
       
       // Creates a constructor that creates a contract with 32 FF as code
-      PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      PUSH32 07FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       PUSH1 0
       MSTORE
       PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
@@ -54,7 +81,7 @@ describe('EvmReplay', () => {
       EXTCODESIZE 
       `
     })
-    const evm = getClassFromTestContainer(ExposedEvm).boot({
+    const evm = getClassFromTestContainer(ExposedEvm, {loggingEnabled: true}).boot({
       program: contract,
       context: {
         nonce: 1,
@@ -66,5 +93,77 @@ describe('EvmReplay', () => {
       },
     });
     await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-2.json'), {});
+  });
+
+
+  it('should correctly replay the third replay file', async () => {
+    const contract = new MnemonicParser().parse({
+      script: `
+        // Creates a constructor that creates a contract wich returns 32 FF
+        PUSH32 0x7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        PUSH1 0
+        MSTORE
+        PUSH32 0xFF6000527FFF60005260206000F3000000000000000000000000000000000000
+        PUSH1 32
+        MSTORE
+        PUSH32 0x000000000060205260296000F300000000000000000000000000000000000000
+        PUSH1 64
+        MSTORE
+
+        // Create the contract with the constructor code above
+        PUSH1 77
+        PUSH1 0
+        PUSH1 0
+        CREATE // Puts the new contract address on the stack
+
+        // Call the deployed contract
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP5
+        PUSH4 0xFFFFFFFF
+        STATICCALL
+
+        // Clear the stack
+        POP
+        POP
+
+        // Clear the memory
+        PUSH1 0
+        PUSH1 0
+        MSTORE
+        PUSH1 0
+        PUSH1 32
+        MSTORE
+        PUSH1 0
+        PUSH1 64
+        MSTORE
+
+        // Example 1
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        RETURNDATACOPY
+
+        // Example 2
+        PUSH1 1
+        PUSH1 31
+        PUSH1 32
+        RETURNDATACOPY
+      `
+    })
+    const evm = getClassFromTestContainer(ExposedEvm, {loggingEnabled: true}).boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
+        value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
+        data: Buffer.alloc(0),
+      },
+    });
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-3.json'), {});
   });
 });

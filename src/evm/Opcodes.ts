@@ -414,7 +414,7 @@ export const Opcodes: Record<number, OpCode> = {
           .padEnd(64, '0'),
         16
       );
-      console.log(value.toString(16));
+
       stack.push(value);
     },
     gasCost: () => 3,
@@ -507,9 +507,11 @@ export const Opcodes: Record<number, OpCode> = {
       const contract = network.get(new Address(stackItem));
       stack.push(new BigNumber(contract.length));
 
+      const computedGas = gasComputer.account({ address: stackItem }).gasCost;
+
       return {
         setPc: false,
-        computedGas: gasComputer.account({ address: stackItem }).gasCost,
+        computedGas,
       };
     },
     gasCost: () => 0,
@@ -746,7 +748,9 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, memory }) => {
       const offset = stack.pop();
-      const value = stack.pop().toString(16).slice(-2);
+      let value: any = stack.pop();
+
+      value = value.toString(16).slice(-2);
       memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
     },
     // TODO this is dynamic
@@ -1090,6 +1094,7 @@ export const Opcodes: Record<number, OpCode> = {
             argsSize,
             retOffset,
             retSize,
+            copy: true,
           },
         });
 
@@ -1169,8 +1174,14 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'STATICCALL',
     arguments: 1,
     // TODO this is dynamic
-    gasCost: () => 2,
-    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
+    gasCost: () => 0,
+    onExecute: async ({
+      stack,
+      evmSubContextCall,
+      evm,
+      evmContext,
+      gasComputer,
+    }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const argsOffset = stack.pop();
@@ -1179,7 +1190,9 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      await evmSubContextCall.createSubContext({
+      let computedGas = 0;
+
+      const { gasCost } = await evmSubContextCall.createSubContext({
         evmContext,
         optionsSubContext: {
           gas,
@@ -1188,8 +1201,41 @@ export const Opcodes: Record<number, OpCode> = {
           argsSize,
           retOffset,
           retSize,
+          copy: true,
         },
       });
+
+      computedGas = computedGas;
+      /*
+        gasComputer.call({
+          value: new BigNumber(0),
+          address,
+        }).gasCost +
+        computedGas +
+        gasCost +
+        gasComputer.memoryExpansion({
+          address: retOffset.plus(retSize),
+        }).gasCost +
+        gasComputer.memoryExpansion({
+          address: argsOffset.plus(argsSize),
+        }).gasCost;*/
+
+      const remainingGas = evm.gasCost() - 700;
+      const allBut64 = remainingGas - Math.floor(remainingGas / 64);
+      const gasSentWithCall = Math.min(gas.toNumber(), allBut64);
+
+      if (computedGas > gasSentWithCall) {
+        throw new Error('Too much gas');
+      }
+
+      gasComputer.warmAddress({
+        address,
+      });
+
+      return {
+        computedGas,
+        setPc: false,
+      };
     },
   }),
   0xfd: new OpCode({

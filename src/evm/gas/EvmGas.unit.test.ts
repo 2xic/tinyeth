@@ -6,6 +6,7 @@ import { MnemonicParser } from '../MnemonicParser';
 import { Wei } from '../eth-units/Wei';
 import { getBufferFromHex } from '../../utils';
 import { ExposedEvm } from '../ExposedEvm';
+import exp from 'constants';
 
 describe('EvmGas', () => {
   const sender = new Address();
@@ -63,6 +64,8 @@ describe('EvmGas', () => {
           },
         })
         .execute();
+      expect(evm.gasCost()).toBe(43126)
+
       // memory is on now hot!
       evm
         .boot({

@@ -1404,10 +1404,7 @@ describe('evm.codes', () => {
         EXTCODESIZE  
       `,
       gasCost: 59551,
-      stack: [20],
-      validation: () => {
-        throw new Error('');
-      },
+      stack: [0x20],
     },
     {
       name: 'EXTCODECOPY',
@@ -1659,15 +1656,22 @@ describe('evm.codes', () => {
           },
         })
         .execute();
+      console.log(contract)
+      console.log(evm.pc)
+      console.log(evm.memory.raw.toString('hex'))
+
       if (options.gasCost !== null) {
         expect(evm.totalGasCost).toBe(options.gasCost);
       }
+
       if (options.memory) {
         expect(evm.memory.raw.toString('hex')).toBe(options.memory);
       }
+
       if (options.stack) {
         expect(evm.stack.toString()).toBe(options.stack.toString());
       }
+
       if (options.validation) {
         options.validation(evm);
       }

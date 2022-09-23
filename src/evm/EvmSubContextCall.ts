@@ -1,12 +1,17 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { getClassFromTestContainer } from '../container/getClassFromTestContainer';
+import {
+  getClassFromTestContainer,
+  getFreshContainer,
+} from '../container/getClassFromTestContainer';
 import { Address } from './Address';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
 import { TxContext } from './Evm';
 import { EvmContext, InterfaceEvm } from './interfaceEvm';
 import { Wei } from './eth-units/Wei';
+import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
+import { EvmMemory } from './EvmMemory';
 
 @injectable()
 export class EvmSubContextCall {
@@ -35,6 +40,7 @@ export class EvmSubContextCall {
         sender: context.sender,
         gasLimit: context.gasLimit,
       },
+      copy: optionsSubContext.copy,
     });
 
     try {
@@ -71,18 +77,26 @@ export class EvmSubContextCall {
     evmContext,
     txContext,
     isFork = true,
+    copy = false,
   }: {
     evmContext: EvmContext;
     txContext: TxContext;
     isFork?: boolean;
+    copy?: boolean;
   }): ForkedEvm {
-    const evm = getClassFromTestContainer(InterfaceEvm);
-    evmContext.memory.raw.forEach((item, index) => {
-      evm.memory.write(index, item);
+    const freshContainer = getFreshContainer({
+      loggingEnabled: true,
     });
-    evmContext.storage.forEach((key, value) => {
-      evm.storage.write({ key, value });
-    });
+    const evm = freshContainer.get(InterfaceEvm);
+
+    if (copy) {
+      evmContext.memory.raw.forEach((item, index) => {
+        evm.memory.write(index, item);
+      });
+      evmContext.storage.forEach((key, value) => {
+        evm.storage.write({ key, value });
+      });
+    }
 
     return {
       executor: async ({ program }: { program: Buffer }) => {
@@ -92,7 +106,7 @@ export class EvmSubContextCall {
             isSubContext: true,
             program,
             context: {
-              value: txContext.value,
+              value: new Wei(new BigNumber(0)), // txContext.value,
               data: txContext.data,
               nonce: 0,
               // Root
@@ -100,7 +114,7 @@ export class EvmSubContextCall {
               sender: evmContext.context.sender,
               gasLimit: evmContext.context.gasLimit,
             },
-            options: { debug: false },
+            options: { debug: true },
           })
           .execute();
 
@@ -124,4 +138,5 @@ interface SubContext {
   argsSize: BigNumber;
   retOffset: BigNumber;
   retSize: BigNumber;
+  copy?: boolean;
 }

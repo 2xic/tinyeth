@@ -77,8 +77,6 @@ export class Evm implements InterfaceEvm {
     this._gasLeft = context.gasLimit.minus(this._gasCost);
     this.resetPc();
 
-    this.logger.log(JSON.stringify(context));
-
     return this;
   }
 
@@ -102,7 +100,9 @@ export class Evm implements InterfaceEvm {
     }
 
     const { opcode, opcodeNumber } = this.loadOpcode();
-    this.logger.log(`Running ${Opcodes[opcodeNumber].mnemonic}`);
+    const prevGas = this.gasCost();
+    console.log(`Running ${Opcodes[opcodeNumber].mnemonic}`);
+
     const evmContext: EvmContext = {
       evm: this,
       stack: this.stack,
@@ -151,6 +151,11 @@ export class Evm implements InterfaceEvm {
     }
 
     if (this.options?.debug) {
+      console.log(
+        `${prevGas - this.gasCost()} gas used after opcode ${
+          Opcodes[opcodeNumber].mnemonic
+        }`
+      );
       this.logger.log(this.memory.raw.toString('hex') || 'empty memory');
       this.logger.log(this.stack.toString() || []);
     }

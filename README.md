@@ -66,12 +66,13 @@ _Just something so I get a better understanding of the core parts of the protoco
           - In other words no fancy optimizer.
       - https://docs.soliditylang.org/en/v0.8.15/grammar.html
       - What could be interesting is diving into static analysis of solidity programs
+        - https://arxiv.org/pdf/1908.09878.pdf
         - Or dynamic analysis, by doing some cool fuzzing ? 
         - Maybe with sat solvers also
       - This would make it easy to test things like state channels.
       - It also makes it super easy to obscure decode function calls
         - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
-
+      
   - [ ] Implement fuzzing / Symbolic execution
     - https://files.sri.inf.ethz.ch/website/papers/ccs19-ilf.pdf
 

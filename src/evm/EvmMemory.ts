@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import { roundToClosest32 } from '../utils/roundToClosest32';
-import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 
 // TODO: should be restricted to 32 bit size
 
@@ -8,7 +7,7 @@ import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
 export class EvmMemory {
   private memory!: Buffer;
 
-  constructor(private memoryAccess: MemoryExpansionGas) {
+  constructor() {
     this.memory = Buffer.alloc(0, 0);
   }
 
@@ -36,6 +35,9 @@ export class EvmMemory {
   }
 
   public write(offset: number, value: number) {
+    if (offset === 0) {
+      this.expand(32);
+    }
     this.expand(offset);
     this.memory[offset] = value;
   }

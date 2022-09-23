@@ -107,7 +107,7 @@
     {
       "memory": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60005260206000f30000000000000000000000000000000000000000000000",
       "stack": [
-        "230fc3fe9249c6f698bfefea56debde9e1de2934"
+        "<32>"
       ],
       "returnValue": "",
       "storage": {},
