@@ -1,26 +1,24 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import {
-  getClassFromTestContainer,
-  getFreshContainer,
-} from '../container/getClassFromTestContainer';
+import { getFreshContainer } from '../container/getClassFromTestContainer';
 import { Address } from './Address';
 import { Reverted } from './errors/Reverted';
 import { StackUnderflow } from './errors/StackUnderflow';
 import { TxContext } from './Evm';
 import { EvmContext, InterfaceEvm } from './interfaceEvm';
 import { Wei } from './eth-units/Wei';
-import { MemoryExpansionGas } from './gas/MemoryExpansionGas';
-import { EvmMemory } from './EvmMemory';
+import { InvalidOpcode } from './errors/InvalidOpcode';
 
 @injectable()
 export class EvmSubContextCall {
   public async createSubContext({
     evmContext,
     optionsSubContext,
+    gasLimit,
   }: {
     evmContext: EvmContext;
     optionsSubContext: SubContext;
+    gasLimit: BigNumber;
   }) {
     const { memory, stack, network, subContext, context } = evmContext;
     const { argsOffset, argsSize, value, address, retSize, retOffset } =
@@ -28,6 +26,7 @@ export class EvmSubContextCall {
 
     const data = memory.read(argsOffset.toNumber(), argsSize.toNumber());
     const contract = network.get(address);
+    let executionCost = 0;
 
     const forkedEvm = this.fork({
       evmContext,
@@ -38,7 +37,7 @@ export class EvmSubContextCall {
         nonce: 0,
         receiver: context.receiver,
         sender: context.sender,
-        gasLimit: context.gasLimit,
+        gasLimit,
       },
       copy: optionsSubContext.copy,
     });
@@ -60,16 +59,51 @@ export class EvmSubContextCall {
       } else if (!optionsSubContext.retSize.isZero()) {
         throw new Error('Expected return data in sub-context');
       }
+      executionCost = forkedEvm.evm.gasCost();
     } catch (err) {
-      if (err instanceof Reverted || err instanceof StackUnderflow) {
+      if (
+        err instanceof InvalidOpcode ||
+        err instanceof Reverted ||
+        err instanceof StackUnderflow
+      ) {
         stack.push(new BigNumber(0));
+
+        /**
+         * From https://github.com/wolflo/evm-opcodes/blob/main/gas.md
+         * On execution of any invalid operation, whether the designated INVALID opcode or simply an undefined opcode, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
+         */
+        if (err instanceof InvalidOpcode) {
+          executionCost = gasLimit.toNumber();
+        } else {
+          executionCost = forkedEvm.evm.gasCost();
+        }
       } else {
         throw err;
       }
     }
 
+    const { gasCost: callCost } = evmContext.gasComputer.call({
+      value: new BigNumber(0),
+      address,
+    });
+    const memoryExpansionCost =
+      evmContext.gasComputer.memoryExpansion({
+        address: retOffset.plus(retSize),
+      }).gasCost +
+      evmContext.gasComputer.memoryExpansion({
+        address: argsOffset.plus(argsSize),
+      }).gasCost;
+
+    const gasCost = callCost + executionCost + memoryExpansionCost;
+
+    console.log({
+      callCost,
+      executionCost,
+      memoryExpansionCost,
+    });
+
     return {
-      gasCost: forkedEvm.evm.gasCost(),
+      gasCost,
     };
   }
 
@@ -84,9 +118,7 @@ export class EvmSubContextCall {
     isFork?: boolean;
     copy?: boolean;
   }): ForkedEvm {
-    const freshContainer = getFreshContainer({
-      loggingEnabled: true,
-    });
+    const freshContainer = getFreshContainer();
     const evm = freshContainer.get(InterfaceEvm);
 
     if (copy) {

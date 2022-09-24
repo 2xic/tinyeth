@@ -30,7 +30,9 @@ export class ReplayContractTestUtils {
       if (!isFinished && evm.pc !== parseInt(state.pc, 16)) {
         throw new Error(
           `
-          Error in pc location 0x${evm.pc.toString(16)} vs 0x${state.pc}. 
+          Error in pc location 0x${evm.pc.toString(16)} vs 0x${
+            state.pc
+          } (truth). 
           \n
           Previous pc 0x${previousPc.toString(16)} vs 0x${
             fileData[index - 1].pc

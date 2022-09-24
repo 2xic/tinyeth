@@ -59,12 +59,12 @@ describe('EvmReplay', () => {
     expect(evm.gasCost()).toBe(21018);
   })
 
-  it('should correctly replay the second replay file', async () => {
+  it('should correctly replay the main second replay file', async () => {
     const contract = new MnemonicParser().parse({
       script: `
       
       // Creates a constructor that creates a contract with 32 FF as code
-      PUSH32 07FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       PUSH1 0
       MSTORE
       PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
@@ -81,7 +81,7 @@ describe('EvmReplay', () => {
       EXTCODESIZE 
       `
     })
-    const evm = getClassFromTestContainer(ExposedEvm, {loggingEnabled: true}).boot({
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
         nonce: 1,
@@ -96,7 +96,7 @@ describe('EvmReplay', () => {
   });
 
 
-  it('should correctly replay the third replay file', async () => {
+  it('should correctly replay the third replay file (STATICCALL)', async () => {
     const contract = new MnemonicParser().parse({
       script: `
         // Creates a constructor that creates a contract wich returns 32 FF
@@ -153,7 +153,7 @@ describe('EvmReplay', () => {
         RETURNDATACOPY
       `
     })
-    const evm = getClassFromTestContainer(ExposedEvm, {loggingEnabled: true}).boot({
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
         nonce: 1,
@@ -165,5 +165,108 @@ describe('EvmReplay', () => {
       },
     });
     await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-3.json'), {});
+  });
+
+
+  it('should correctly replay the forth replay file (DELEGATECALL)', async () => {
+    const contract = new MnemonicParser().parse({
+      script: `
+        // Create a contract that creates an exception if first slot of storage is 0
+        PUSH17 0x67600054600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+        
+        // Call with storage slot 0 = 0, returns 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP5
+        PUSH2 0xFFFF
+        DELEGATECALL
+        
+        // Set first slot in the current contract
+        PUSH1 1
+        PUSH1 0
+        SSTORE
+        
+        // Call with storage slot 0 != 0, returns 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 32
+        PUSH1 0
+        DUP6
+        PUSH2 0xFFFF
+        DELEGATECALL
+      `
+    })
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
+        value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
+        data: Buffer.alloc(0),
+      },
+    });
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-4.json'), {});
+  });
+
+  it('should correctly replay the fifth replay file (CALLCODE)', async () => {
+    const contract = new MnemonicParser().parse({
+      script: `
+        // Create a contract that creates an exception if first slot of storage is 0
+        PUSH17 0x67600054600757FE5B60005260086018F3
+        PUSH1 0
+        MSTORE
+        PUSH1 17
+        PUSH1 15
+        PUSH1 0
+        CREATE
+        
+        // Call with storage slot 0 = 0, returns 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        PUSH1 0
+        DUP6
+        PUSH2 0xFFFF
+        CALLCODE
+        
+        // Set first slot in the current contract
+        PUSH1 1
+        PUSH1 0
+        SSTORE
+        
+        // Call with storage slot 0 != 0, returns 1
+        PUSH1 0
+        PUSH1 0
+        PUSH1 32
+        PUSH1 0
+        PUSH1 0
+        DUP7
+        PUSH2 0xFFFF
+        CALLCODE
+      `
+    })
+    const evm = getClassFromTestContainer(ExposedEvm).boot({
+      program: contract,
+      context: {
+        nonce: 1,
+        gasLimit,
+        sender: new Address('0xbe862ad9abfe6f22bcb087716c7d89a26051f74c'),
+        value: new Wei(new BigNumber(0)),
+        receiver: new Address(),
+        data: Buffer.alloc(0),
+      },
+    });
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-5.json'), {});
   });
 });

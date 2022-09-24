@@ -1577,59 +1577,6 @@ describe('evm.codes', () => {
         '00000000000000000000000000000067600054600757fe5b60005260086018f3',
       stack: null,
     },
-    {
-      name: 'CALLCODE',
-      script: `
-        // Create a contract that creates an exception if first slot of storage is 0
-        PUSH17 0x67600054600757FE5B60005260086018F3
-        PUSH1 0
-        MSTORE
-        PUSH1 17
-        PUSH1 15
-        PUSH1 0
-        CREATE
-        
-        // Call with storage slot 0 = 0, returns 0
-        PUSH1 0
-        PUSH1 0
-        PUSH1 0
-        PUSH1 0
-        PUSH1 0
-        DUP6
-        PUSH2 0xFFFF
-        CALLCODE
-        
-        // Set first slot in the current contract
-        PUSH1 1
-        PUSH1 0
-        SSTORE
-        
-        // Call with storage slot 0 != 0, returns 1
-        PUSH1 0
-        PUSH1 0
-        PUSH1 32
-        PUSH1 0
-        PUSH1 0
-        DUP7
-        PUSH2 0xFFFF
-        CALLCODE
-      `,
-      gasCost: null,
-      memory:
-        '00000000000000000000000000000067600054600757fe5b60005260086018f3',
-      stack: null,
-      validation: (evm) => {
-        const stack = evm.stack;
-        const network = evm.network;
-        expect(stack.pop().isEqualTo(1)).toBe(true);
-        expect(stack.pop().isEqualTo(0)).toBe(true);
-        const contract = !!network.contracts.find(
-          (item) =>
-            item.address.toString() === new Address(evm.stack.pop()).toString()
-        );
-        expect(contract).toBe(true);
-      },
-    },
   ];
 
   const singleCase: EvmTestCaseOptions[] = evmTestCases.filter(
@@ -1656,9 +1603,6 @@ describe('evm.codes', () => {
           },
         })
         .execute();
-      console.log(contract)
-      console.log(evm.pc)
-      console.log(evm.memory.raw.toString('hex'))
 
       if (options.gasCost !== null) {
         expect(evm.totalGasCost).toBe(options.gasCost);

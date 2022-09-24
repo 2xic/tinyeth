@@ -51,7 +51,7 @@ describe('EvmGas', () => {
                 SSTORE
             `,
       });
-      const evm = await getClassFromTestContainer(Evm)
+      const evm = await getClassFromTestContainer(Evm, { loggingEnabled: true })
         .boot({
           program: contract,
           context: {
@@ -67,7 +67,7 @@ describe('EvmGas', () => {
       expect(evm.gasCost()).toBe(43126)
 
       // memory is on now hot!
-      evm
+      await evm
         .boot({
           program: contract,
           context: {
@@ -80,7 +80,7 @@ describe('EvmGas', () => {
           },
         })
         .execute();
-      expect(evm.totalGasCost).toBe(23226);
+      expect(evm.gasCost()).toBe(23226);
     });
   });
 

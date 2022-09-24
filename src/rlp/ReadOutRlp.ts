@@ -97,6 +97,9 @@ export class ReadOutRlp {
         ) as unknown as T;
       } else if ((item as any).toString().startsWith('0x')) {
         return parseInt(item as unknown as string, 16) as unknown as T;
+      } else if (typeof item === 'string') {
+        const hexString = Buffer.from(item).toString('hex');
+        return parseInt(hexString, 16) as unknown as T;
       }
     }
     return item;

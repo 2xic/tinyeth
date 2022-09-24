@@ -101,7 +101,11 @@ export class Evm implements InterfaceEvm {
 
     const { opcode, opcodeNumber } = this.loadOpcode();
     const prevGas = this.gasCost();
-    console.log(`Running ${Opcodes[opcodeNumber].mnemonic}`);
+    this.logger.log(
+      `Running ${Opcodes[opcodeNumber].mnemonic} (pc: 0x${this.pc.toString(
+        16
+      )})`
+    );
 
     const evmContext: EvmContext = {
       evm: this,
@@ -151,8 +155,10 @@ export class Evm implements InterfaceEvm {
     }
 
     if (this.options?.debug) {
-      console.log(
-        `${prevGas - this.gasCost()} gas used after opcode ${
+      this.logger.log(
+        `${
+          this.gasCost() - prevGas
+        } (${this.gasCost()}) gas used after opcode ${
           Opcodes[opcodeNumber].mnemonic
         }`
       );

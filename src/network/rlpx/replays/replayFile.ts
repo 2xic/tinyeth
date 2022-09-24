@@ -14,18 +14,15 @@ import { MessageQueue } from '../MessageQueue';
 export async function replayFile({
   filePath,
   debug,
-  loggingEnabled,
 }: {
   filePath: string;
   debug?: boolean;
-  loggingEnabled?: boolean;
 }) {
   const container = new UnitTestContainer().create({
     privateKey:
       '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
     ephemeralPrivateKey:
       '0a04fa0107c51d2b9fa4504e220537f1a3aaf287cfcd5a66b8c2c8272fd8029a',
-    loggingEnabled: loggingEnabled,
   });
   const node = container.get(CommunicationState) as DebugCommunicationState;
   const logger = container.get(Logger);

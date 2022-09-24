@@ -8,8 +8,9 @@ import { ExposedFrameCommunication } from '../network/auth/frameing/ExposedFrame
 import { ReplayContractTestUtils } from '../evm';
 
 export class UnitTestContainer extends CoreContainer {
-  public create(options?: ContainerOptions) {
-    const container = super.create(options);
+  public create(options?: Omit<ContainerOptions, 'loggingEnabled'>) {
+    const loggingEnabled = !!process.env.LOGGING_ENABLED;
+    const container = super.create({ ...options, loggingEnabled });
 
     container.bind(AbstractSocket).to(MockSocket);
     container.bind(NonceGenerator).to(MockNonceGenerator);

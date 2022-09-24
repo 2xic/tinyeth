@@ -11,7 +11,10 @@ import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariab
 import { Reverted } from './errors/Reverted';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
+import { EvmNumberHandler } from './EvmNumberHandler';
+import { computeGasSentWithCall } from './gas/computeGasSentWithCall';
 import { wordSize } from './gas/wordSize';
+import { getBigNumberFromBoolean } from './getBigNumberFromBoolean';
 import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
@@ -67,9 +70,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'DIV',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(Math.floor(a / b)));
+      const a = new EvmNumberHandler(stack.pop());
+      const b = new EvmNumberHandler(stack.pop());
+      stack.push(a.divideFloor(b));
     },
     gasCost: 5,
   }),
@@ -77,9 +80,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'SDIV',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(Math.floor(a / b)));
+      const a = new EvmNumberHandler(stack.pop());
+      const b = new EvmNumberHandler(stack.pop());
+      stack.push(a.divideFloor(b));
     },
     gasCost: 5,
   }),
@@ -87,9 +90,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'MOD',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(a % b));
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(new BigNumber(a).modulo(b));
     },
     gasCost: 5,
   }),
@@ -112,10 +115,10 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop();
       const b = stack.pop();
-      const c = stack.pop().toNumber();
+      const c = stack.pop();
       const newLocal = a.plus(b).modulo(new BigNumber(2).pow(256));
 
-      stack.push(new BigNumber(newLocal.toNumber() % c));
+      stack.push(new BigNumber(newLocal).modulo(c));
     },
     gasCost: 8,
   }),
@@ -136,9 +139,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'EXP',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-      stack.push(new BigNumber(Math.pow(a, b)));
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(new BigNumber(a).pow(b));
 
       return {
         setPc: false,
@@ -153,7 +156,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop();
       const b = stack.pop();
-      stack.push(new BigNumber(Number(a.isLessThan(b))));
+      stack.push(getBigNumberFromBoolean(a.isLessThan(b)));
     },
     gasCost: 3,
   }),
@@ -163,7 +166,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = stack.pop();
       const b = stack.pop();
-      stack.push(new BigNumber(Number(a.isGreaterThan(b))));
+      stack.push(getBigNumberFromBoolean(a.isGreaterThan(b)));
     },
     gasCost: 3,
   }),
@@ -174,7 +177,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = new SignedUnsignedNumberConverter().parse(stack.pop());
       const b = new SignedUnsignedNumberConverter().parse(stack.pop());
-      stack.push(new BigNumber(Number(a.isLessThan(b))));
+      stack.push(getBigNumberFromBoolean(a.isLessThan(b)));
     },
   }),
   0x13: new OpCode({
@@ -184,17 +187,16 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack }) => {
       const a = new SignedUnsignedNumberConverter().parse(stack.pop());
       const b = new SignedUnsignedNumberConverter().parse(stack.pop());
-      stack.push(new BigNumber(Number(a.isGreaterThan(b))));
+      stack.push(getBigNumberFromBoolean(a.isGreaterThan(b)));
     },
   }),
   0x14: new OpCode({
     name: 'EQ',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-      const b = stack.pop().toNumber();
-
-      stack.push(new BigNumber(Number(a === b)));
+      const a = stack.pop();
+      const b = stack.pop();
+      stack.push(getBigNumberFromBoolean(a.isEqualTo(b)));
     },
     gasCost: 3,
   }),
@@ -202,9 +204,7 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'ISZERO',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = stack.pop().toNumber();
-
-      stack.push(new BigNumber(Number(a === 0)));
+      stack.push(getBigNumberFromBoolean(stack.pop().isZero()));
     },
     gasCost: 3,
   }),
@@ -213,12 +213,9 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
-      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const and = BigInt(a.toString()) & BigInt(b.toString());
-      const results = new SignedUnsignedNumberConverter().convert(
-        new BigNumber(and.toString())
-      );
+      const a = new EvmNumberHandler(stack.pop());
+      const b = new EvmNumberHandler(stack.pop());
+      const results = a.and(b);
       stack.push(results);
     },
   }),
@@ -227,12 +224,9 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
-      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const or = BigInt(a.toString()) | BigInt(b.toString());
-      const results = new SignedUnsignedNumberConverter().convert(
-        new BigNumber(or.toString())
-      );
+      const a = new EvmNumberHandler(stack.pop());
+      const b = new EvmNumberHandler(stack.pop());
+      const results = a.or(b);
       stack.push(results);
     },
   }),
@@ -240,12 +234,9 @@ export const Opcodes: Record<number, OpCode> = {
     name: 'XOR',
     arguments: 1,
     onExecute: ({ stack }) => {
-      const a = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const b = new SignedUnsignedNumberConverter().parse(stack.pop());
-      const xor = BigInt(a.toString()) ^ BigInt(b.toString());
-      const results = new SignedUnsignedNumberConverter().convert(
-        new BigNumber(xor.toString())
-      );
+      const a = new EvmNumberHandler(stack.pop());
+      const b = new EvmNumberHandler(stack.pop());
+      const results = a.xor(b);
       stack.push(results);
     },
     gasCost: 3,
@@ -748,9 +739,7 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     onExecute: ({ stack, memory }) => {
       const offset = stack.pop();
-      let value: any = stack.pop();
-
-      value = value.toString(16).slice(-2);
+      const value = stack.pop().toString(16).slice(-2);
       memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
     },
     // TODO this is dynamic
@@ -770,7 +759,7 @@ export const Opcodes: Record<number, OpCode> = {
   0x55: new OpCode({
     name: 'SSTORE',
     arguments: 1,
-    onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
+    onExecute: ({ stack, gasComputer, storage, evm }): ExecutionResults => {
       const key = stack.pop();
       const value = stack.pop();
       const gas = gasComputer.sstore({
@@ -785,7 +774,7 @@ export const Opcodes: Record<number, OpCode> = {
       return {
         setPc: false,
         // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
-        computedGas: gas.gasCost - gas.gasRefund,
+        computedGas: gas.gasCost, // - gas.gasRefund,
       };
     },
     gasCost: () => 0,
@@ -1000,6 +989,7 @@ export const Opcodes: Record<number, OpCode> = {
 
       await evmSubContextCall.createSubContext({
         evmContext,
+        gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
           gas,
           address,
@@ -1027,8 +1017,9 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
-      await evmSubContextCall.createSubContext({
+      const { gasCost } = await evmSubContextCall.createSubContext({
         evmContext,
+        gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
           gas,
           address,
@@ -1039,6 +1030,11 @@ export const Opcodes: Record<number, OpCode> = {
           retSize,
         },
       });
+
+      return {
+        computedGas: gasCost,
+        setPc: false,
+      };
     },
   }),
   0xf3: new OpCode({
@@ -1085,8 +1081,18 @@ export const Opcodes: Record<number, OpCode> = {
       let computedGas = 0;
 
       if (!gas.isZero()) {
+        const gasSentWithCall = computeGasSentWithCall({
+          gas2Send: gas,
+          usedGas: evm.gasCost(),
+        });
+
+        if (computedGas > gasSentWithCall) {
+          throw new Error('Too much gas');
+        }
+
         const { gasCost } = await evmSubContextCall.createSubContext({
           evmContext,
+          gasLimit: new BigNumber(gasSentWithCall),
           optionsSubContext: {
             gas,
             address,
@@ -1094,31 +1100,11 @@ export const Opcodes: Record<number, OpCode> = {
             argsSize,
             retOffset,
             retSize,
-            copy: true,
+            copy: false,
           },
         });
 
-        computedGas =
-          gasComputer.call({
-            value: new BigNumber(0),
-            address,
-          }).gasCost +
-          computedGas +
-          gasCost +
-          gasComputer.memoryExpansion({
-            address: retOffset.plus(retSize),
-          }).gasCost +
-          gasComputer.memoryExpansion({
-            address: argsOffset.plus(argsSize),
-          }).gasCost;
-
-        const remainingGas = evm.gasCost() - 700;
-        const allBut64 = remainingGas - Math.floor(remainingGas / 64);
-        const gasSentWithCall = Math.min(gas.toNumber(), allBut64);
-
-        if (computedGas > gasSentWithCall) {
-          throw new Error('Too much gas');
-        }
+        computedGas = gasCost;
 
         gasComputer.warmAddress({
           address,
@@ -1192,8 +1178,14 @@ export const Opcodes: Record<number, OpCode> = {
 
       let computedGas = 0;
 
+      const gasSentWithCall = computeGasSentWithCall({
+        gas2Send: gas,
+        usedGas: evm.gasCost(),
+      });
+
       const { gasCost } = await evmSubContextCall.createSubContext({
         evmContext,
+        gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
           gas,
           address,
@@ -1205,25 +1197,6 @@ export const Opcodes: Record<number, OpCode> = {
         },
       });
 
-      computedGas = computedGas;
-      /*
-        gasComputer.call({
-          value: new BigNumber(0),
-          address,
-        }).gasCost +
-        computedGas +
-        gasCost +
-        gasComputer.memoryExpansion({
-          address: retOffset.plus(retSize),
-        }).gasCost +
-        gasComputer.memoryExpansion({
-          address: argsOffset.plus(argsSize),
-        }).gasCost;*/
-
-      const remainingGas = evm.gasCost() - 700;
-      const allBut64 = remainingGas - Math.floor(remainingGas / 64);
-      const gasSentWithCall = Math.min(gas.toNumber(), allBut64);
-
       if (computedGas > gasSentWithCall) {
         throw new Error('Too much gas');
       }
@@ -1231,6 +1204,8 @@ export const Opcodes: Record<number, OpCode> = {
       gasComputer.warmAddress({
         address,
       });
+
+      computedGas = gasCost;
 
       return {
         computedGas,
