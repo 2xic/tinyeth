@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { GasComputeResults } from './GasComputer';
+import { GasKeys } from './GasKeys';
 import { wordSize } from './wordSize';
 
 @injectable()
@@ -8,6 +9,7 @@ export class MemoryExpansionGas {
   private highestReferencedAddress: BigNumber = new BigNumber(0);
 
   public compute({ address }: MemoryExpansionContext): GasComputeResults {
+    const name = GasKeys.MEMORY;
     if (address.isGreaterThan(this.highestReferencedAddress)) {
       const newWordSize = wordSize({ address });
 
@@ -25,12 +27,14 @@ export class MemoryExpansionGas {
       return {
         gasCost,
         gasRefund: 0,
+        name,
       };
     }
 
     return {
       gasCost: 0,
       gasRefund: 0,
+      name,
     };
   }
 

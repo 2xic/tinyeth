@@ -16,6 +16,7 @@
 - https://medium.com/@chiqing/merkle-patricia-trie-explained-ae3ac6a7e123
 - https://eth.wiki/fundamentals/patricia-tree
 - https://medium.com/codechain/modified-merkle-patricia-trie-how-ethereum-saves-a-state-e6d7555078dd
-
+- https://github.com/norswap/nanoeth/blob/cc5d94a349c90627024f3cd629a2d830008fec72/src/com/norswap/nanoeth/trees/patricia/README.md
+  
 ## Code
 - https://github.com/ebuchman/understanding_ethereum_trie

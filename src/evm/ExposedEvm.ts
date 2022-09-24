@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import { Logger } from '../utils/Logger';
 import { Evm } from './Evm';
 import { EvmAccountState } from './EvmAccountState';
-import { EvmErrorTrace } from './EvmErrorTrace';
+import { EvmDebugger } from './EvmDebugger';
 import { EvmStorage } from './EvmStorage';
 import { EvmMemory } from './EvmMemory';
 import { EvmStack } from './EvmStack';
@@ -26,7 +26,7 @@ export class ExposedEvm extends Evm implements InterfaceEvm {
     public subContextExecutor: EvmSubContextCall,
     public evmAccountState: EvmAccountState,
     public logger: Logger,
-    public evmErrorTrace: EvmErrorTrace
+    public evmDebugger: EvmDebugger
   ) {
     super(
       stack,
@@ -38,7 +38,7 @@ export class ExposedEvm extends Evm implements InterfaceEvm {
       subContext,
       subContextExecutor,
       evmAccountState,
-      evmErrorTrace,
+      evmDebugger,
       logger
     );
   }

@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
+import { padKey32 } from '../../utils/padHexKey32';
 
 @injectable()
 export class AccessSets {
@@ -16,11 +17,17 @@ export class AccessSets {
     return !(address.toString(16) in this.touchedAddresses);
   }
 
-  public touchStorageSlot({ address, key }: { address: string; key: string }) {
+  public touchStorageSlot({
+    address,
+    key,
+  }: {
+    address: string;
+    key: BigNumber;
+  }) {
     if (!(address in this.touchedStorageSlots)) {
       this.touchedStorageSlots[address] = {};
     }
-    this.touchedStorageSlots[address][key] = true;
+    this.touchedStorageSlots[address][padKey32({ key })] = true;
   }
 
   public isColdSlot({
@@ -32,7 +39,7 @@ export class AccessSets {
   }): boolean {
     return !(
       address in this.touchedStorageSlots &&
-      key.toString(16) in this.touchedStorageSlots[address]
+      padKey32({ key }) in this.touchedStorageSlots[address]
     );
   }
 

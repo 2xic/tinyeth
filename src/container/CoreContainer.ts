@@ -55,7 +55,7 @@ import { AccountAccessGas } from '../evm/gas/AccountAccessGas';
 import { EvmSubContext } from '../evm/EvmSubContext';
 import { EvmSubContextCall } from '../evm/EvmSubContextCall';
 import { EvmAccountState } from '../evm/EvmAccountState';
-import { EvmErrorTrace } from '../evm/EvmErrorTrace';
+import { EvmDebugger } from '../evm/EvmDebugger';
 import { BlockLoader } from '../blocks/BlockLoader';
 import { NodeId } from '../network/rlpx/NodeId';
 import { SimpleRplxHelloMessageEncoder } from '../network/rlpx/packet-types/RlpxHelloMessageEncoder';
@@ -72,6 +72,7 @@ import { CallGasCompute } from '../evm/gas/CallGasCompute';
 import { Evm } from '../evm/Evm';
 import { ExposedEvm } from '../evm/ExposedEvm';
 import { InterfaceEvm } from '../evm/interfaceEvm';
+import { BaseGasComputer } from '../evm/gas/BaseGasComputer';
 
 export class CoreContainer {
   protected create(options?: ContainerOptions) {
@@ -164,6 +165,7 @@ export class CoreContainer {
     container.bind(Network).toSelf();
     container.bind(EvmMemory).toSelf();
     container.bind(GasComputer).toSelf();
+    container.bind(BaseGasComputer).toSelf();
     container.bind(ComputeSstoreGas).toSelf();
     container.bind(AccessSets).toSelf();
     container.bind(EvmStorage).toSelf();
@@ -172,7 +174,7 @@ export class CoreContainer {
     container.bind(EvmSubContextCall).toSelf();
     container.bind(EvmSubContext).toSelf();
     container.bind(EvmAccountState).toSelf();
-    container.bind(EvmErrorTrace).toSelf();
+    container.bind(EvmDebugger).toSelf();
     container.bind(CallGasCompute).toSelf();
 
     container.bind(Logger).toSelf();

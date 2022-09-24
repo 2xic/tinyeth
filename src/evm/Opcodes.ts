@@ -9,6 +9,7 @@ import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
 import { Reverted } from './errors/Reverted';
+import { Wei } from './eth-units/Wei';
 import { Evm } from './Evm';
 import { isValidJump } from './evmJumpCheck';
 import { EvmNumberHandler } from './EvmNumberHandler';
@@ -737,24 +738,41 @@ export const Opcodes: Record<number, OpCode> = {
   0x53: new OpCode({
     name: 'MSTORE8',
     arguments: 1,
-    onExecute: ({ stack, memory }) => {
+    onExecute: ({ stack, memory, gasComputer }) => {
       const offset = stack.pop();
       const value = stack.pop().toString(16).slice(-2);
       memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
+
+      const { gasCost } = gasComputer.memoryExpansion({
+        address: new BigNumber(memory.raw.length),
+      });
+
+      return {
+        setPc: false,
+        computedGas: gasCost,
+      };
     },
-    // TODO this is dynamic
     gasCost: () => 3,
   }),
   0x54: new OpCode({
     name: 'SLOAD',
     arguments: 1,
-    onExecute: async ({ stack, storage, context }) => {
+    onExecute: async ({ stack, storage, context, gasComputer }) => {
       const key = stack.pop();
       const value = await storage.read({ key, address: context.receiver });
+      const gas = gasComputer.sload({
+        key,
+        address: '0xdeadbeef',
+      });
+
       stack.push(value);
+
+      return {
+        computedGas: gas.gasCost,
+        setPc: false,
+      };
     },
-    // TODO this is dynamic
-    gasCost: () => 3,
+    gasCost: () => 0,
   }),
   0x55: new OpCode({
     name: 'SSTORE',
@@ -763,7 +781,7 @@ export const Opcodes: Record<number, OpCode> = {
       const key = stack.pop();
       const value = stack.pop();
       const gas = gasComputer.sstore({
-        gasLeft: 10_000, //evm.gasLeft,
+        gasLeft: 10_000, // evm.gasLeft.toNumber(),
         address: '0xdeadbeef',
         key,
         value,
@@ -977,7 +995,12 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
+    onExecute: async ({
+      stack,
+      gasComputer,
+      evmSubContextCall,
+      evmContext,
+    }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const value = stack.pop();
@@ -987,7 +1010,17 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
+      const baseGas = gasComputer.baseGas({
+        address,
+        value: new Wei(value),
+        memoryOffsets: {
+          argsOffset,
+          argsSize,
+        },
+      }).gasCost;
+
       await evmSubContextCall.createSubContext({
+        baseGas,
         evmContext,
         gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
@@ -1007,7 +1040,12 @@ export const Opcodes: Record<number, OpCode> = {
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
-    onExecute: async ({ stack, evmSubContextCall, evmContext }) => {
+    onExecute: async ({
+      stack,
+      gasComputer,
+      evmSubContextCall,
+      evmContext,
+    }) => {
       const gas = stack.pop();
       const address = new Address(stack.pop());
       const value = stack.pop();
@@ -1017,7 +1055,17 @@ export const Opcodes: Record<number, OpCode> = {
       const retOffset = stack.pop();
       const retSize = stack.pop();
 
+      const baseGas = gasComputer.baseGas({
+        address,
+        value: new Wei(value),
+        memoryOffsets: {
+          argsOffset,
+          argsSize,
+        },
+      }).gasCost;
+
       const { gasCost } = await evmSubContextCall.createSubContext({
+        baseGas,
         evmContext,
         gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
@@ -1081,9 +1129,18 @@ export const Opcodes: Record<number, OpCode> = {
       let computedGas = 0;
 
       if (!gas.isZero()) {
+        const baseGas = gasComputer.baseGas({
+          address,
+          value: new Wei(new BigNumber(0)),
+          memoryOffsets: {
+            argsOffset,
+            argsSize,
+          },
+        }).gasCost;
         const gasSentWithCall = computeGasSentWithCall({
-          gas2Send: gas,
-          usedGas: evm.gasCost(),
+          requestedGas: gas,
+          availableGas: evm.gasLeft.toNumber(),
+          baseGas,
         });
 
         if (computedGas > gasSentWithCall) {
@@ -1091,6 +1148,7 @@ export const Opcodes: Record<number, OpCode> = {
         }
 
         const { gasCost } = await evmSubContextCall.createSubContext({
+          baseGas,
           evmContext,
           gasLimit: new BigNumber(gasSentWithCall),
           optionsSubContext: {
@@ -1178,12 +1236,22 @@ export const Opcodes: Record<number, OpCode> = {
 
       let computedGas = 0;
 
+      const baseGas = gasComputer.baseGas({
+        address,
+        value: new Wei(new BigNumber(0)),
+        memoryOffsets: {
+          argsOffset,
+          argsSize,
+        },
+      }).gasCost;
       const gasSentWithCall = computeGasSentWithCall({
-        gas2Send: gas,
-        usedGas: evm.gasCost(),
+        requestedGas: gas,
+        availableGas: evm.gasLeft.toNumber(),
+        baseGas,
       });
 
       const { gasCost } = await evmSubContextCall.createSubContext({
+        baseGas,
         evmContext,
         gasLimit: evmContext.context.gasLimit,
         optionsSubContext: {
@@ -1216,9 +1284,13 @@ export const Opcodes: Record<number, OpCode> = {
   0xfd: new OpCode({
     name: 'REVERT',
     arguments: 1,
-    onExecute: ({ evm, stack, memory }) => {
+    onExecute: ({ evm, stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
       const length = stack.pop().toNumber();
+
+      gasComputer.memoryExpansion({
+        address: new BigNumber(offset + length),
+      });
 
       evm.setCallingContextReturnData(memory.read(offset, length));
 
@@ -1226,8 +1298,7 @@ export const Opcodes: Record<number, OpCode> = {
         `Ran Reverted opcode ${memory.read(offset, length).toString('utf-8')}`
       );
     },
-    // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
-    gasCost: () => 1,
+    gasCost: () => 0,
   }),
   0xfe: new OpCode({
     name: 'INVALID',

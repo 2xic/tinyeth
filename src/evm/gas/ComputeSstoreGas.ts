@@ -5,13 +5,34 @@ import { OutOfGasError } from '../errors/OutOfGasError';
 import { EvmStorage } from '../EvmStorage';
 import { GasComputeResults } from './GasComputer';
 import { Address } from '../Address';
+import { GasKeys } from './GasKeys';
 
 @injectable()
 export class ComputeSstoreGas {
   constructor(private accessSets: AccessSets, private storage: EvmStorage) {}
 
+  public computeSload(context: SloadContext): GasComputeResults {
+    const isCold = this.accessSets.isColdSlot({
+      address: context.address,
+      key: context.key,
+    });
+    if (isCold) {
+      return {
+        gasCost: 2100,
+        gasRefund: 0,
+        name: GasKeys.STORAGE_READ,
+      };
+    } else {
+      return {
+        gasCost: 100,
+        gasRefund: 0,
+        name: GasKeys.STORAGE_READ,
+      };
+    }
+  }
+
   // implementation of https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a7-sstore
-  public compute({
+  public computeStore({
     gasLeft,
     address,
     key,
@@ -46,6 +67,7 @@ export class ComputeSstoreGas {
           gasCost += 20000;
         } else {
           gasCost += 2900;
+
           if (value.isEqualTo(0)) {
             gasRefund += 4800;
           }
@@ -79,13 +101,21 @@ export class ComputeSstoreGas {
       }
     }
 
-    return { gasCost, gasRefund };
+    this.accessSets.touchStorageSlot({
+      address,
+      key,
+    });
+
+    return { gasCost, gasRefund, name: GasKeys.STORAGE_WRITE };
   }
 }
 
-export interface SstoreContext {
-  gasLeft: number;
+export interface SloadContext {
   address: string;
   key: BigNumber;
+}
+
+export interface SstoreContext extends SloadContext {
+  gasLeft: number;
   value: BigNumber;
 }

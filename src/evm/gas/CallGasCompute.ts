@@ -4,6 +4,7 @@ import { Address } from '../Address';
 import { EvmAccountState } from '../EvmAccountState';
 import { AccountAccessGas } from './AccountAccessGas';
 import { GasComputeResults } from './GasComputer';
+import { GasKeys } from './GasKeys';
 
 @injectable()
 export class CallGasCompute {
@@ -33,6 +34,7 @@ export class CallGasCompute {
     return {
       gasCost,
       gasRefund,
+      name: GasKeys.CALL,
     };
   }
 }

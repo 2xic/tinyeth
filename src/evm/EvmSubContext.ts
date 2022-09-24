@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { EvmDebugger } from './EvmDebugger';
 
 @injectable()
 export class EvmSubContext {
@@ -26,4 +27,5 @@ export class EvmSubContext {
 
 interface SubContext {
   returnData?: Buffer;
+  debugger?: EvmDebugger;
 }

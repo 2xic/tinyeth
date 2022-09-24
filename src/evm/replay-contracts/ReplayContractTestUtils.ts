@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import fs from 'fs';
 import { injectable } from 'inversify';
+import { padHex } from '../../utils';
 import { ExposedEvm } from '../ExposedEvm';
 import { Opcodes } from '../Opcodes';
 
@@ -28,6 +29,9 @@ export class ReplayContractTestUtils {
       const isFinished = !state.pc && !evm.isRunning;
 
       if (!isFinished && evm.pc !== parseInt(state.pc, 16)) {
+        evm.evmDebugger.printState({
+          evmContext: evm,
+        });
         throw new Error(
           `
           Error in pc location 0x${evm.pc.toString(16)} vs 0x${
@@ -48,15 +52,20 @@ export class ReplayContractTestUtils {
       }
 
       if (evm.gasCost() !== state.gasUsage) {
+        evm.evmDebugger.printState({
+          evmContext: evm,
+        });
+
         throw new Error(`
         Error in gas computation at previous opcode ${
           Opcodes[evm.program[previousPc]].mnemonic
         }
-        vs  ${Opcodes[evm.program[parseInt(state.pc, 16)]].mnemonic}
+        vs  ${Opcodes[evm.program[parseInt(state.pc, 16)]]?.mnemonic}
          
         PC 0x${previousPc.toString(16)} and ${index}th state index
 
         Gas difference ${evm.gasCost()} vs ${state.gasUsage} (truth)
+        Delta : ${evm.gasCost() - (state.gasUsage || 0)}
         `);
       }
 
@@ -163,7 +172,7 @@ export class ReplayContractTestUtils {
     const sameKeyValues = Object.entries(state.storage).every(
       ([key, value]) =>
         evm.storage.storage[key] &&
-        evm.storage.storage[key].toString(16) === value
+        padHex(evm.storage.storage[key].toString(16)) === value
     );
     const isError = !sameLength || !sameKeyValues;
 

@@ -25,12 +25,12 @@ import {
   EvmContext,
   InterfaceEvm,
 } from './interfaceEvm';
-import { EvmErrorTrace } from './EvmErrorTrace';
+import { EvmDebugger } from './EvmDebugger';
 
 @injectable()
 export class Evm implements InterfaceEvm {
   constructor(
-    protected stack: EvmStack,
+    public stack: EvmStack,
     protected network: Network,
     public memory: EvmMemory,
     public storage: EvmStorage,
@@ -39,7 +39,7 @@ export class Evm implements InterfaceEvm {
     protected subContext: EvmSubContext,
     protected evmSubContextCall: EvmSubContextCall,
     protected evmAccountState: EvmAccountState,
-    protected evmErrorTrace: EvmErrorTrace,
+    protected evmDebugger: EvmDebugger,
     protected logger: Logger
   ) {}
 
@@ -72,7 +72,7 @@ export class Evm implements InterfaceEvm {
     this.options = options;
     this._isSubContext = isSubContext || false;
     this._gasCost = isFork
-      ? 0
+      ? 0 // calculateDataGasCost(context.data)
       : GAS_BASE_COST + calculateDataGasCost(context.data);
     this._gasLeft = context.gasLimit.minus(this._gasCost);
     this.resetPc();
@@ -99,6 +99,8 @@ export class Evm implements InterfaceEvm {
       );
     }
 
+    this.evmDebugger.tick();
+
     const { opcode, opcodeNumber } = this.loadOpcode();
     const prevGas = this.gasCost();
     this.logger.log(
@@ -123,12 +125,13 @@ export class Evm implements InterfaceEvm {
     };
     let results: ExecutionResults | void;
     try {
+      this._lastPc = this.pc;
       results = await opcode.execute({
         ...evmContext,
         evmContext,
       });
     } catch (err) {
-      this.evmErrorTrace.printState({
+      this.evmDebugger.printState({
         evmContext,
       });
       throw err;

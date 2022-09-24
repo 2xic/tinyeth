@@ -12,6 +12,38 @@ describe('EvmGas', () => {
   const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 
+  describe('sload', () => {
+
+    it('should correctly execute a cold sload', async () => {
+      const mnemonicParser = new MnemonicParser();
+      const contract = mnemonicParser.parse({
+        script: `
+            PUSH1 0x01
+            PUSH1 0x00
+            SSTORE 
+            PUSH1 0x00
+            SLOAD 
+            PUSH1 0x0c
+            JUMPI 
+            INVALID 
+            JUMPDEST        
+          `,
+      });
+      const evm = await getClassFromTestContainer(ExposedEvm).boot({
+        program: contract,
+        context: {
+          nonce: 1,
+          gasLimit,
+          sender,
+          value: new Wei(new BigNumber(0)),
+          receiver: new Address(),
+          data: Buffer.alloc(0),
+        },
+      }).execute();
+      expect(evm.gasCost()).toBe(43223);
+    })
+  })
+
   describe('sstore', () => {
     it('should correctly compute the gas cost of SSTORE', async () => {
       const mnemonicParser = new MnemonicParser();
@@ -51,7 +83,7 @@ describe('EvmGas', () => {
                 SSTORE
             `,
       });
-      const evm = await getClassFromTestContainer(Evm, { loggingEnabled: true })
+      const evm = await getClassFromTestContainer(Evm)
         .boot({
           program: contract,
           context: {
@@ -65,6 +97,8 @@ describe('EvmGas', () => {
         })
         .execute();
       expect(evm.gasCost()).toBe(43126)
+
+      expect(Object.entries(evm.storage.storage).length).toBe(1)
 
       // memory is on now hot!
       await evm
@@ -80,9 +114,44 @@ describe('EvmGas', () => {
           },
         })
         .execute();
-      expect(evm.gasCost()).toBe(23226);
+      // I think this is correct, since we assume it's in the same execution
+      expect(evm.gasCost()).toBe(21126);
     });
   });
+
+  describe('mstore8', () => {
+    it('should compute mstore8 correctly', async () => {
+      const mnemonicParser = new MnemonicParser();
+      // Example from https://www.evm.codes/#53
+      const contract = mnemonicParser.parse({
+        script: `
+          // Example 1
+          PUSH2 0xFFFF
+          PUSH1 0
+          MSTORE8
+          
+          // Example 2
+          PUSH1 0xFF
+          PUSH1 1
+          MSTORE8        
+          `,
+      });
+      const evm = await getClassFromTestContainer(Evm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            sender,
+            gasLimit,
+            receiver: new Address(),
+            value: new Wei(new BigNumber(0)),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
+      expect(evm.totalGasCost).toBe(21021);
+    });
+  })
 
   describe('MSTORE', () => {
     it('should compute mstore correctly', async () => {

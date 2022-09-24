@@ -2,6 +2,7 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { padHex } from '../utils/';
+import { padKey32 } from '../utils/padHexKey32';
 import { Address } from './Address';
 
 @injectable()
@@ -9,7 +10,7 @@ export class EvmStorage {
   public storage: Record<string, BigNumber> = {};
 
   public write({ key, value }: { key: BigNumber; value: BigNumber }) {
-    this.storage[this.convertKey({ key })] = value;
+    this.storage[padKey32({ key })] = value;
   }
 
   public async read({
@@ -23,7 +24,7 @@ export class EvmStorage {
   }
 
   public hasKey({ key }: { key: BigNumber | number }) {
-    return key.toString(16) in this.storage;
+    return padKey32({ key }) in this.storage;
   }
 
   public readSync({
@@ -33,7 +34,7 @@ export class EvmStorage {
     key: BigNumber | number;
     address: Address;
   }): BigNumber {
-    return this.storage[this.convertKey({ key })] || new BigNumber(0);
+    return this.storage[padKey32({ key })] || new BigNumber(0);
   }
 
   public isEqualOriginal({ key }: { key: BigNumber }) {
@@ -57,9 +58,5 @@ export class EvmStorage {
     return Object.entries(this.storage).map((item) => {
       callback(new BigNumber(item[0]), item[1]);
     });
-  }
-
-  private convertKey({ key }: { key: BigNumber | number }) {
-    return padHex(key.toString(16));
   }
 }

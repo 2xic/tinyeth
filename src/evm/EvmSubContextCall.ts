@@ -8,18 +8,26 @@ import { TxContext } from './Evm';
 import { EvmContext, InterfaceEvm } from './interfaceEvm';
 import { Wei } from './eth-units/Wei';
 import { InvalidOpcode } from './errors/InvalidOpcode';
+import { EvmDebugger } from './EvmDebugger';
+import { GasKeys } from './gas/GasKeys';
 
 @injectable()
 export class EvmSubContextCall {
+  constructor(private evmDebugger: EvmDebugger) {}
+
   public async createSubContext({
+    baseGas,
     evmContext,
     optionsSubContext,
     gasLimit,
   }: {
+    baseGas: number;
     evmContext: EvmContext;
     optionsSubContext: SubContext;
     gasLimit: BigNumber;
-  }) {
+  }): Promise<{
+    gasCost: number;
+  }> {
     const { memory, stack, network, subContext, context } = evmContext;
     const { argsOffset, argsSize, value, address, retSize, retOffset } =
       optionsSubContext;
@@ -30,9 +38,9 @@ export class EvmSubContextCall {
 
     const forkedEvm = this.fork({
       evmContext,
-      isFork: false,
+      isFork: true,
       txContext: {
-        value: new Wei(new BigNumber(value?.toNumber() || 0)),
+        value: new Wei(value || new BigNumber(0)),
         data,
         nonce: 0,
         receiver: context.receiver,
@@ -59,7 +67,8 @@ export class EvmSubContextCall {
       } else if (!optionsSubContext.retSize.isZero()) {
         throw new Error('Expected return data in sub-context');
       }
-      executionCost = forkedEvm.evm.gasCost();
+
+      executionCost = baseGas + forkedEvm.evm.gasCost();
     } catch (err) {
       if (
         err instanceof InvalidOpcode ||
@@ -75,32 +84,25 @@ export class EvmSubContextCall {
         if (err instanceof InvalidOpcode) {
           executionCost = gasLimit.toNumber();
         } else {
-          executionCost = forkedEvm.evm.gasCost();
+          executionCost = gasLimit.toNumber();
         }
       } else {
         throw err;
       }
     }
 
+    this.evmDebugger.writeGasUsage({
+      key: GasKeys.SUB_CONTEXT,
+      value: executionCost,
+    });
+
+    // TODO: This should only be executed with the CALL opcode.
     const { gasCost: callCost } = evmContext.gasComputer.call({
       value: new BigNumber(0),
       address,
     });
-    const memoryExpansionCost =
-      evmContext.gasComputer.memoryExpansion({
-        address: retOffset.plus(retSize),
-      }).gasCost +
-      evmContext.gasComputer.memoryExpansion({
-        address: argsOffset.plus(argsSize),
-      }).gasCost;
 
-    const gasCost = callCost + executionCost + memoryExpansionCost;
-
-    console.log({
-      callCost,
-      executionCost,
-      memoryExpansionCost,
-    });
+    const gasCost = /*baseGas + callCost + */ executionCost;
 
     return {
       gasCost,
@@ -120,15 +122,21 @@ export class EvmSubContextCall {
   }): ForkedEvm {
     const freshContainer = getFreshContainer();
     const evm = freshContainer.get(InterfaceEvm);
-
     if (copy) {
       evmContext.memory.raw.forEach((item, index) => {
         evm.memory.write(index, item);
       });
-      evmContext.storage.forEach((key, value) => {
-        evm.storage.write({ key, value });
-      });
     }
+
+    /*
+      TODO: Fix this bug.
+        Storage should be stored per contract, and not inside the evm.
+        Fix it.
+    */
+    evmContext.storage.forEach((key, value) => {
+      evm.storage.write({ key, value });
+      evmContext.gasComputer.warmKey({ address: '0xdeadbeef', key });
+    });
 
     return {
       executor: async ({ program }: { program: Buffer }) => {
