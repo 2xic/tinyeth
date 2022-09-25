@@ -2,6 +2,8 @@ import BigNumber from 'bignumber.js';
 import fs from 'fs';
 import { injectable } from 'inversify';
 import { padHex } from '../../utils';
+import { padKey32 } from '../../utils/padHexKey32';
+import { Address } from '../Address';
 import { ExposedEvm } from '../ExposedEvm';
 import { Opcodes } from '../Opcodes';
 
@@ -170,12 +172,23 @@ export class ReplayContractTestUtils {
       Object.entries(state.storage).length ===
       Object.entries(evm.storage.storage).length;
     const sameKeyValues = Object.entries(state.storage).every(
-      ([key, value]) =>
-        evm.storage.storage[key] &&
-        padHex(evm.storage.storage[key].toString(16)) === value
+      ([key, value]) => {
+        let hasKey = !!evm.storage.storage[key];
+        if (hasKey) {
+          const evmValue = padHex(
+            evm.storage
+              .readSync({
+                key: new BigNumber(key, 16),
+                address: new Address('0xdeadbeef'),
+              })
+              .toString(16)
+          );
+          hasKey = evmValue === value;
+        }
+        return hasKey;
+      }
     );
     const isError = !sameLength || !sameKeyValues;
-
     const { opcode, opcodeArguments } = this.getPreviousOpcodeAndArguments({
       evm,
       previousPc,
@@ -196,7 +209,7 @@ export class ReplayContractTestUtils {
           Our EVM
           ${Object.entries(evm.storage.storage).map((item) => [
             item[0],
-            item[1],
+            item[1]?.toString(16),
           ])}
           `
       );

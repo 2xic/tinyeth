@@ -45,6 +45,7 @@ export class Evm implements InterfaceEvm {
 
   private running = false;
   private _gasCost = 0;
+  private _gasRefund = 0;
   private _gasLeft: BigNumber = new BigNumber(0);
 
   private _pc = 0;
@@ -147,8 +148,11 @@ export class Evm implements InterfaceEvm {
 
     let updatedPc = false;
     if (results) {
-      if (results.computedGas) {
-        this._gasCost += results.computedGas;
+      if (results.dynamicGasCost) {
+        this._gasCost += results.dynamicGasCost;
+      }
+      if (results.dynamicGasRefund) {
+        this._gasRefund += results.dynamicGasRefund;
       }
       updatedPc = results.setPc;
     }
@@ -181,6 +185,13 @@ export class Evm implements InterfaceEvm {
         break;
       }
     }
+
+    // https://eips.ethereum.org/EIPS/eip-3529 -> max one fifth is refunded.
+    const minRefund = Math.min(
+      this._gasRefund,
+      new BigNumber(this._gasCost).dividedToIntegerBy(5).toNumber()
+    );
+    this._gasCost -= minRefund;
 
     return this;
   }

@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { padHex } from '../utils/';
 import { padKey32 } from '../utils/padHexKey32';
 import { Address } from './Address';
 
 @injectable()
 export class EvmStorage {
-  public storage: Record<string, BigNumber> = {};
+  public storage: Partial<Record<string, BigNumber>> = {};
+
+  public originalStorageValue: Partial<Record<string, BigNumber>> = {};
 
   public write({ key, value }: { key: BigNumber; value: BigNumber }) {
     this.storage[padKey32({ key })] = value;
@@ -37,10 +38,20 @@ export class EvmStorage {
     return this.storage[padKey32({ key })] || new BigNumber(0);
   }
 
-  public isEqualOriginal({ key }: { key: BigNumber }) {
-    // TODO: Fully implement this.
-    // it should basically do copy of the memory before execution and check against it.
-    return true;
+  public isEqualOriginal({
+    key,
+    address,
+  }: {
+    key: BigNumber;
+    address: Address;
+  }) {
+    const originalValue = this.readOriginalValue({ key, address });
+    return originalValue.isEqualTo(
+      this.readSync({
+        key,
+        address: new Address('0xdeadbeef'),
+      })
+    );
   }
 
   public isOriginallyZero({
@@ -50,13 +61,29 @@ export class EvmStorage {
     key: BigNumber;
     address: Address;
   }) {
-    // Should check the original storage.
-    return this.readSync({ key, address }).isEqualTo(0);
+    const originalValue = this.readOriginalValue({ key, address });
+    return originalValue.isEqualTo(0);
+  }
+
+  public readOriginalValue({
+    key,
+    address,
+  }: {
+    key: BigNumber;
+    address: Address;
+  }) {
+    return this.originalStorageValue[padKey32({ key })] || new BigNumber(0);
   }
 
   public forEach(callback: (key: BigNumber, value: BigNumber) => void) {
     return Object.entries(this.storage).map((item) => {
-      callback(new BigNumber(item[0]), item[1]);
+      callback(
+        new BigNumber(item[0]),
+        this.readSync({
+          key: new BigNumber(item[0]),
+          address: new Address('0xdeadbeef'),
+        })
+      );
     });
   }
 }

@@ -47,7 +47,8 @@ export class OpCode {
 
 export interface ExecutionResults {
   setPc: boolean;
-  computedGas: number;
+  dynamicGasCost: number;
+  dynamicGasRefund: number;
 }
 
 type UnionResults = ExecutionResults | void;

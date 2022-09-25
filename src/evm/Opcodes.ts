@@ -146,7 +146,8 @@ export const Opcodes: Record<number, OpCode> = {
 
       return {
         setPc: false,
-        computedGas: 10 + (b.toString(2).length - 1) * 50,
+        dynamicGasCost: 10 + (b.toString(2).length - 1) * 50,
+        dynamicGasRefund: 0,
       };
     },
     gasCost: 0,
@@ -328,7 +329,8 @@ export const Opcodes: Record<number, OpCode> = {
         }).gasCost;
 
       return {
-        computedGas,
+        dynamicGasCost: computedGas,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
@@ -363,7 +365,8 @@ export const Opcodes: Record<number, OpCode> = {
         address,
       });
       return {
-        computedGas: gasComputed.gasCost,
+        dynamicGasCost: gasComputed.gasCost,
+        dynamicGasRefund: gasComputed.gasRefund,
         setPc: false,
       };
     },
@@ -434,18 +437,17 @@ export const Opcodes: Record<number, OpCode> = {
       memory.write32(dataOffset, value);
 
       return {
-        computedGas:
+        dynamicGasCost:
           3 +
           3 * wordSize({ address: new BigNumber(length) }).toNumber() +
           gasComputer.memoryExpansion({
             address: new BigNumber(memory.raw.length),
           }).gasCost,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
-    gasCost: () => {
-      return 0;
-    },
+    gasCost: 0,
   }),
   0x38: new OpCode({
     name: 'CODESIZE',
@@ -468,7 +470,7 @@ export const Opcodes: Record<number, OpCode> = {
       }
 
       return {
-        computedGas:
+        dynamicGasCost:
           3 *
             wordSize({
               address: new BigNumber(size),
@@ -476,6 +478,7 @@ export const Opcodes: Record<number, OpCode> = {
           gasComputer.memoryExpansion({
             address: new BigNumber(memory.raw.length),
           }).gasCost,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
@@ -499,11 +502,12 @@ export const Opcodes: Record<number, OpCode> = {
       const contract = network.get(new Address(stackItem));
       stack.push(new BigNumber(contract.length));
 
-      const computedGas = gasComputer.account({ address: stackItem }).gasCost;
+      const gas = gasComputer.account({ address: stackItem });
 
       return {
         setPc: false,
-        computedGas,
+        dynamicGasCost: gas.gasCost,
+        dynamicGasRefund: gas.gasRefund,
       };
     },
     gasCost: () => 0,
@@ -544,7 +548,8 @@ export const Opcodes: Record<number, OpCode> = {
 
       return {
         setPc: false,
-        computedGas,
+        dynamicGasRefund: 0,
+        dynamicGasCost: computedGas,
       };
     },
   }),
@@ -697,12 +702,13 @@ export const Opcodes: Record<number, OpCode> = {
       const read = memory.read32(offset);
       stack.push(new BigNumber(read.toString('hex'), 16));
 
-      const computedGas = gasComputer.memoryExpansion({
+      const gas = gasComputer.memoryExpansion({
         address: new BigNumber(memory.raw.length),
-      }).gasCost;
+      });
 
       return {
-        computedGas,
+        dynamicGasCost: gas.gasCost,
+        dynamicGasRefund: gas.gasRefund,
         setPc: false,
       };
     },
@@ -729,7 +735,8 @@ export const Opcodes: Record<number, OpCode> = {
       });
 
       return {
-        computedGas: computedGas.gasCost,
+        dynamicGasCost: computedGas.gasCost,
+        dynamicGasRefund: computedGas.gasRefund,
         setPc: false,
       };
     },
@@ -743,13 +750,14 @@ export const Opcodes: Record<number, OpCode> = {
       const value = stack.pop().toString(16).slice(-2);
       memory.write(offset.toNumber(), new BigNumber(value, 16).toNumber());
 
-      const { gasCost } = gasComputer.memoryExpansion({
+      const { gasCost, gasRefund } = gasComputer.memoryExpansion({
         address: new BigNumber(memory.raw.length),
       });
 
       return {
         setPc: false,
-        computedGas: gasCost,
+        dynamicGasCost: gasCost,
+        dynamicGasRefund: gasRefund,
       };
     },
     gasCost: () => 3,
@@ -765,10 +773,16 @@ export const Opcodes: Record<number, OpCode> = {
         address: '0xdeadbeef',
       });
 
+      gasComputer.warmKey({
+        key,
+        address: '0xdeadbeef',
+      });
+
       stack.push(value);
 
       return {
-        computedGas: gas.gasCost,
+        dynamicGasCost: gas.gasCost,
+        dynamicGasRefund: gas.gasRefund,
         setPc: false,
       };
     },
@@ -791,8 +805,8 @@ export const Opcodes: Record<number, OpCode> = {
 
       return {
         setPc: false,
-        // not sure if this is correct, If I recall correctly gas refund is done at the end of the transaction.
-        computedGas: gas.gasCost, // - gas.gasRefund,
+        dynamicGasCost: gas.gasCost,
+        dynamicGasRefund: gas.gasRefund,
       };
     },
     gasCost: () => 0,
@@ -812,7 +826,8 @@ export const Opcodes: Record<number, OpCode> = {
       evm.setPc(pc);
       return {
         setPc: true,
-        computedGas: 0,
+        dynamicGasCost: 0,
+        dynamicGasRefund: 0,
       };
     },
     gasCost: 8,
@@ -835,7 +850,8 @@ export const Opcodes: Record<number, OpCode> = {
         evm.setPc(pc);
         return {
           setPc: true,
-          computedGas: 0,
+          dynamicGasCost: 0,
+          dynamicGasRefund: 0,
         };
       }
     },
@@ -930,14 +946,16 @@ export const Opcodes: Record<number, OpCode> = {
           stack.pop();
         }
 
-        const memoryExpansion = gasComputer.memoryExpansion({
-          address: offset.plus(size),
-        }).gasCost;
+        const { gasCost: memoryExpansion, gasRefund } =
+          gasComputer.memoryExpansion({
+            address: offset.plus(size),
+          });
         const computedGas =
           375 * (topicCount + 1) + 8 * size.toNumber() + memoryExpansion;
 
         return {
-          computedGas,
+          dynamicGasCost: computedGas,
+          dynamicGasRefund: gasRefund,
           setPc: false,
         };
       },
@@ -984,7 +1002,8 @@ export const Opcodes: Record<number, OpCode> = {
       const computedGas = codeDepositCost + deploymentCost;
 
       return {
-        computedGas,
+        dynamicGasCost: computedGas,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
@@ -1080,7 +1099,8 @@ export const Opcodes: Record<number, OpCode> = {
       });
 
       return {
-        computedGas: gasCost,
+        dynamicGasCost: gasCost,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
@@ -1094,12 +1114,13 @@ export const Opcodes: Record<number, OpCode> = {
 
       evm.setCallingContextReturnData(memory.read(offset, size).slice(0, size));
 
-      const computedGas = gasComputer.memoryExpansion({
+      const { gasCost, gasRefund } = gasComputer.memoryExpansion({
         address: new BigNumber(offset + size),
-      }).gasCost;
+      });
 
       return {
-        computedGas,
+        dynamicGasCost: gasCost,
+        dynamicGasRefund: gasRefund,
         setPc: false,
       };
     },
@@ -1170,7 +1191,8 @@ export const Opcodes: Record<number, OpCode> = {
       }
 
       return {
-        computedGas,
+        dynamicGasCost: computedGas,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },
@@ -1276,7 +1298,8 @@ export const Opcodes: Record<number, OpCode> = {
       computedGas = gasCost;
 
       return {
-        computedGas,
+        dynamicGasCost: computedGas,
+        dynamicGasRefund: 0,
         setPc: false,
       };
     },

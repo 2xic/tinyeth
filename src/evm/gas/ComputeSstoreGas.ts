@@ -53,17 +53,26 @@ export class ComputeSstoreGas {
       gasCost += 2100;
     }
 
-    if (
-      this.storage
-        .readSync({ key, address: new Address(address) })
-        .isEqualTo(value)
-    ) {
+    const currentValue = this.storage.readSync({
+      key,
+      address: new Address(address),
+    });
+    const isNoOp = currentValue.isEqualTo(value);
+
+    if (isNoOp) {
       gasCost += 100;
     } else {
-      if (this.storage.isEqualOriginal({ key })) {
-        if (
-          this.storage.isOriginallyZero({ key, address: new Address(address) })
-        ) {
+      const isEqualOriginal = this.storage.isEqualOriginal({
+        key,
+        address: new Address(address),
+      });
+      const isOriginallyZero = this.storage.isOriginallyZero({
+        key,
+        address: new Address(address),
+      });
+
+      if (isEqualOriginal) {
+        if (isOriginallyZero) {
           gasCost += 20000;
         } else {
           gasCost += 2900;
@@ -74,28 +83,31 @@ export class ComputeSstoreGas {
         }
       } else {
         gasCost += 100;
-        if (
-          !this.storage.isOriginallyZero({ key, address: new Address(address) })
-        ) {
-          if (
-            this.storage
-              .readSync({ key, address: new Address(address) })
-              .isEqualTo(0)
-          ) {
+
+        const originalValue = this.storage.readOriginalValue({
+          key,
+          address: new Address(address),
+        });
+        const isNotOriginallyZero = !originalValue.isZero();
+
+        if (isNotOriginallyZero) {
+          if (currentValue.isEqualTo(0)) {
             gasRefund -= 4800;
           } else if (value.isEqualTo(0)) {
             gasRefund += 4800;
-          } else if (this.storage.isEqualOriginal({ key })) {
-            if (
-              this.storage.isOriginallyZero({
-                key,
-                address: new Address(address),
-              })
-            ) {
-              gasRefund += 19900;
-            } else {
-              gasRefund += 2800;
-            }
+          }
+        }
+
+        if (originalValue.isEqualTo(value)) {
+          if (
+            this.storage.isOriginallyZero({
+              key,
+              address: new Address(address),
+            })
+          ) {
+            gasRefund += 19900;
+          } else {
+            gasRefund += 2800;
           }
         }
       }
