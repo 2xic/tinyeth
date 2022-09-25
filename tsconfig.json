@@ -23,10 +23,9 @@
     "emitDecoratorMetadata": true
   },
   "include": [
-    "src/"
+    "src/",
   ],
   "exclude": [
     "scripts",
-    "src/**/*.unit.test.ts"
   ]
 }

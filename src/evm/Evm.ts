@@ -49,7 +49,7 @@ export class Evm implements InterfaceEvm {
   private _gasLeft: BigNumber = new BigNumber(0);
 
   private _pc = 0;
-  private _lastPc = -1;
+  private _previousPc = -1;
   private _callingContextReturnData?: Buffer;
   public program: Buffer = Buffer.alloc(0);
   private context!: TxContext;
@@ -83,7 +83,7 @@ export class Evm implements InterfaceEvm {
 
   public resetPc() {
     this._pc = 0;
-    this._lastPc = -1;
+    this._previousPc = -1;
     this.running = true;
     this._callingContextReturnData = undefined;
   }
@@ -94,7 +94,7 @@ export class Evm implements InterfaceEvm {
     }
     if (this.pc < 0) {
       throw new InvalidPc('Negative PC');
-    } else if (this.pc === this._lastPc) {
+    } else if (this.pc === this._previousPc) {
       throw new InvalidPc(
         `Program counter is stuck ${this.currentOpcodeNumber.toString(16)}`
       );
@@ -126,7 +126,7 @@ export class Evm implements InterfaceEvm {
     };
     let results: ExecutionResults | void;
     try {
-      this._lastPc = this.pc;
+      this._previousPc = this.pc;
       results = await opcode.execute({
         ...evmContext,
         evmContext,
@@ -217,7 +217,7 @@ export class Evm implements InterfaceEvm {
   }
 
   public setPc(pc: number) {
-    this._lastPc = this._pc;
+    this._previousPc = this._pc;
     this._pc = pc;
   }
 
@@ -227,6 +227,10 @@ export class Evm implements InterfaceEvm {
 
   public get pc() {
     return this._pc;
+  }
+
+  public get previousPc() {
+    return this._previousPc;
   }
 
   public get isRunning() {

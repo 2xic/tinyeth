@@ -334,6 +334,7 @@ describe('Parser', () => {
     const firstConditionalNode = functionNode.nodes[0] as ConditionalNode;
     expect(firstConditionalNode).toBeInstanceOf(ConditionalNode);
     expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ((firstConditionalNode.nodes[0] as VariableNode).fields as any).variable
     ).toBe('true');
 

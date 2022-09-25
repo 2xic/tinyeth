@@ -12,85 +12,92 @@ describe('EvmGas', () => {
   const gasLimit = new BigNumber(0xffffff);
 
   describe('intrinsic Gas', () => {
-    it('should add base cost', async() => {
+    it('should add base cost', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
-        script: ``,
+        script: '',
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.alloc(0),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(21000);
-    })
+    });
 
-    it('should add zero memory cost', async() => {
+    it('should add zero memory cost', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
-        script: ``,
+        script: '',
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.alloc(4, 0),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.alloc(4, 0),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(21016);
-    })
+    });
 
-    it('should add non-zero memory cost', async() => {
+    it('should add non-zero memory cost', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
-        script: ``,
+        script: '',
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.alloc(4, 1),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.alloc(4, 1),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(21064);
-    })
+    });
 
-    it('should add combined zero and non-zero memory cost', async() => {
+    it('should add combined zero and non-zero memory cost', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
-        script: ``,
+        script: '',
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.concat([Buffer.alloc(4, 1), Buffer.alloc(4, 0)]),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.concat([Buffer.alloc(4, 1), Buffer.alloc(4, 0)]),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(21080);
-    })
-  })
+    });
+  });
 
   describe('sload', () => {
-
     it('should correctly execute a cold sload', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
@@ -106,20 +113,22 @@ describe('EvmGas', () => {
             JUMPDEST        
           `,
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.alloc(0),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(43223);
-    })
-    
+    });
+
     it('should correctly warm a key on sload', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
@@ -130,20 +139,22 @@ describe('EvmGas', () => {
             SLOAD
           `,
       });
-      const evm = await getClassFromTestContainer(ExposedEvm).boot({
-        program: contract,
-        context: {
-          nonce: 1,
-          gasLimit,
-          sender,
-          value: new Wei(new BigNumber(0)),
-          receiver: new Address(),
-          data: Buffer.alloc(0),
-        },
-      }).execute();
+      const evm = await getClassFromTestContainer(ExposedEvm)
+        .boot({
+          program: contract,
+          context: {
+            nonce: 1,
+            gasLimit,
+            sender,
+            value: new Wei(new BigNumber(0)),
+            receiver: new Address(),
+            data: Buffer.alloc(0),
+          },
+        })
+        .execute();
       expect(evm.gasCost()).toBe(23206);
-    })
-  })
+    });
+  });
 
   describe('sstore', () => {
     it('should correctly compute the gas cost of SSTORE', async () => {
@@ -197,9 +208,9 @@ describe('EvmGas', () => {
           },
         })
         .execute();
-      expect(evm.gasCost()).toBe(43126)
+      expect(evm.gasCost()).toBe(43126);
 
-      expect(Object.entries(evm.storage.storage).length).toBe(1)
+      expect(Object.entries(evm.storage.storage).length).toBe(1);
 
       // memory is on now hot!
       await evm
@@ -246,9 +257,9 @@ describe('EvmGas', () => {
         })
         .execute();
       expect(evm.totalGasCost).toBe(43109);
-    })
+    });
 
-    it('should correctly compute gas cost of updating a value', async () => {
+    it('should correctly compute gas cost of updating a value', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: `
@@ -275,9 +286,9 @@ describe('EvmGas', () => {
         })
         .execute();
       expect(evm.totalGasCost).toBe(43212);
-    })
+    });
 
-    it('should correctly compute gas cost of updating from zero to non zero value', async () => {
+    it('should correctly compute gas cost of updating from zero to non zero value', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: `
@@ -306,9 +317,9 @@ describe('EvmGas', () => {
         })
         .execute();
       expect(evm.totalGasCost).toBe(43212);
-    })
+    });
 
-    it('should correctly compute gas cost of updating from zero to zero value', async () => {
+    it('should correctly compute gas cost of updating from zero to zero value', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: `
@@ -337,9 +348,9 @@ describe('EvmGas', () => {
         })
         .execute();
       expect(evm.totalGasCost).toBe(23312);
-    })
+    });
 
-    it('should correctly compute gas cost of updating from zero to one to zero value', async () => {
+    it('should correctly compute gas cost of updating from zero to one to zero value', async () => {
       const mnemonicParser = new MnemonicParser();
       const contract = mnemonicParser.parse({
         script: `
@@ -408,7 +419,7 @@ describe('EvmGas', () => {
         .execute();
       expect(evm.totalGasCost).toBe(21021);
     });
-  })
+  });
 
   describe('MSTORE', () => {
     it('should compute mstore correctly', async () => {

@@ -551,7 +551,7 @@ describe('evm', () => {
       PUSH1 0
       LOG0  
       PUSH1 1
-    ` 
+    `,
     });
     await evm
       .boot({
@@ -567,9 +567,9 @@ describe('evm', () => {
         },
       })
       .execute();
-    expect(evm.stack.toString()).toBe("1")
-    expect(evm.pc).toBe(7)
-  })
+    expect(evm.stack.toString()).toBe('1');
+    expect(evm.pc).toBe(7);
+  });
 
   it('should correctly set the pc after a LOG4 opcode', async () => {
     const mnemonicParser = new MnemonicParser();
@@ -583,7 +583,7 @@ describe('evm', () => {
       PUSH1 0
       LOG4
       PUSH1 1
-    ` 
+    `,
     });
     await evm
       .boot({
@@ -599,7 +599,7 @@ describe('evm', () => {
         },
       })
       .execute();
-    expect(evm.stack.toString()).toBe("1")
-    expect(evm.pc).toBe(15)
-  })
+    expect(evm.stack.toString()).toBe('1');
+    expect(evm.pc).toBe(15);
+  });
 });

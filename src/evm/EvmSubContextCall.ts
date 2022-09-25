@@ -96,13 +96,7 @@ export class EvmSubContextCall {
       value: executionCost,
     });
 
-    // TODO: This should only be executed with the CALL opcode.
-    const { gasCost: callCost } = evmContext.gasComputer.call({
-      value: new BigNumber(0),
-      address,
-    });
-
-    const gasCost = /*baseGas + callCost + */ executionCost;
+    const gasCost = executionCost;
 
     return {
       gasCost,

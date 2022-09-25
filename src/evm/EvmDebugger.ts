@@ -49,8 +49,8 @@ export class EvmDebugger {
   private getOpcode({ evm }: { evm: Evm }) {
     if (evm.pc < evm.program.length) {
       return Opcodes[evm.program[evm.pc]];
-    } else if ((evm as any)._lastPC < evm.program.length) {
-      return Opcodes[evm.program[(evm as any)._lastPc]];
+    } else if (evm.previousPc < evm.program.length) {
+      return Opcodes[evm.program[evm.previousPc]];
     }
   }
 

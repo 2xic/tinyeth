@@ -2,7 +2,6 @@ import BigNumber from 'bignumber.js';
 import fs from 'fs';
 import { injectable } from 'inversify';
 import { padHex } from '../../utils';
-import { padKey32 } from '../../utils/padHexKey32';
 import { Address } from '../Address';
 import { ExposedEvm } from '../ExposedEvm';
 import { Opcodes } from '../Opcodes';

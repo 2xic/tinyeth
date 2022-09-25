@@ -9,7 +9,6 @@ import path from 'path';
 import { MnemonicParser } from '../MnemonicParser';
 
 describe('EvmReplay', () => {
-  const sender = new Address();
   const gasLimit = new BigNumber(0xffffff);
 
   it('should correctly replay a baisc contract', async () => {
@@ -29,7 +28,11 @@ describe('EvmReplay', () => {
         ),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-1.json'), {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-1.json'),
+      {}
+    );
   });
 
   it('should correctly replay the second replay file minor contract', async () => {
@@ -41,8 +44,8 @@ describe('EvmReplay', () => {
         PUSH1 0x20
         PUSH1 0x00	
         RETURN
-      `
-    })
+      `,
+    });
     const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
@@ -54,10 +57,14 @@ describe('EvmReplay', () => {
         data: Buffer.alloc(0),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-2-deployment.json'), {});
-    evm.execute();
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-2-deployment.json'),
+      {}
+    );
+    await evm.execute();
     expect(evm.gasCost()).toBe(21018);
-  })
+  });
 
   it('should correctly replay the main second replay file', async () => {
     const contract = new MnemonicParser().parse({
@@ -79,8 +86,8 @@ describe('EvmReplay', () => {
       
       // The address is on the stack, we can query the size
       EXTCODESIZE 
-      `
-    })
+      `,
+    });
     const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
@@ -92,9 +99,12 @@ describe('EvmReplay', () => {
         data: Buffer.alloc(0),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-2.json'), {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-2.json'),
+      {}
+    );
   });
-
 
   it('should correctly replay the third replay file (STATICCALL)', async () => {
     const contract = new MnemonicParser().parse({
@@ -151,8 +161,8 @@ describe('EvmReplay', () => {
         PUSH1 31
         PUSH1 32
         RETURNDATACOPY
-      `
-    })
+      `,
+    });
     const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
@@ -164,9 +174,12 @@ describe('EvmReplay', () => {
         data: Buffer.alloc(0),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-3.json'), {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-3.json'),
+      {}
+    );
   });
-
 
   it('should correctly replay the forth replay file (DELEGATECALL)', async () => {
     const contract = new MnemonicParser().parse({
@@ -202,8 +215,8 @@ describe('EvmReplay', () => {
         DUP6
         PUSH2 0xFFFF
         DELEGATECALL
-      `
-    })
+      `,
+    });
     const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
@@ -215,7 +228,11 @@ describe('EvmReplay', () => {
         data: Buffer.alloc(0),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-4.json'), {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-4.json'),
+      {}
+    );
   });
 
   it('should correctly replay the fifth replay file (CALLCODE)', async () => {
@@ -254,8 +271,8 @@ describe('EvmReplay', () => {
         DUP7
         PUSH2 0xFFFF
         CALLCODE
-      `
-    })
+      `,
+    });
     const evm = getClassFromTestContainer(ExposedEvm).boot({
       program: contract,
       context: {
@@ -267,6 +284,10 @@ describe('EvmReplay', () => {
         data: Buffer.alloc(0),
       },
     });
-    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(evm, path.join(__dirname, 'example-5.json'), {});
+    await getClassFromTestContainer(ReplayContractTestUtils).replayFile(
+      evm,
+      path.join(__dirname, 'example-5.json'),
+      {}
+    );
   });
 });

@@ -1,10 +1,8 @@
 import BigNumber from 'bignumber.js';
-import { createNoSubstitutionTemplateLiteral } from 'typescript';
 import { Uint } from '../rlp/types/Uint';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 import { keccak256 } from '../utils/keccak256';
-import { padBuffer32 } from '../utils/padBuffer32';
 import { Address } from './Address';
 import { Contract } from './Contract';
 import { CreateOpCodeWIthVariableArgumentLength } from './CreateOpCodeWIthVariableArgumentLength';
@@ -791,7 +789,7 @@ export const Opcodes: Record<number, OpCode> = {
   0x55: new OpCode({
     name: 'SSTORE',
     arguments: 1,
-    onExecute: ({ stack, gasComputer, storage, evm }): ExecutionResults => {
+    onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
       const key = stack.pop();
       const value = stack.pop();
       const gas = gasComputer.sstore({
