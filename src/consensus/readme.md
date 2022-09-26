@@ -1,6 +1,24 @@
 There has been many protocol changes over the year, add support for some of the new consensus rules with a feature flag (block height) as has been done in other clients.
 
 https://github.com/ethereum/execution-specs/blob/master/README.md
+https://github.com/ethereum/consensus-specs
 
 # Docs
 - https://ethereum.org/en/developers/docs/gas/
+
+# Eth 2.0 docs
+- https://notes.ethereum.org/@serenity/handbook
+- https://eth2book.info/altair/contents
+  - https://github.com/ethereum/consensus-specs/tree/dev/tests/generators
+
+# Eth 2.0 code
+- https://github.com/ethereum/beacon_chain
+  - 
+
+# Eth 1.0
+- EthHash ? 
+- Block validation
+- Consensus rules.
+  - i.e when opcodes where added
+  - gas price of op codes over time
+
