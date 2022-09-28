@@ -13,7 +13,7 @@ https://github.com/ethereum/consensus-specs
 
 # Eth 2.0 code
 - https://github.com/ethereum/beacon_chain
-  - 
+  
 
 # Eth 1.0
 - EthHash ? 
@@ -22,3 +22,6 @@ https://github.com/ethereum/consensus-specs
   - i.e when opcodes where added
   - gas price of op codes over time
 
+# Eth 1.0 - tests
+- https://github.com/QuarkChain/pyquarkchain/blob/master/ethereum/pow/tests/test_ethash.py
+- 

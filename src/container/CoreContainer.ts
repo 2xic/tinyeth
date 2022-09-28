@@ -75,7 +75,7 @@ import { InterfaceEvm } from '../evm/interfaceEvm';
 import { BaseGasComputer } from '../evm/gas/BaseGasComputer';
 
 export class CoreContainer {
-  protected create(options?: ContainerOptions) {
+  public create(options?: ContainerOptions) {
     const container = new Container({
       defaultScope: 'Singleton',
     });

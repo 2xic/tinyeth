@@ -18,3 +18,4 @@ geth-data
 cache
 coverage
 reports
+git_stats.py
