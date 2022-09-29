@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
 import {
   CACHE_BYTES_GROWTH,
   CACHE_BYTES_INIT,
@@ -10,6 +11,7 @@ import {
 } from './EthHashConstants';
 import { EthHashHelper } from './EthHashHelpers';
 
+@injectable()
 export class EthHashBlockParameters {
   constructor(private ethHashHelper: EthHashHelper) {}
 

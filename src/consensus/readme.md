@@ -16,7 +16,10 @@ https://github.com/ethereum/consensus-specs
   
 
 # Eth 1.0
-- EthHash ? 
+- EthHash
+  - https://github.com/ethereum/wiki/wiki/Ethash/6e97c9cea49605264c6f4d1dc9e1939b1f89a5a3
+  - https://ethereum.org/en/developers/docs/consensus-mechanisms/pow/mining-algorithms/ethash/
+    https://github.com/ethereum/wiki/wiki/Dagger-Hashimoto
 - Block validation
 - Consensus rules.
   - i.e when opcodes where added

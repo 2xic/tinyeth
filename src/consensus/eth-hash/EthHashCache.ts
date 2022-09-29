@@ -4,17 +4,21 @@ import { getBufferFromHex } from '../../utils/getBufferFromHex';
 import { forLoop } from '../../utils/forBigNumberLoop';
 import { sha3_256 } from '../../utils/sha3_256';
 import { CACHE_ROUNDS } from './EthHashConstants';
+import { injectable } from 'inversify';
+import { getBigNumberFromBuffer } from '../../utils/getBigNumberFromBuffer';
 
+@injectable()
 export class EthHashConstants {
   public makeCache({
     cacheSize,
     seed,
   }: {
     cacheSize: BigNumber;
-    seed: BigNumber;
-  }) {
-    const n = cacheSize.dividedToIntegerBy(seed);
-    const set = [sha3_256(getBufferFromHex(seed.toString(16)))];
+    seed: Buffer;
+  }): Buffer[] {
+    const seedBigNumber = getBigNumberFromBuffer(seed);
+    const n = cacheSize.dividedToIntegerBy(seedBigNumber);
+    const set = [sha3_256(seed)];
 
     forLoop({
       startValue: new BigNumber(1),

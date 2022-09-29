@@ -18,7 +18,7 @@ import { ExecutionResults, OpCode } from './OpCode';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 // TODO: see if there is away around this.
-BigNumber.set({ EXPONENTIAL_AT: 1024 });
+BigNumber.set({ EXPONENTIAL_AT: 10_024 });
 
 /*
   TODO: 

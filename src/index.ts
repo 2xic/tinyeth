@@ -6,3 +6,4 @@ export * from './container/index';
 export * from './rlp';
 export * from './tiny-solidiity-compiler';
 export * from './utils/';
+export * from './consensus';

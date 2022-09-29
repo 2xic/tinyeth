@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
 
 // TODO: see if there is away around this.
-BigNumber.set({ EXPONENTIAL_AT: 1024 });
+BigNumber.set({ EXPONENTIAL_AT: 10_024 });
 
 export class SignedUnsignedNumberConverter {
   public parse(rawInput: string | BigNumber): BigNumber {

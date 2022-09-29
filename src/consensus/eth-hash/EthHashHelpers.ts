@@ -1,14 +1,16 @@
 import BigNumber from 'bignumber.js';
-import { EvmNumberHandler } from '../../evm/EvmNumberHandler';
+import { injectable } from 'inversify';
+import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { padHex } from '../../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
 
 const FNV_PRIME = new BigNumber('01000193', 16);
 
+@injectable()
 export class EthHashHelper {
   public isPrime({ number }: { number: BigNumber }) {
     let i = new BigNumber(2);
-    while (i.isLessThan(number.pow(0.5).integerValue())) {
+    while (i.isLessThan(new BigNumber(number).squareRoot().integerValue())) {
       if (number.modulo(i).isEqualTo(0)) {
         return false;
       }
@@ -18,14 +20,14 @@ export class EthHashHelper {
   }
 
   public fnv({ v1, v2 }: { v1: BigNumber; v2: BigNumber }) {
-    return new EvmNumberHandler(v1.multipliedBy(FNV_PRIME))
-      .xor(new EvmNumberHandler(v2))
+    return new BigNumberBinaryOperations(v1.multipliedBy(FNV_PRIME))
+      .xor(new BigNumberBinaryOperations(v2))
       .modulo(new BigNumber(2).pow(32));
   }
 
-  public serialize({ cmix }: { cmix: BigNumber[] }): Buffer {
+  public serialize({ cmix }: { cmix: BigNumber[] | Buffer }): Buffer {
     return Buffer.concat(
-      cmix.map((item) => {
+      [...cmix].map((item) => {
         const results = this.padding({
           value: getBufferFromHex(padHex(item.toString())),
           length: 4,
@@ -43,6 +45,9 @@ export class EthHashHelper {
     value: Buffer;
     length: number;
   }): Buffer {
-    return Buffer.concat([value, Buffer.alloc(length - value.length)]);
+    if (value.length < length) {
+      return Buffer.concat([value, Buffer.alloc(length - value.length)]);
+    }
+    return value;
   }
 }

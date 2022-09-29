@@ -1,17 +1,16 @@
-import { CoreContainer } from '../../container';
+import { UnitTestContainer } from '../../container/UnitTestContainer';
 import BigNumber from 'bignumber.js';
 import { EthHash } from './EthHash';
 
 describe('EthHash', () => {
   it('should run', () => {
-    const results = new CoreContainer()
+    const results = new UnitTestContainer()
       .create()
       .get(EthHash)
-      .hashimoto({
+      .mine({
+        blockNumber: new BigNumber(30000),
         header: Buffer.alloc(0),
-        nonce: Buffer.alloc(0),
-        fullSize: new BigNumber(10),
-        datasetLookup: () => new BigNumber(2),
+        difficultly: new BigNumber(1),
       });
     expect(results).toBeTruthy();
   });
