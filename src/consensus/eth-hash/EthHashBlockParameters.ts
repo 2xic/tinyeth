@@ -13,7 +13,7 @@ import { EthHashHelper } from './EthHashHelpers';
 
 @injectable()
 export class EthHashBlockParameters {
-  constructor(private ethHashHelper: EthHashHelper) {}
+  constructor(protected ethHashHelper: EthHashHelper) {}
 
   public getBlockParameters({ blockNumber }: { blockNumber: BigNumber }) {
     const cacheSize = this.getSize({

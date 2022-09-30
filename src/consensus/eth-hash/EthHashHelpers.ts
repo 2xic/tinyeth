@@ -29,8 +29,12 @@ export class EthHashHelper {
     return Buffer.concat(
       [...cmix].map((item) => {
         const results = this.padding({
-          value: getBufferFromHex(padHex(item.toString())),
-          length: 4,
+          value: getBufferFromHex(
+            padHex(item.toString(16)).split('').reverse().join('')
+          ),
+          // Not sure why 4 is selected the padding.
+          // since it's always 2d when it's used as a hex (because \0 is end of string char)
+          length: 1,
         });
 
         return results;
@@ -45,9 +49,9 @@ export class EthHashHelper {
     value: Buffer;
     length: number;
   }): Buffer {
-    if (value.length < length) {
-      return Buffer.concat([value, Buffer.alloc(length - value.length)]);
-    }
-    return value;
+    return Buffer.concat([
+      value,
+      Buffer.alloc(Math.max(0, length - value.length)),
+    ]);
   }
 }

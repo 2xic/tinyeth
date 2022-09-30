@@ -27,4 +27,6 @@ https://github.com/ethereum/consensus-specs
 
 # Eth 1.0 - tests
 - https://github.com/QuarkChain/pyquarkchain/blob/master/ethereum/pow/tests/test_ethash.py
+- https://github.com/ethereum/tests/blob/develop/PoWTests/ethash_tests.json
+- https://github.com/ethereum/ethash/blob/master/test/python/test_pyethash.py
 - 
