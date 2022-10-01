@@ -13,7 +13,19 @@ describe('Block', () => {
     });
 
     expect(parsed.coinbase).toBe('8888f1f195afa192cfee860698584c030f4c9db1');
+    expect(parsed.root).toBe(
+      'ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017'
+    );
+    expect(parsed.difficultly).toBe(131072);
+    expect(parsed.gasLimit).toBe(3141592);
+    expect(parsed.gasUsed).toBe(21000);
+    expect(parsed.timestamp).toBe(1426516743);
+    expect(parsed.mixDigest).toBe(
+      'bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498'
+    );
+    expect(parsed.nonce).toBe('a13a5a8c8f2bb1c4');
     expect(parsed.transaction).toHaveLength(1);
+
     const transaction = parsed.transaction[0];
     expect(transaction.to.toString()).toBe(
       new Address('0x095e7baea6a6c7c4c2dfeb977efac326af552d87').toString()

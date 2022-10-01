@@ -4,6 +4,7 @@ import { Address } from '../evm/Address';
 import { RlpDecoder } from '../rlp';
 import { ReadOutRlp } from '../rlp/ReadOutRlp';
 import { SimpleTypes } from '../rlp/types/TypeEncoderDecoder';
+import { getBigNumberFromBuffer } from '../utils/getBigNumberFromBuffer';
 
 @injectable()
 export class BlockLoader {
@@ -13,8 +14,30 @@ export class BlockLoader {
     const rlp = this.rlpDecoder.decode({ input: block });
     const rlpParser = new ReadOutRlp(rlp);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, __, coinbase] = rlpParser.readArray<Buffer>({
+    const [
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      __,
+      coinbase,
+      root,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ___,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _____,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ______,
+      difficultly,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ________,
+      gasLimit,
+      gasUsed,
+      timestamp,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _________,
+      mixDigest,
+      blockNonce,
+    ] = rlpParser.readArray<Buffer>({
       length: -1,
       convertToBuffer: true,
     });
@@ -44,13 +67,40 @@ export class BlockLoader {
 
     return {
       coinbase: coinbase.toString('hex'),
+      root: root.toString('hex'),
+      difficultly: getBigNumberFromBuffer(difficultly).toNumber(),
+      gasLimit: getBigNumberFromBuffer(gasLimit).toNumber(),
+      gasUsed: getBigNumberFromBuffer(gasUsed).toNumber(),
+      timestamp: getBigNumberFromBuffer(timestamp).toNumber(),
+      mixDigest: mixDigest.toString('hex'),
+      nonce: blockNonce.toString('hex'),
       transaction,
     };
+  }
+
+  public validate() {
+    /**
+     * Verify
+     *  - Uncles
+     *  - TransactionRoot
+     *  - Metadata
+     *     - Gas usage
+     *     - timestamp 
+     */
+    throw new Error('Not implemented');
   }
 }
 
 interface Block {
   coinbase: string;
+  root: string;
+  difficultly: number;
+  gasLimit: number;
+  gasUsed: number;
+  timestamp: number;
+  mixDigest: string;
+  nonce?: string;
+
   transaction: Transaction[];
 }
 

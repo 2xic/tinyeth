@@ -31,6 +31,7 @@ _Just something so I get a better understanding of the core parts of the protoco
     - Support for signing a raw transaction
     - (todo) Implement EIP 2718
     - (todo) Implement EIP 1559
+    - (todo) Implement EIP 4844
     - (todo) Add some tracking of the nonce to make things user friendly.
 
 - [x] Implement the "core" of the EVM

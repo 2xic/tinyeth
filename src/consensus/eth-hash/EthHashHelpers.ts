@@ -2,7 +2,10 @@ import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { padHex } from '../../utils/convertNumberToPadHex';
+import { forLoop } from '../../utils/forBigNumberLoop';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { sha3_256 } from '../../utils/sha3_256';
+import { EPOCH_LENGTH } from './EthHashConstants';
 
 const FNV_PRIME = new BigNumber('01000193', 16);
 
@@ -17,6 +20,21 @@ export class EthHashHelper {
       i = i.plus(1);
     }
     return true;
+  }
+
+  public getSeedHash({ blockNumber }: { blockNumber: BigNumber }) {
+    let seed = Buffer.alloc(32);
+    forLoop({
+      startValue: new BigNumber(0),
+      endValue: new BigNumber(blockNumber).dividedToIntegerBy(EPOCH_LENGTH),
+      callback: () => {
+        seed = this.serialize({
+          cmix: sha3_256(seed),
+        });
+      },
+    });
+
+    return seed;
   }
 
   public fnv({ v1, v2 }: { v1: BigNumber; v2: BigNumber }) {

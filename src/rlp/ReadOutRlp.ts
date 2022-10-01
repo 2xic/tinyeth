@@ -58,7 +58,8 @@ export class ReadOutRlp {
           }),
         ];
       } else if (Array.isArray(item)) {
-        return (item.slice(0, length) as unknown as T[]).map((item) =>
+        const arrayLength = length === -1 ? item.length : length;
+        return (item.slice(0, arrayLength) as unknown as T[]).map((item) =>
           this.valueConverter(item, {
             convertToBuffer,
             convertToNumber,
