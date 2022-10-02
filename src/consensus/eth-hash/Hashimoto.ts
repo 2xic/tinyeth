@@ -1,7 +1,10 @@
 import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
+import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
+import { assertEqual } from '../../utils/enforce';
 
 import { forLoop } from '../../utils/forBigNumberLoop';
-import { sha3_256 } from '../../utils/sha3_256';
+import { isNanOrFalsy } from '../../utils/isNanOrFalsy';
 import {
   HASH_BYTES,
   MIX_BYTES,
@@ -10,6 +13,7 @@ import {
 } from './EthHashConstants';
 import { EthHashHelper } from './EthHashHelpers';
 
+@injectable()
 export class Hashimoto {
   constructor(protected ethHashHelper: EthHashHelper) {}
 
@@ -24,11 +28,13 @@ export class Hashimoto {
     fullSize: BigNumber;
     datasetLookup: (value: BigNumber) => Buffer;
   }) {
-    const n = fullSize.dividedBy(HASH_BYTES);
+    const n = fullSize.dividedToIntegerBy(HASH_BYTES);
     const w = MIX_BYTES.dividedToIntegerBy(WORD_BYTES);
     const mixHashes = MIX_BYTES.dividedBy(HASH_BYTES);
 
-    const s = sha3_256(Buffer.concat([header, nonce.reverse()]));
+    const s = this.ethHashHelper.sha3_512({
+      buffer: Buffer.concat([header, nonce.reverse()]),
+    });
 
     let mix: number[] = [];
     forLoop({
@@ -38,23 +44,29 @@ export class Hashimoto {
         mix.push(...s);
       },
     });
+    assertEqual(mix.length, 32, 'test');
 
     forLoop({
       startValue: new BigNumber(0),
       endValue: ACCESSES,
       callback: (i) => {
-        const mixResults = mix[i.toNumber() % w.toNumber()];
-        if (!mixResults) {
-          throw new Error(
-            `Found no mix match ${mix.length} vs ${i.toNumber() % w.toNumber()}`
-          );
-        }
+        const mixIndex = mix[i.toNumber() % w.toNumber()];
+        assertEqual(isNanOrFalsy(mixIndex), false, 'mixIndex is nan');
+
+        const v1 = new BigNumberBinaryOperations(i).xor(
+          new BigNumberBinaryOperations(new BigNumber(s[0]))
+        );
+        const v2 = new BigNumber(mixIndex).modulo(
+          n.dividedToIntegerBy(mixHashes).times(mixHashes)
+        );
+        assertEqual(isNanOrFalsy(v1), false, 'number is nan');
+        assertEqual(isNanOrFalsy(v2.toNumber()), false, 'number is nan');
+
         const p = this.ethHashHelper.fnv({
-          v1: new BigNumber(i.toNumber() ^ s[0]),
-          v2: new BigNumber(mixResults)
-            .modulo(n.dividedToIntegerBy(mixHashes))
-            .times(mixHashes),
+          v1,
+          v2,
         });
+
         const newData: number[] = [];
         forLoop({
           startValue: new BigNumber(0),
@@ -64,18 +76,36 @@ export class Hashimoto {
           },
         });
 
+        assertEqual(
+          newData.length,
+          mix.length,
+          'mix and data should be same length'
+        );
+
         mix = mix.map((item, index) => {
+          assertEqual(
+            index < newData.length,
+            true,
+            'index greater than data size'
+          );
+          assertEqual(isNanOrFalsy(item), false, 'number is nan');
+          assertEqual(isNanOrFalsy(newData[index]), false, 'number is nan');
+
           const combined = this.ethHashHelper.fnv({
             v1: new BigNumber(item),
             v2: new BigNumber(newData[index]),
           });
 
-          return combined.toNumber();
+          const results = combined.toNumber();
+          assertEqual(isNanOrFalsy(results), false, 'number is nan');
+
+          return results;
         });
       },
     });
 
     const cmix: BigNumber[] = [];
+
     forLoop({
       startValue: new BigNumber(0),
       endValue: new BigNumber(mix.length),
@@ -101,7 +131,7 @@ export class Hashimoto {
     });
 
     return this.ethHashHelper.serialize({
-      cmix,
+      buffer: cmix,
     });
   }
 }

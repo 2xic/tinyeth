@@ -1,17 +1,19 @@
 import BigNumber from 'bignumber.js';
-import { getBufferFromHex } from '../../utils';
+import { injectable } from 'inversify';
+import { assertEqual } from '../../utils/enforce';
 import { EthHashBlockParameters } from './EthHashBlockParameters';
-import { EthHashConstants } from './EthHashCache';
+import { EthHashCache } from './EthHashCache';
 import { EthHashDataset } from './EthHashDataset';
 import { EthHashHelper } from './EthHashHelpers';
 import { Hashimoto } from './Hashimoto';
 
+@injectable()
 export class EthHashValidation extends Hashimoto {
   constructor(
     protected ethHashHelper: EthHashHelper,
     private ethHashDataset: EthHashDataset,
     private ethHashBlockParameters: EthHashBlockParameters,
-    private ethHashConstants: EthHashConstants
+    private ethHashConstants: EthHashCache
   ) {
     super(ethHashHelper);
   }
@@ -29,6 +31,10 @@ export class EthHashValidation extends Hashimoto {
     nonce: Buffer;
     difficultly: BigNumber;
   }) {
+    assertEqual(headerHash.length, 32);
+    assertEqual(mixHash.length, 32);
+    assertEqual(nonce.length, 8);
+
     const { cacheSize, datasetSize: fullSize } =
       this.ethHashBlockParameters.getBlockParameters({ blockNumber });
 
@@ -45,7 +51,7 @@ export class EthHashValidation extends Hashimoto {
       fullSize,
       nonce,
       header: headerHash,
-      cache,
+      cache: cache.map((item) => Buffer.from(item)),
     });
 
     return calculatedMixhash.equals(mixHash);
@@ -67,7 +73,7 @@ export class EthHashValidation extends Hashimoto {
       nonce,
       fullSize,
       datasetLookup: (i) =>
-        getBufferFromHex(
+        Buffer.from(
           this.ethHashDataset.calculateDatasetItem({
             cache,
             i,

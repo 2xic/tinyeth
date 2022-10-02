@@ -31,6 +31,9 @@ export class BigNumberBinaryOperations {
   }
 
   private convertToBigInt(value: BigNumber) {
+    if (value.isNaN()) {
+      throw new Error('Input was nan');
+    }
     const bigInt = BigInt(value.toString());
 
     return bigInt;

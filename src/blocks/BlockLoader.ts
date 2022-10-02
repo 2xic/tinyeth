@@ -85,7 +85,7 @@ export class BlockLoader {
      *  - TransactionRoot
      *  - Metadata
      *     - Gas usage
-     *     - timestamp 
+     *     - timestamp
      */
     throw new Error('Not implemented');
   }

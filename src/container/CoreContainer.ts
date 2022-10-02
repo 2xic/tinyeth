@@ -75,9 +75,11 @@ import { InterfaceEvm } from '../evm/interfaceEvm';
 import { BaseGasComputer } from '../evm/gas/BaseGasComputer';
 import { EthHash } from '../consensus/eth-hash/EthHash';
 import { EthHashBlockParameters } from '../consensus/eth-hash/EthHashBlockParameters';
-import { EthHashConstants } from '../consensus/eth-hash/EthHashCache';
+import { EthHashCache } from '../consensus/eth-hash/EthHashCache';
 import { EthHashDataset } from '../consensus/eth-hash/EthHashDataset';
 import { EthHashHelper } from '../consensus/eth-hash/EthHashHelpers';
+import { EthHashValidation } from '../consensus';
+import { Hashimoto } from '../consensus/eth-hash/Hashimoto';
 
 export class CoreContainer {
   public create(options?: ContainerOptions) {
@@ -195,9 +197,11 @@ export class CoreContainer {
 
     container.bind(EthHash).toSelf();
     container.bind(EthHashBlockParameters).toSelf();
-    container.bind(EthHashConstants).toSelf();
+    container.bind(EthHashCache).toSelf();
     container.bind(EthHashDataset).toSelf();
     container.bind(EthHashHelper).toSelf();
+    container.bind(EthHashValidation).toSelf();
+    container.bind(Hashimoto).toSelf();
 
     container.bind(Container).toConstantValue(container);
 

@@ -5,7 +5,7 @@ import { EthHashBlockParameters } from './EthHashBlockParameters';
 import { EthHashBlockParametersMock } from './EthHashBlockParametersMock';
 
 describe('EthHash', () => {
-  it('should run', () => {
+  it.skip('should run', () => {
     const container = new UnitTestContainer().create();
     container.unbind(EthHashBlockParameters);
     container.bind(EthHashBlockParameters).to(EthHashBlockParametersMock);

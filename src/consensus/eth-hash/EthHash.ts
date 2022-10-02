@@ -1,19 +1,9 @@
 import BigNumber from 'bignumber.js';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { forLoop } from '../../utils/forBigNumberLoop';
-import { sha3_256 } from '../../utils/sha3_256';
-import {
-  ACCESSES,
-  EPOCH_LENGTH,
-  HASH_BYTES,
-  MIX_BYTES,
-  WORD_BYTES,
-} from './EthHashConstants';
 import { EthHashHelper } from './EthHashHelpers';
 import { injectable } from 'inversify';
 import { EthHashDataset } from './EthHashDataset';
 import { EthHashBlockParameters } from './EthHashBlockParameters';
-import { EthHashConstants } from './EthHashCache';
+import { EthHashCache } from './EthHashCache';
 import { Hashimoto } from './Hashimoto';
 
 @injectable()
@@ -22,7 +12,7 @@ export class EthHash extends Hashimoto {
     protected ethHashHelper: EthHashHelper,
     private ethHashDataset: EthHashDataset,
     private ethHashBlockParameters: EthHashBlockParameters,
-    private ethHashConstants: EthHashConstants
+    private ethHashConstants: EthHashCache
   ) {
     super(ethHashHelper);
   }
@@ -50,15 +40,17 @@ export class EthHash extends Hashimoto {
       cacheSize,
       seed,
     });
+    const cacheBuffer = cache.map((item) => Buffer.from(item));
+
     const dataset = this.ethHashDataset.calculateDataset({
       fullSize,
-      cache,
+      cache: cacheBuffer,
     });
 
     // TODO: should not stop mining before the difficulty is hit
 
     return this.hashimoto({
-      cache,
+      cache: cacheBuffer,
       header,
       nonce,
       dataset,
@@ -86,7 +78,7 @@ export class EthHash extends Hashimoto {
       datasetLookup: (i) =>
         dataset[i.toNumber()] ||
         // TODO: THs is not correct.
-        getBufferFromHex(
+        Buffer.from(
           this.ethHashDataset.calculateDatasetItem({
             cache,
             i,

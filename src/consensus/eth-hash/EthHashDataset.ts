@@ -1,9 +1,8 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { sha3_512 } from 'js-sha3';
-import { getBufferFromHex } from '../../utils';
+import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
+import { assertEqual } from '../../utils/enforce';
 import { forLoop } from '../../utils/forBigNumberLoop';
-import { sha3_256 } from '../../utils/sha3_256';
 import { DATASET_PARENTS, HASH_BYTES, WORD_BYTES } from './EthHashConstants';
 import { EthHashHelper } from './EthHashHelpers';
 
@@ -31,7 +30,7 @@ export class EthHashDataset {
           )
         : [];
 
-    const results = items.map((item) => getBufferFromHex(item));
+    const results = items.map((item) => Buffer.from(item));
     const hasUndefined = results.find((item) => item === undefined);
     if (hasUndefined) {
       throw new Error('undefined data item');
@@ -40,37 +39,68 @@ export class EthHashDataset {
     return results;
   }
 
-  public calculateDatasetItem({ cache, i }: { cache: Buffer[]; i: BigNumber }) {
+  public calculateDatasetItem({
+    cache,
+    i,
+  }: {
+    cache: Buffer[] | number[][];
+    i: BigNumber;
+  }) {
+    const converter = (item: Buffer | number[]) =>
+      Buffer.isBuffer(item)
+        ? item
+        : this.ethHashHelper.serialize({
+            buffer: item,
+          });
     const size = cache.length;
     const r = HASH_BYTES.dividedToIntegerBy(WORD_BYTES);
 
-    let mix = cache[i.modulo(size).toNumber()];
+    let mix: number[] = [...cache[i.modulo(size).toNumber()]];
     mix[0] ^= i.toNumber();
-    mix = sha3_256(mix);
+
+    mix = this.ethHashHelper.sha3_512({
+      buffer: converter(mix),
+    });
 
     forLoop({
       startValue: new BigNumber(0),
       endValue: DATASET_PARENTS,
       callback: (j) => {
         const cacheIndex = this.ethHashHelper.fnv({
-          v1: i.pow(j),
+          v1: new BigNumberBinaryOperations(i).xor(
+            new BigNumberBinaryOperations(j)
+          ),
           v2: new BigNumber(mix[j.modulo(r).toNumber()]),
         });
-        mix = Buffer.from(
-          mix.map((item) => {
-            const value = this.ethHashHelper.fnv({
-              v1: new BigNumber(item),
-              v2: new BigNumber(
-                cache[cacheIndex.modulo(size).toNumber()].toString('hex'),
-                16
-              ),
-            });
-            return value.toNumber();
-          })
-        );
+        assertEqual(!!mix, true, 'mix is undefined');
+        assertEqual(cacheIndex.isGreaterThan(0), true, 'Mix is underflow');
+
+        const cacheItem = cache[cacheIndex.modulo(size).toNumber()];
+
+        assertEqual(mix.length, cacheItem.length);
+
+        mix = mix.map((item, index) => {
+          const currentCacheItem = cacheItem[index];
+          assertEqual(Number.isNaN(currentCacheItem), false);
+
+          assertEqual(!!cacheItem, true, 'Cache item is undefined');
+          assertEqual(!!item, true, 'item is undefined');
+
+          const value = this.ethHashHelper.fnv({
+            v1: new BigNumber(item),
+            v2: new BigNumber(currentCacheItem),
+          });
+
+          const results = value.toNumber();
+          assertEqual(Number.isNaN(results), false);
+
+          return results;
+        });
       },
     });
 
-    return sha3_512(mix);
+    return this.ethHashHelper.sha3_512({
+      buffer: converter(mix),
+    });
   }
 }
