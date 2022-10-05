@@ -73,12 +73,10 @@ export class EthHashValidation extends Hashimoto {
       nonce,
       fullSize,
       datasetLookup: (i) =>
-        Buffer.from(
-          this.ethHashDataset.calculateDatasetItem({
-            cache,
-            i,
-          })
-        ),
+        this.ethHashDataset.calculateDatasetItem({
+          cache,
+          i,
+        }),
     });
   }
 }

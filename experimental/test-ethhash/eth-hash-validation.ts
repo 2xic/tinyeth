@@ -16,7 +16,7 @@ import { EthHashBlockParameters } from '../../dist/consensus/eth-hash/EthHashBlo
 
     const results = container.get(EthHashValidation).validatePow({
         headerHash: Buffer.alloc(32),
-        nonce: Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
+        nonce: Buffer.alloc(8),
         blockNumber: new BigNumber(0),
         difficultly: new BigNumber(100),
         mixHash: Buffer.from('ba4d46a087cdfa4ab7d61c372804695c217ca008e55139409c9fd1b8e4c02e9e', 'hex'),

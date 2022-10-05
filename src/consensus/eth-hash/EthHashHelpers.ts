@@ -62,7 +62,7 @@ export class EthHashHelper {
       throw new Error('v2 is nan');
     }
 
-    return new BigNumberBinaryOperations(v1.multipliedBy(FNV_PRIME))
+    return new BigNumberBinaryOperations(v1.times(FNV_PRIME))
       .xor(new BigNumberBinaryOperations(v2))
       .modulo(new BigNumber(2).pow(32));
   }

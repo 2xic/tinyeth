@@ -26,7 +26,7 @@ export class Hashimoto {
     header: Buffer;
     nonce: Buffer;
     fullSize: BigNumber;
-    datasetLookup: (value: BigNumber) => Buffer;
+    datasetLookup: (value: BigNumber) => number[];
   }) {
     const n = fullSize.dividedToIntegerBy(HASH_BYTES);
     const w = MIX_BYTES.dividedToIntegerBy(WORD_BYTES);
@@ -56,16 +56,19 @@ export class Hashimoto {
         const v1 = new BigNumberBinaryOperations(i).xor(
           new BigNumberBinaryOperations(new BigNumber(s[0]))
         );
-        const v2 = new BigNumber(mixIndex).modulo(
-          n.dividedToIntegerBy(mixHashes).times(mixHashes)
-        );
+
+        const v2 = new BigNumber(mixIndex); //.modulo(moduloResults);
+
         assertEqual(isNanOrFalsy(v1), false, 'number is nan');
         assertEqual(isNanOrFalsy(v2.toNumber()), false, 'number is nan');
 
-        const p = this.ethHashHelper.fnv({
-          v1,
-          v2,
-        });
+        const p = this.ethHashHelper
+          .fnv({
+            v1,
+            v2,
+          })
+          .modulo(n.dividedToIntegerBy(mixHashes))
+          .times(mixHashes);
 
         const newData: number[] = [];
         forLoop({

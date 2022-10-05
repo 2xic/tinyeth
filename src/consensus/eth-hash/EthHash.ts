@@ -76,14 +76,12 @@ export class EthHash extends Hashimoto {
       nonce: Buffer.from(nonce.toString(16), 'hex'),
       fullSize,
       datasetLookup: (i) =>
-        dataset[i.toNumber()] ||
+        //   dataset[i.toNumber()] ||
         // TODO: THs is not correct.
-        Buffer.from(
-          this.ethHashDataset.calculateDatasetItem({
-            cache,
-            i,
-          })
-        ),
+        this.ethHashDataset.calculateDatasetItem({
+          cache,
+          i,
+        }),
     });
   }
 }
