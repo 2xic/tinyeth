@@ -12,19 +12,6 @@ describe('EthHashHelpers', () => {
     interactor = container.get(EthHashHelper);
   });
 
-  it('should correctly serialize', () => {
-    const buffer = Buffer.from(
-      'ca2ff06caae7c94dc968be7d76d0fbf60dd2e1989ee9bf0d5931e48564d5143b',
-      'hex'
-    );
-    const output = interactor.serialize({
-      buffer,
-    });
-    expect(output.toString('hex')).toBe(
-      'ac000000f20000000f000000c6000000aa0000007e0000009c000000d40000009c00000086000000eb000000d7000000670000000d000000bf0000006f000000d00000002d0000001e00000089000000e90000009e000000fb000000d000000095000000130000004e00000058000000460000005d00000041000000b3000000'
-    );
-  });
-
   it('should correctly serialize number array', () => {
     const buffer = [
       1556305580, 3110293675, 2203511527, 3296848916, 2859967755, 2430480614,
@@ -51,7 +38,7 @@ describe('EthHashHelpers', () => {
       blockNumber: new BigNumber(30000),
     });
     expect(results.toString('hex')).toBe(
-      'e9000000260000001900000079000000c00000004b000000d40000009d00000004000000800000007c000000b9000000ac0000009f0000008d000000f6000000810000004b0000004b000000b90000005a0000002b0000000a0000007400000018000000bd0000001700000099000000de000000b3000000e9000000e4000000'
+      'e9261979c04bd49d04807cb9ac9f8df6814b4bb95a2b0a7418bd1799deb3e9e4'
     );
   });
 
@@ -62,7 +49,7 @@ describe('EthHashHelpers', () => {
     expect(results.toString('hex')).toBe('00'.repeat(32));
   });
 
-  it('should correctly run sha3_512 with words size', () => {
+  it('should correctly run sha3_512 with words size and number input', () => {
     const pythonResults = [
       4222350358, 1973225343, 1791960186, 753837074, 3994813480, 3079448127,
       1588136613, 3582437939, 1953671597, 2220154068, 3659787161, 974854965,
@@ -99,17 +86,48 @@ describe('EthHashHelpers', () => {
 
   it('should correctly run sha3_512 with words size', () => {
     const pythonResults = [
-      4217925025, 2185742795, 606201448, 842188344, 4202428871, 2216616280,
-      724259879, 3986359582, 523939305, 538900924, 2437647790, 2723274948,
-      1645722346, 1329526573, 3834217637, 1665343538,
+      3105742346, 3981608396, 1688573785, 3177087789, 3496416025, 1247159436,
+      4145437299, 259714167, 1582819074, 965637980, 2046479830, 1809411072,
+      1728689348, 3106127019, 804101648, 4143475241,
     ];
+    const buffer = interactor.serialize({
+      buffer: Buffer.alloc(8),
+    });
     const results = interactor.sha3_512({
-      buffer: interactor.serialize({
-        buffer: Buffer.alloc(32),
-      }),
+      buffer,
     });
     pythonResults.forEach((item, index) => {
       expect(item).toBe(results[index]);
+    });
+  });
+
+  it('should correctly run serialize array', () => {
+    const buffer = interactor.serialize({
+      buffer: [
+        2755235811, 1595104947, 4073035754, 3783746169, 3486906058, 91995985,
+        4139805475, 96047419, 3546066439, 3293631156, 274415143, 1006938476,
+        358277688, 1510701946, 3769647728, 13810314,
+      ],
+    });
+    expect(buffer.toString('hex').length).toBe(126);
+    expect(buffer.toString('hex')).toBe(
+      '3ef8934a3be531f5ae795c2f9726781eac6f5dfc15fbb75032b60c6fb3199b5070eac53d4b2d054c72e3b501c69a40c3832ea551a7b7b0a507240b0ea8ab2d'
+    );
+  });
+
+  it('should correctly deserialize', () => {
+    const expectedResults = [
+      2542887582, 3645748236, 2613512256, 1876490698, 2612311064, 1201713829,
+      2574375809, 1318992877,
+    ];
+    const output = interactor.deserialize({
+      hashed: Buffer.from(
+        '9e6291970cb44dd94008c79bcaf9d86f18b4b49ba5b2a04781db7199ed3b9e4e',
+        'hex'
+      ),
+    });
+    expectedResults.forEach((item, index) => {
+      expect(item).toBe(output[index]);
     });
   });
 });

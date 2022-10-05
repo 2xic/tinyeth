@@ -1,7 +1,10 @@
 import BigNumber from 'bignumber.js';
+import { buf } from 'crc-32/*';
 import { injectable } from 'inversify';
+import { isTemplateExpression } from 'typescript';
 import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { padHex } from '../../utils/convertNumberToPadHex';
+import { assertEqual } from '../../utils/enforce';
 import { forLoop } from '../../utils/forBigNumberLoop';
 import { getBigNumberFromBuffer } from '../../utils/getBigNumberFromBuffer';
 import { getBufferFromHex } from '../../utils/getBufferFromHex';
@@ -32,9 +35,19 @@ export class EthHashHelper {
         startValue: new BigNumber(0),
         endValue: new BigNumber(blockNumber).dividedToIntegerBy(EPOCH_LENGTH),
         callback: () => {
-          seed = this.serialize({
-            buffer: sha3_256(seed),
+          const buffer = sha3_256(seed);
+
+          const seralized = this.serialize({
+            buffer,
           });
+          const reversedList = [...new Array(buffer.length)]
+            .map((_, index) => {
+              const item = seralized[index];
+              return padHex(item.toString(16)).split('').reverse().join('');
+            })
+            .join('');
+          seed = getBufferFromHex(reversedList);
+          assertEqual(seed.length, 32);
         },
       });
     }
@@ -59,18 +72,29 @@ export class EthHashHelper {
   }: {
     buffer: BigNumber[] | number[] | Buffer;
   }): Buffer {
-    return Buffer.concat(
-      [...buffer].map((item) => {
+    if (Buffer.isBuffer(buffer)) {
+      return buffer;
+    }
+    const results = Buffer.concat(
+      [...new Array(buffer.length)].map((_, index) => {
+        const item = buffer[index];
+        const slicedBuffer = padHex(item.toString(16))
+          .split('')
+          .reverse()
+          .join('');
+
+        const value = getBufferFromHex(slicedBuffer);
+
         const results = this.padding({
-          value: getBufferFromHex(
-            padHex(item.toString(16)).split('').reverse().join('')
-          ),
-          length: 4,
+          value,
+          length: 2,
         });
 
         return results;
       })
     );
+
+    return results;
   }
 
   public sha3_256({ buffer }: { buffer: Buffer }) {
@@ -85,7 +109,7 @@ export class EthHashHelper {
     return this.deserialize({ hashed });
   }
 
-  private deserialize({ hashed }: { hashed: Buffer }) {
+  public deserialize({ hashed }: { hashed: Buffer }): Array<number> {
     return [...new Array(hashed.length / WORD_BYTES.toNumber())].map(
       (_, index) => {
         const item = hashed.slice(
@@ -113,9 +137,10 @@ export class EthHashHelper {
     value: Buffer;
     length: number;
   }): Buffer {
+    const bufferLength = value.length;
     return Buffer.concat([
       value,
-      Buffer.alloc(Math.max(0, length - value.length)),
+      Buffer.alloc(Math.max(0, length - bufferLength)),
     ]);
   }
 }

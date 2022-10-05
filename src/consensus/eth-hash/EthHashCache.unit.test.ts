@@ -15,7 +15,7 @@ describe('EthHashCache', () => {
       }),
     });
 
-    const cacheSeralized = cache
+    const cacheSerialized = cache
       .map((item) =>
         ethHashHelper
           .serialize({
@@ -25,16 +25,41 @@ describe('EthHashCache', () => {
       )
       .join('');
 
-    expect(cacheSeralized).toBe(
+    expect(cacheSerialized).toBe(
       'da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3'
     );
   });
 
-  it('should correctly create the cache with an interation', () => {
+  it('should correctly create the cache with an interaction', () => {
     const blockNumber = new BigNumber(0);
     const ethHashHelper = getClassFromTestContainer(EthHashHelper);
     const cache = getClassFromTestContainer(EthHashCache).makeCache({
       cacheSize: HASH_BYTES,
+      seed: ethHashHelper.getSeedHash({
+        blockNumber,
+      }),
+    });
+
+    const cacheSerialized = cache
+      .map((item) =>
+        ethHashHelper
+          .serialize({
+            buffer: item,
+          })
+          .toString('hex')
+      )
+      .join('');
+
+    expect(cacheSerialized).toBe(
+      'da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3'
+    );
+  });
+
+  it('should correctly create cache with double iterations', () => {
+    const blockNumber = new BigNumber(0);
+    const ethHashHelper = getClassFromTestContainer(EthHashHelper);
+    const cache = getClassFromTestContainer(EthHashCache).makeCache({
+      cacheSize: HASH_BYTES.times(2),
       seed: ethHashHelper.getSeedHash({
         blockNumber,
       }),
@@ -51,7 +76,32 @@ describe('EthHashCache', () => {
       .join('');
 
     expect(cacheSeralized).toBe(
-      '42d3295f1a23a8c49c4fbcd66ae06e7f3b2674f2a74dcf11e763648c051675c4211e01dbcf9dd8090f1db9b6ffb5447a6cd91a79c5a3582290e59b12e755c382'
+      'da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3'
+    );
+  });
+
+  it('should correctly create cache with three iterations', () => {
+    const blockNumber = new BigNumber(0);
+    const ethHashHelper = getClassFromTestContainer(EthHashHelper);
+    const cache = getClassFromTestContainer(EthHashCache).makeCache({
+      cacheSize: HASH_BYTES.times(3),
+      seed: ethHashHelper.getSeedHash({
+        blockNumber,
+      }),
+    });
+
+    const cacheSerialized = cache
+      .map((item) =>
+        ethHashHelper
+          .serialize({
+            buffer: item,
+          })
+          .toString('hex')
+      )
+      .join('');
+
+    expect(cacheSerialized).toBe(
+      'da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3'
     );
   });
 
@@ -65,7 +115,7 @@ describe('EthHashCache', () => {
       }),
     });
 
-    const cacheSeralized = cache
+    const cacheSerialized = cache
       .map((item) =>
         ethHashHelper
           .serialize({
@@ -75,8 +125,8 @@ describe('EthHashCache', () => {
       )
       .join('');
 
-    expect(cacheSeralized).toBe(
-      'da653cc5ba05369b7eae653841ce184cb05a77aa6e03ed09024000e9881fd85ab7dbdfaa0acf81c9668c8d3542b8b61188445df3d7b01ad10e3ffbfac4ddb9f3d1736ce32673f6848f4bce2d5062c52e1d4c99565d0e1fb991665d1bde94e0ab3f0e39c753308092a500abee4065ec7e867f60afdfaab41dca1ef412f048cbc5200b38d3c57ac38ac3f2c9cbf2e4a7bc555da0b7cd6009965e67fbc83569bd29d9c387042171e9ba14e90af7b9773c1471864fef3740f6f0b53c35b4927b44ecdb3013b240a2fa60ce57278fe50dcfccd6a37a18faa20281edbb606fe67022966c951eba7c877a73714f76bcbbf126f3c2211db6e7a0529691bdf9b525321189'
+    expect(cacheSerialized).toBe(
+      '252e5612625ef1eaf6bdef150b1ac1352908c605b1418ac8a9f7e17461c1d663cbcad65dc8ca1e791c96ad6f824b55b9d54747d1e3ec1b7dbb3bd70a99bf7a501445fade0842cbff5e4f4c10b05322f3a7e9152247e6ca1ec48e4a98af34eaee8ca1adafa1b29b0a23aec492a736401771cb259b989ebea37d2c7bcf197f1e96a5038a552fc65975b946a142776eeace349b4d1dd81f9d23b9672cdb0ac7263b284e9a7c95af124b26d6fa8cc1de68516eff55fbd070100ff60c41588cdff22f923a820497aeb8fd2a2f04869448540a7f175292cbbf36a614bdcf89a9ce87a80dec5841bfb87fc1c34750cc0ef66cb0b5d06569b394d5972ce6bbc0d25cc8b9'
     );
   });
 });

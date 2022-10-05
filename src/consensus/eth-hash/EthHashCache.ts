@@ -4,6 +4,7 @@ import { CACHE_ROUNDS, HASH_BYTES } from './EthHashConstants';
 import { injectable } from 'inversify';
 import { EthHashHelper } from './EthHashHelpers';
 import { assertEqual } from '../../utils/enforce';
+import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 
 @injectable()
 export class EthHashCache {
@@ -31,13 +32,13 @@ export class EthHashCache {
       startValue: new BigNumber(1),
       endValue: n,
       callback: () => {
-        set.push(
-          this.ethHashHelper.sha3_512({
-            buffer: this.ethHashHelper.serialize({
-              buffer: set[set.length - 1],
-            }),
-          })
-        );
+        const results = this.ethHashHelper.sha3_512({
+          buffer: this.ethHashHelper.serialize({
+            buffer: set[set.length - 1],
+          }),
+        });
+        assertEqual(results.length, 16);
+        set.push(results);
       },
     });
 
@@ -50,20 +51,29 @@ export class EthHashCache {
           endValue: n,
           callback: (i) => {
             const v = set[i.toNumber()][0] % n.toNumber();
+            const z = i.minus(1).plus(n).modulo(n).toNumber();
 
-            const array1 = set[i.minus(1).plus(n).modulo(n).toNumber()];
+            const array1 = set[z];
             const array2 = set[v];
 
             assertEqual(array1.length, array2.length);
 
-            const buffer = [...array1].map(
-              (item, index) => item ^ array2[index]
+            const buffer = [...array1].map((item, index) =>
+              new BigNumberBinaryOperations(new BigNumber(item))
+                .xor(
+                  new BigNumberBinaryOperations(new BigNumber(array2[index]))
+                )
+                .toNumber()
             );
 
+            assertEqual(buffer.length, 16, 'wrong buffer length');
+
+            const serializedBuffer = this.ethHashHelper.serialize({
+              buffer,
+            });
+
             const mappedHash = this.ethHashHelper.sha3_512({
-              buffer: this.ethHashHelper.serialize({
-                buffer,
-              }),
+              buffer: serializedBuffer,
             });
 
             set[i.toNumber()] = mappedHash;
