@@ -9,18 +9,13 @@ import { EthHashBlockParameters } from '../../dist/consensus/eth-hash/EthHashBlo
     container.unbind(EthHashBlockParameters);
     container.bind(EthHashBlockParameters).to(EthHashBlockParametersMock);
 
-    const headerHash = Buffer.from(
-        'ca2ff06caae7c94dc968be7d76d0fbf60dd2e1989ee9bf0d5931e48564d5143b',
-        'hex'
-    )
-
     const results = container.get(EthHashValidation).validatePow({
         headerHash: Buffer.alloc(32),
         nonce: Buffer.alloc(8),
         blockNumber: new BigNumber(0),
         difficultly: new BigNumber(100),
-        mixHash: Buffer.from('ba4d46a087cdfa4ab7d61c372804695c217ca008e55139409c9fd1b8e4c02e9e', 'hex'),
+        mixHash: Buffer.from('4e7bc6e24307fffb42684d33e3eb53d015a92c066630d6b64f4fc98293ce58a7', 'hex'),
     });
 
-    console.log(results)
+    expect(results).toBe(true);
 })()

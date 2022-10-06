@@ -18,19 +18,27 @@ export class EthHash extends Hashimoto {
   }
 
   public mine({
+    nonce: inputNonce,
     blockNumber,
     header,
     difficultly,
   }: {
+    nonce?: Buffer;
     blockNumber: BigNumber;
     header: Buffer;
     difficultly: BigNumber;
   }) {
     const { cacheSize, datasetSize: fullSize } =
       this.ethHashBlockParameters.getBlockParameters({ blockNumber });
-    const nonce = BigNumber.random()
-      .times(new BigNumber(2).pow(64))
-      .integerValue();
+    const nonce = inputNonce
+      ? inputNonce
+      : Buffer.from(
+          BigNumber.random()
+            .times(new BigNumber(2).pow(64))
+            .integerValue()
+            .toString(16),
+          'hex'
+        );
 
     const seed = this.ethHashHelper.getSeedHash({
       blockNumber,
@@ -40,17 +48,16 @@ export class EthHash extends Hashimoto {
       cacheSize,
       seed,
     });
-    const cacheBuffer = cache.map((item) => Buffer.from(item));
 
     const dataset = this.ethHashDataset.calculateDataset({
       fullSize,
-      cache: cacheBuffer,
+      cache,
     });
 
     // TODO: should not stop mining before the difficulty is hit
 
     return this.hashimoto({
-      cache: cacheBuffer,
+      cache,
       header,
       nonce,
       dataset,
@@ -63,25 +70,18 @@ export class EthHash extends Hashimoto {
     nonce,
     fullSize,
     dataset,
-    cache,
   }: {
     header: Buffer;
-    nonce: BigNumber;
+    nonce: Buffer;
     fullSize: BigNumber;
-    dataset: Buffer[];
-    cache: Buffer[];
+    dataset: number[][];
+    cache: number[][];
   }) {
     return this._hashimoto({
       header,
-      nonce: Buffer.from(nonce.toString(16), 'hex'),
+      nonce, //: Buffer.from(nonce.toString(16), 'hex'),
       fullSize,
-      datasetLookup: (i) =>
-        //   dataset[i.toNumber()] ||
-        // TODO: THs is not correct.
-        this.ethHashDataset.calculateDatasetItem({
-          cache,
-          i,
-        }),
+      datasetLookup: (i) => dataset[i.toNumber()],
     });
   }
 }

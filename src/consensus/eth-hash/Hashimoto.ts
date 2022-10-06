@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
+import { isPlusToken } from 'typescript';
 import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { assertEqual } from '../../utils/enforce';
 
@@ -112,11 +113,12 @@ export class Hashimoto {
     forLoop({
       startValue: new BigNumber(0),
       endValue: new BigNumber(mix.length),
+      increment: new BigNumber(4),
       callback: (i) => {
         const mix_i = new BigNumber(mix[i.toNumber()]);
-        const mix_i1 = new BigNumber(mix[i.toNumber()]);
-        const mix_i2 = new BigNumber(mix[i.toNumber()]);
-        const mix_i3 = new BigNumber(mix[i.toNumber()]);
+        const mix_i1 = new BigNumber(mix[i.toNumber() + 1]);
+        const mix_i2 = new BigNumber(mix[i.toNumber() + 2]);
+        const mix_i3 = new BigNumber(mix[i.toNumber() + 3]);
 
         const results = this.ethHashHelper.fnv({
           v1: this.ethHashHelper.fnv({
@@ -133,8 +135,9 @@ export class Hashimoto {
       },
     });
 
-    return this.ethHashHelper.serialize({
-      buffer: cmix,
+    const output = this.ethHashHelper.serialize({
+      buffer: cmix.map((item) => item.toNumber()),
     });
+    return output;
   }
 }

@@ -11,16 +11,12 @@ import { EthHashBlockParameters } from '../../dist/consensus/eth-hash/EthHashBlo
     container.unbind(EthHashBlockParameters);
     container.bind(EthHashBlockParameters).to(EthHashBlockParametersMock);
 
-    const headerHash = Buffer.from(
-        'ca2ff06caae7c94dc968be7d76d0fbf60dd2e1989ee9bf0d5931e48564d5143b',
-        'hex'
-      )
-
     const results = container.get(EthHash).mine({
       blockNumber: new BigNumber(0),
-      header: headerHash,
       difficultly: new BigNumber(1),
-    });
+      header: Buffer.alloc(32),
+      nonce: Buffer.alloc(8),
+  });
 
     console.log(results)
     console.log(results.length)

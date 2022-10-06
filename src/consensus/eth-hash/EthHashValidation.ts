@@ -51,7 +51,7 @@ export class EthHashValidation extends Hashimoto {
       fullSize,
       nonce,
       header: headerHash,
-      cache: cache.map((item) => Buffer.from(item)),
+      cache,
     });
 
     return calculatedMixhash.equals(mixHash);
@@ -66,7 +66,7 @@ export class EthHashValidation extends Hashimoto {
     header: Buffer;
     nonce: Buffer;
     fullSize: BigNumber;
-    cache: Buffer[];
+    cache: number[][];
   }) {
     return this._hashimoto({
       header,

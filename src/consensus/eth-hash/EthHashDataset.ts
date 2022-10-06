@@ -15,26 +15,15 @@ export class EthHashDataset {
     cache,
   }: {
     fullSize: BigNumber;
-    cache: Buffer[];
-  }): Buffer[] {
+    cache: number[][];
+  }): number[][] {
     const size = fullSize.dividedToIntegerBy(HASH_BYTES);
-
-    const items =
-      // TODO, is this even correct ? I think size should be positive always
-      0 < size.toNumber()
-        ? [...new Array(size.toNumber())].map((_, index) =>
-            this.calculateDatasetItem({
-              cache,
-              i: new BigNumber(index),
-            })
-          )
-        : [];
-
-    const results = items.map((item) => Buffer.from(item));
-    const hasUndefined = results.find((item) => item === undefined);
-    if (hasUndefined) {
-      throw new Error('undefined data item');
-    }
+    const results = [...new Array(size.toNumber())].map((_, index) =>
+      this.calculateDatasetItem({
+        cache,
+        i: new BigNumber(index),
+      })
+    );
 
     return results;
   }
@@ -43,20 +32,20 @@ export class EthHashDataset {
     cache,
     i,
   }: {
-    cache: Buffer[] | number[][];
+    cache: number[][];
     i: BigNumber;
-  }) {
-    const converter = (item: Buffer | number[]) =>
-      Buffer.isBuffer(item)
-        ? item
-        : this.ethHashHelper.serialize({
-            buffer: item,
-          });
+  }): number[] {
+    const converter = (item: number[]) =>
+      this.ethHashHelper.serialize({
+        buffer: item,
+      });
     const size = cache.length;
     const r = HASH_BYTES.dividedToIntegerBy(WORD_BYTES);
 
     let mix: number[] = [...cache[i.modulo(size).toNumber()]];
-    mix[0] ^= i.toNumber();
+    mix[0] = new BigNumberBinaryOperations(new BigNumber(mix[0]))
+      .xor(new BigNumberBinaryOperations(i))
+      .toNumber();
 
     mix = this.ethHashHelper.sha3_512({
       buffer: converter(mix),

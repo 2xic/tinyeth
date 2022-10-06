@@ -5,16 +5,20 @@ import { EthHashBlockParameters } from './EthHashBlockParameters';
 import { EthHashBlockParametersMock } from './EthHashBlockParametersMock';
 
 describe('EthHash', () => {
-  it.skip('should run', () => {
+  it('should correctly run the algorithm', () => {
     const container = new UnitTestContainer().create();
     container.unbind(EthHashBlockParameters);
     container.bind(EthHashBlockParameters).to(EthHashBlockParametersMock);
 
     const results = container.get(EthHash).mine({
-      blockNumber: new BigNumber(30000),
-      header: Buffer.alloc(0),
+      blockNumber: new BigNumber(0),
       difficultly: new BigNumber(1),
+      header: Buffer.alloc(32),
+      nonce: Buffer.alloc(8),
     });
-    expect(results).toBeTruthy();
+
+    expect(results.toString('hex')).toBe(
+      '4e7bc6e24307fffb42684d33e3eb53d015a92c066630d6b64f4fc98293ce58a7'
+    );
   });
 });
