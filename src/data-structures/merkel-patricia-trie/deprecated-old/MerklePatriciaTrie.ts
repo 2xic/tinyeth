@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { convertBytesToNibbles } from './utils/convertBytesToNibbles';
-import { InMemoryDatabase } from '../utils/InMemoryDatabase';
+import { convertBytesToNibbles } from '../utils/convertBytesToNibbles';
+import { InMemoryDatabase } from '../../utils/InMemoryDatabase';
 import {
   CommonPrefixResultType,
   MerklePatriciaTrieHelper,
 } from './MerklePatriciaTrieHelper';
-import { packNibbles } from './utils/packNibbles';
-import { addTerminator, removeTerminator } from './utils/terminatorUtils';
+import { packNibbles } from '../utils/packNibbles';
+import { addTerminator, removeTerminator } from '../utils/terminatorUtils';
 import { NodeType, TrieNode } from './nodes/TrieNode';
 import { TrieNodeRawKeyValue } from './nodes/TrieNodeRawKeyValue';
 import { TrieNodeRawValue } from './nodes/TrieNodeRawValue';
-import { unpackNibbles } from './utils/unpackNibbles';
+import { unpackNibbles } from '../utils/unpackNibbles';
+import { RlpEncoder } from '../../../rlp';
 
 export class MerklePatriciaTrie {
   private _root: TrieNode;
@@ -27,24 +28,36 @@ export class MerklePatriciaTrie {
   }
 
   public put(key: Buffer, value: Buffer): { success: boolean } {
+    let createdNode: TrieNode;
     if (this._root.type === NodeType.UNINITIALIZED) {
       this._root = new TrieNode({
         key,
         value,
       });
+      createdNode = this._root;
     } else if (this._root.type === NodeType.LEAF) {
       this._root = this.updateTrie({
         node: this._root,
         key: convertBytesToNibbles(key),
         value,
       });
+      createdNode = this._root;
     } else if (this._root.type === NodeType.BRANCH) {
       throw new Error('oh no');
+    } else {
+      throw new Error('Unknown state');
     }
 
     // eslint-disable-next-line no-console
-    console.log(this._root.childrenValues);
-
+    console.log(['child values', this._root.childrenValues]);
+    /*
+    this.database.insert({
+      key: createdNode.hash,
+      value: new RlpEncoder().encode({
+        input: createdNode.childrenValues,
+      }),
+    });
+    */
     return {
       success: true,
     };

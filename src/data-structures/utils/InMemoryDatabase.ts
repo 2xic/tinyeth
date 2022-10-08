@@ -1,11 +1,17 @@
 export class InMemoryDatabase {
-  private storage: Record<string, string> = {};
+  private storage: Record<string, Buffer> = {};
 
-  public save(key: string, value: string) {
-    this.storage[key] = value;
+  public insert({ key, value }: { key: Buffer; value: Buffer }) {
+    this.storage[key.toString('hex')] = value;
   }
 
-  public retrieve(key: string) {
-    return this.storage[key];
+  public retrieve(key: Buffer) {
+    const results = this.storage[key.toString('hex')];
+
+    if (!results) {
+      throw new Error(`${key.toString('hex')} not found in db`);
+    }
+
+    return results;
   }
 }

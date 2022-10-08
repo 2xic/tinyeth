@@ -1,10 +1,10 @@
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { RlpEncoder } from '../../rlp/RlpEncoder';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
+import { RlpEncoder } from '../../../rlp/RlpEncoder';
 import {
   CommonPrefixResultType,
   MerklePatriciaTrieHelper as MerklePatriciaTrieHelper,
 } from './MerklePatriciaTrieHelper';
-import { singleHexDigitString } from '../utils/singleHexDigitString';
+import { singleHexDigitString } from '../../utils/singleHexDigitString';
 
 describe('MerklePatriciaTrieHelper', () => {
   it('should correctly encode key and value', () => {

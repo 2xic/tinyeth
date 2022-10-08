@@ -1,20 +1,18 @@
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
-import { RlpEncoder } from '../../rlp/RlpEncoder';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
+import { RlpEncoder } from '../../../rlp/RlpEncoder';
 import { MerklePatriciaTrie } from './MerklePatriciaTrie';
+import { convertBytesToNibbles } from '../utils/convertBytesToNibbles';
 
 // Test from https://medium.com/@chiqing/merkle-patricia-trie-explained-ae3ac6a7e123
-describe.skip('MerklePatriciaTrie', () => {
+describe('MerklePatriciaTrie', () => {
   it('should correctly get the hash of a basic root node', () => {
     const trie = new MerklePatriciaTrie();
     trie.put(
       Buffer.from('010102', 'hex'),
-      Buffer.from(
-        new RlpEncoder()
-          .encode({
-            input: ['hello'],
-          })
-          .slice(2),
-        'hex'
+      getBufferFromHex(
+        new RlpEncoder().encode({
+          input: ['hello'],
+        })
       )
     );
     expect(trie.root.key.toString('hex')).toBe('20010102');
@@ -71,7 +69,7 @@ describe.skip('MerklePatriciaTrie', () => {
     );
   });
 
-  it('should correctly construct a trie with an extension node', () => {
+  it.skip('should correctly construct a trie with an extension node', () => {
     const trie = new MerklePatriciaTrie();
     const value1 = getBufferFromHex(
       new RlpEncoder().encode({
@@ -128,5 +126,29 @@ describe.skip('MerklePatriciaTrie', () => {
     const hash2 = trie.rootHash;
 
     expect(hash1).not.toBe(hash2);
+  });
+  it.skip('should correctly execute the example in the ethwiki', () => {
+    // from https://github.com/ethereum/wiki/wiki/Patricia-Tree/eb67aed3dd751a25aa94704de22f6bd8850d345b#example-trie
+    const trie = new MerklePatriciaTrie();
+    trie.put(
+      convertBytesToNibbles(Buffer.from('do')),
+      Buffer.from('verb', 'ascii')
+    );
+    trie.put(
+      convertBytesToNibbles(Buffer.from('dog')),
+      Buffer.from('puppy', 'ascii')
+    );
+
+    /*
+      Maps too
+      <64 6f> : 'verb'
+      <64 6f 67> : 'puppy'
+      <- Based on my understanding....
+      We should then have a extension node
+      root : [extension]
+      extension -> [<64, 6f> ,hash]
+      hash -> [<6 -> hash-2>, 'verb],
+      hash-2 -> [<>, 'puppy]
+    */
   });
 });

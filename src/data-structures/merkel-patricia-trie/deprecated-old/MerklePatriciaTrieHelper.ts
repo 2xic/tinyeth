@@ -1,12 +1,12 @@
-import { RlpEncoder } from '../../rlp/RlpEncoder';
-import { addTerminator, removeTerminator } from './utils/terminatorUtils';
-import { convertBytesToNibbles } from './utils/convertBytesToNibbles';
-import { packNibbles } from './utils/packNibbles';
-import { getBufferFromHex } from '../../utils/getBufferFromHex';
+import { RlpEncoder } from '../../../rlp/RlpEncoder';
+import { addTerminator, removeTerminator } from '../utils/terminatorUtils';
+import { convertBytesToNibbles } from '../utils/convertBytesToNibbles';
+import { packNibbles } from '../utils/packNibbles';
+import { getBufferFromHex } from '../../../utils/getBufferFromHex';
 import { TrieNode } from './nodes/TrieNode';
 import { TrieNodeReference } from './nodes/TrieNodeReference';
-import { sha3_256 } from '../../utils/sha3_256';
-import { unpackNibbles } from './utils/unpackNibbles';
+import { sha3_256 } from '../../../utils/sha3_256';
+import { unpackNibbles } from '../utils/unpackNibbles';
 
 export class MerklePatriciaTrieHelper {
   public encodeNode({ key, value }: { key: Buffer; value: Buffer }) {
@@ -109,10 +109,10 @@ export class MerklePatriciaTrieHelper {
 }
 
 export enum CommonPrefixResultType {
-  NO_PREFIX,
-  EQUAL,
-  KEY1_EXHAUSTED,
-  KEY2_EXHAUSTED,
-  KEY1_PREFIX,
-  KEY2_PREFIX,
+  NO_PREFIX = 'NO_PREFIX',
+  EQUAL = 'EQUAL',
+  KEY1_EXHAUSTED = 'KEY1_EXHAUSTED',
+  KEY2_EXHAUSTED = 'KEY2_EXHAUSTED',
+  KEY1_PREFIX = 'KEY1_PREFIX',
+  KEY2_PREFIX = 'KEY2_PREFIX',
 }
