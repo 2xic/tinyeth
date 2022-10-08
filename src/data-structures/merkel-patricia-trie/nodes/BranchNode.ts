@@ -1,18 +1,16 @@
-import { buf } from 'crc-32/*';
-import { RlpEncoder } from '../../../rlp';
-import { getBufferFromHex } from '../../../utils';
-import { sha3_256 } from '../../../utils/sha3_256';
 import { Node, NodeType } from './Node';
 
-export class BranchNode implements Node {
+export class BranchNode extends Node {
   private children: Array<Buffer | number> = [...new Array(17)];
 
   constructor(
-    private options: {
+    protected options: {
       key: Buffer;
       value: Buffer;
     }
   ) {
+    super(options);
+
     this.children = this.children.map(() => 0);
     this.children[this.children.length - 1] = options.value;
   }
@@ -22,22 +20,7 @@ export class BranchNode implements Node {
       throw new Error(`you overwrite a key at index ${index}, are you sure ?`);
     }
     this.children[index] = node;
-  }
-
-  public get nodeKey() {
-    return sha3_256(this.nodeValue);
-  }
-
-  public get nodeValue() {
-    return getBufferFromHex(
-      new RlpEncoder().encode({
-        input: this.children,
-      })
-    );
-  }
-
-  public get value() {
-    return this.options.value;
+    return this;
   }
 
   public get(index: number): Buffer | null {

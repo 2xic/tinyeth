@@ -1,8 +1,5 @@
 import { RewriteMerklePatriciaTrie } from './MerkelPatriciaTrie';
-import { BranchNode } from './nodes/BranchNode';
-import { ExtensionNode } from './nodes/ExstensionNode';
-import { LeafNode } from './nodes/LeafNode';
-import { Node, NodeType } from './nodes/Node';
+import { NodeType } from './nodes/Node';
 
 describe('MerklePatriciaTrie', () => {
   it('should correctly update the root node from empty node to leaf node', () => {
@@ -13,6 +10,32 @@ describe('MerklePatriciaTrie', () => {
 
     const value = interactor.traverse('dog');
     expect(value).toBe('verb');
+  });
+
+  it.skip('should correctly generate the root hash of a simple trie', () => {
+    const interactor = new RewriteMerklePatriciaTrie();
+    interactor.insert('do', 'verb');
+    expect(interactor.trieRoot.nodeValue.toString('hex')).toBe(
+      'c98320646f8476657262'
+    );
+    expect(interactor.trieRoot.nodeKey.toString('hex')).toBe(
+      '014f07ed95e2e028804d915e0dbd4ed451e394e1acfd29e463c11a060b2ddef7'
+    );
+  });
+
+  it.skip('should correctly generate the root hash of a trie with extension node', () => {
+    const interactor = new RewriteMerklePatriciaTrie();
+
+    interactor.insert('do', 'verb');
+
+    interactor.insert('dog', 'puppy');
+
+    expect(interactor.trieRoot.nodeValue.toString('hex')).toBe(
+      'e18300646fdc808080808080c7378570757070798080808080808080808476657262'
+    );
+    expect(interactor.trieRoot.nodeKey.toString('hex')).toBe(
+      '014f07ed95e2e028804d915e0dbd4ed451e394e1acfd29e463c11a060b2ddef7'
+    );
   });
 
   it('should correctly update the root node from empty node to leaf node to branch node', () => {
@@ -78,9 +101,7 @@ describe('MerklePatriciaTrie', () => {
       hash: branchNodeReference.rawValues[4],
     });
     expect(branchNodeExtensionReference.type).toBe(NodeType.EXTENSION_NODE);
-    expect(
-      (branchNodeExtensionReference as ExtensionNode).key.toString('hex')
-    ).toBe('060f');
+    expect(branchNodeExtensionReference.key.toString('hex')).toBe('060f');
     const branchNodeExtensionLeaf = interactor.retrieveNode({
       hash: branchNodeReference.rawValues[8],
     });
@@ -94,6 +115,28 @@ describe('MerklePatriciaTrie', () => {
 
     const horseValue = interactor.traverse('horse');
     expect(horseValue).toBe('stallion');
+  });
+
+  it('should correctly update readjust the extension node', () => {
+    const interactor = new RewriteMerklePatriciaTrie();
+    expect(interactor.trieRoot.type).toBe(NodeType.EMPTY_NODE);
+    interactor.insert('do', 'verb');
+    expect(interactor.trieRoot.type).toBe(NodeType.LEAF_NODE);
+
+    interactor.insert('dog', 'puppy');
+
+    interactor.insert('doge', 'coin');
+
+    expect(interactor.trieRoot.type).toBe(NodeType.EXTENSION_NODE);
+
+    const doValue = interactor.traverse('do');
+    expect(doValue).toBe('verb');
+
+    const dogValue = interactor.traverse('dog');
+    expect(dogValue).toBe('puppy');
+
+    const dogeValue = interactor.traverse('doge');
+    expect(dogeValue).toBe('coin');
   });
 
   it('should correctly create same tree layout as on the wiki when all keys are added', () => {
@@ -110,7 +153,7 @@ describe('MerklePatriciaTrie', () => {
 
     const branchNodeReference = interactor.retrieveNode({
       hash: value,
-    }) as BranchNode;
+    });
     expect(branchNodeReference.type).toBe(NodeType.BRANCH_NODE);
     expect(branchNodeReference.rawValues[4]).toBeTruthy();
     expect(branchNodeReference.rawValues[8]).toBeTruthy();
@@ -124,7 +167,7 @@ describe('MerklePatriciaTrie', () => {
      */
     const slot8 = interactor.retrieveNode({
       hash: branchNodeReference.rawValues[8],
-    }) as LeafNode;
+    });
     expect(slot8.type).toBe(NodeType.LEAF_NODE);
 
     /*
@@ -132,15 +175,15 @@ describe('MerklePatriciaTrie', () => {
     */
     const slot4 = interactor.retrieveNode({
       hash: branchNodeReference.rawValues[4],
-    }) as ExtensionNode;
+    });
     expect(slot4.type).toBe(NodeType.EXTENSION_NODE);
 
     /**
       Extension references
     */
     const branchExtensionReferences = interactor.retrieveNode({
-      hash: (slot4 as ExtensionNode).value,
-    }) as BranchNode;
+      hash: slot4.value,
+    });
     expect(branchExtensionReferences.type).toBe(NodeType.BRANCH_NODE);
     expect(branchExtensionReferences.value.toString('ascii')).toBe('verb');
     expect(branchExtensionReferences.rawValues[6]).toBeTruthy();
@@ -157,12 +200,12 @@ describe('MerklePatriciaTrie', () => {
 
     const slot6 = interactor.retrieveNode({
       hash: branchExtensionReferences.rawValues[6],
-    }) as ExtensionNode;
+    });
     expect(slot6.type).toBe(NodeType.EXTENSION_NODE);
 
     const slot6BranchNode = interactor.retrieveNode({
       hash: slot6.value,
-    }) as BranchNode;
+    });
     expect(slot6BranchNode.type).toBe(NodeType.BRANCH_NODE);
     expect(slot6BranchNode.value.toString('utf8')).toBe('puppy');
 
@@ -175,8 +218,20 @@ describe('MerklePatriciaTrie', () => {
 
     const coinSlot = interactor.retrieveNode({
       hash: slot6BranchNode.rawValues[6],
-    }) as BranchNode;
+    });
     expect(coinSlot.type).toBe(NodeType.LEAF_NODE);
     expect(coinSlot.value.toString('utf8')).toBe('coin');
+
+    const doValue = interactor.traverse('do');
+    expect(doValue).toBe('verb');
+
+    const dogValue = interactor.traverse('dog');
+    expect(dogValue).toBe('puppy');
+
+    const horseValue = interactor.traverse('horse');
+    expect(horseValue).toBe('stallion');
+
+    const dogeValue = interactor.traverse('doge');
+    expect(dogeValue).toBe('coin');
   });
 });

@@ -1,29 +1,8 @@
-import { RlpEncoder } from '../../../rlp';
-import { getBufferFromHex } from '../../../utils';
-import { sha3_256 } from '../../../utils/sha3_256';
 import { Node, NodeType } from './Node';
 
-export class LeafNode implements Node {
-  constructor(private options: { key: Buffer; value: Buffer }) {}
-
-  public get nodeKey() {
-    return sha3_256(this.nodeValue);
-  }
-
-  public get nodeValue() {
-    return getBufferFromHex(
-      new RlpEncoder().encode({
-        input: this.rawValues,
-      })
-    );
-  }
-
-  public get key() {
-    return this.options.key;
-  }
-
-  public get value() {
-    return this.options.value;
+export class LeafNode extends Node {
+  constructor(protected options: { key: Buffer; value: Buffer }) {
+    super(options);
   }
 
   public get type(): NodeType {
@@ -31,6 +10,13 @@ export class LeafNode implements Node {
   }
 
   public get rawValues(): Buffer[] {
+    /*
+    TODO: this should actually be
+      encodeNibbles({
+        inputBytes: this.key,
+        isLeaf: true,
+      })
+    */
     return [this.key, this.options.value];
   }
 }

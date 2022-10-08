@@ -1,12 +1,15 @@
 import { Node, NodeType } from './Node';
 
-export class EmptyNode implements Node {
-  public get type(): NodeType {
-    return NodeType.EMPTY_NODE;
+export class EmptyNode extends Node {
+  constructor() {
+    super({
+      key: Buffer.from('deadbeef'),
+      value: Buffer.from('deadbeef'),
+    });
   }
 
-  public get value(): string {
-    return '';
+  public get type(): NodeType {
+    return NodeType.EMPTY_NODE;
   }
 
   public get rawValues(): Buffer[] {

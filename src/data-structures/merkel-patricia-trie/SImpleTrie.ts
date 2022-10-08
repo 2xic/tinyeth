@@ -1,10 +1,5 @@
-import { allocUnsafe } from 'bun';
-import { Extension, OutliningSpanKind } from 'typescript';
-import { Parser } from '../../tiny-solidiity-compiler';
-import { InMemoryDatabase } from '../utils/InMemoryDatabase';
 import { BranchNode } from './nodes/BranchNode';
 import { ExtensionNode } from './nodes/ExstensionNode';
-import { LeafNode } from './nodes/LeafNode';
 import { Node, NodeType } from './nodes/Node';
 
 /*

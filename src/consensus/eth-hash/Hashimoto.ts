@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
-import { isPlusToken } from 'typescript';
 import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { assertEqual } from '../../utils/enforce';
 

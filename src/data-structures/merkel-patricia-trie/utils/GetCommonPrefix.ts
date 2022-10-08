@@ -1,5 +1,3 @@
-import { CommonPrefixResultType } from '../deprecated-old/MerklePatriciaTrieHelper';
-
 export class GetCommonPrefixResult {
   public commonPrefixLength({ key1, key2 }: { key1: Buffer; key2: Buffer }) {
     const length = Math.min(key1.length, key2.length);
@@ -46,4 +44,13 @@ export class GetCommonPrefixResult {
       return CommonPrefixResultType.NO_PREFIX;
     }
   }
+}
+
+export enum CommonPrefixResultType {
+  NO_PREFIX = 'NO_PREFIX',
+  EQUAL = 'EQUAL',
+  KEY1_EXHAUSTED = 'KEY1_EXHAUSTED',
+  KEY2_EXHAUSTED = 'KEY2_EXHAUSTED',
+  KEY1_PREFIX = 'KEY1_PREFIX',
+  KEY2_PREFIX = 'KEY2_PREFIX',
 }
