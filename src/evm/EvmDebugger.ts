@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { Logger } from '../utils/Logger';
 import { Evm } from './Evm';
 import { ExposedEvm } from './ExposedEvm';
 import { GasKeys } from './gas/GasKeys';
@@ -9,6 +10,8 @@ import { Opcodes } from './Opcodes';
 export class EvmDebugger {
   private currentGasUsage: Partial<Record<GasKeys, number>> = {};
   private previousGasUsage: Partial<Record<GasKeys, number>> = {};
+
+  constructor(private logger: Logger) {}
 
   public tick() {
     this.previousGasUsage = {
@@ -40,8 +43,7 @@ export class EvmDebugger {
       keyValue: this.previousGasUsage,
     });
 
-    // eslint-disable-next-line no-console
-    console.log(
+    this.logger.log(
       [...state, '\n', ...gasState, '\n', ...previousGasState].join('\n')
     );
   }

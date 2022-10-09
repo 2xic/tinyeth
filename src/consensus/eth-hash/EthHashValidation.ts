@@ -23,6 +23,7 @@ export class EthHashValidation extends Hashimoto {
     headerHash,
     mixHash,
     nonce,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     difficultly,
   }: {
     blockNumber: BigNumber;

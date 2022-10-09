@@ -178,12 +178,12 @@ export class RewriteMerklePatriciaTrie {
   }
 
   public retrieveNode({ hash }: { hash: Buffer }): Node {
-    /*if (hash.length < 32) {
+    if (hash.length < 32) {
       return convertRlpNodeToNode({
         key: Buffer.alloc(0),
         value: hash,
       });
-    }*/
+    }
     return convertRlpNodeToNode({
       key: Buffer.alloc(0),
       value: this.database.retrieve(hash),

@@ -1,7 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { buf } from 'crc-32/*';
 import { injectable } from 'inversify';
-import { isTemplateExpression } from 'typescript';
 import { BigNumberBinaryOperations } from '../../utils/BigNumberBinaryOperations';
 import { padHex } from '../../utils/convertNumberToPadHex';
 import { assertEqual } from '../../utils/enforce';

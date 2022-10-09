@@ -12,13 +12,10 @@ describe('MerklePatriciaTrie', () => {
     expect(value).toBe('verb');
   });
 
-  it.skip('should correctly generate the root hash of a simple trie', () => {
+  it('should correctly generate the root hash of a simple trie', () => {
     const interactor = new RewriteMerklePatriciaTrie();
     interactor.insert('do', 'verb');
-    expect(interactor.trieRoot.nodeValue.toString('hex')).toBe(
-      'c98320646f8476657262'
-    );
-    expect(interactor.trieRoot.nodeKey.toString('hex')).toBe(
+    expect(interactor.trieRoot.hash.toString('hex')).toBe(
       '014f07ed95e2e028804d915e0dbd4ed451e394e1acfd29e463c11a060b2ddef7'
     );
   });
@@ -30,10 +27,7 @@ describe('MerklePatriciaTrie', () => {
 
     interactor.insert('dog', 'puppy');
 
-    expect(interactor.trieRoot.nodeValue.toString('hex')).toBe(
-      'e18300646fdc808080808080c7378570757070798080808080808080808476657262'
-    );
-    expect(interactor.trieRoot.nodeKey.toString('hex')).toBe(
+    expect(interactor.trieRoot.hash.toString('hex')).toBe(
       '014f07ed95e2e028804d915e0dbd4ed451e394e1acfd29e463c11a060b2ddef7'
     );
   });

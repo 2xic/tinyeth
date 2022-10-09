@@ -31,6 +31,7 @@ export class ConsensusRules {
       .map((item) => item.feature);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getParametersFeature({ blockNumber }: { blockNumber: number }) {
     // i.e default gas, some opcodes have also been adjusted between updates.
   }

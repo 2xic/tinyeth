@@ -10,13 +10,6 @@ export class LeafNode extends Node {
   }
 
   public get rawValues(): Buffer[] {
-    /*
-    TODO: this should actually be
-      encodeNibbles({
-        inputBytes: this.key,
-        isLeaf: true,
-      })
-    */
-    return [this.key, this.options.value];
+    return [this.key, this.value];
   }
 }

@@ -21,6 +21,7 @@ export class EthHash extends Hashimoto {
     nonce: inputNonce,
     blockNumber,
     header,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     difficultly,
   }: {
     nonce?: Buffer;

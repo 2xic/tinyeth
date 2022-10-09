@@ -2,6 +2,7 @@ import { RlpEncoder } from '../../../rlp';
 import { getBufferFromHex } from '../../../utils';
 import { keccak256 } from '../../../utils/keccak256';
 import { InMemoryDatabase } from '../../utils/InMemoryDatabase';
+import { encodeNibbles } from '../utils/encodeNibbles';
 
 export abstract class Node {
   constructor(protected options: { key: Buffer; value: Buffer }) {}
@@ -19,6 +20,9 @@ export abstract class Node {
   }
 
   public get nodeKey(): Buffer {
+    if (this.nodeValue.length < 32) {
+      return this.nodeValue;
+    }
     return getBufferFromHex(keccak256(this.nodeValue));
   }
 
@@ -27,6 +31,24 @@ export abstract class Node {
       new RlpEncoder().encode({
         input: this.rawValues,
       })
+    );
+  }
+
+  public get hash() {
+    const input = [
+      encodeNibbles({
+        inputBytes: this.key,
+        isLeaf: this.type === NodeType.LEAF_NODE,
+      }),
+      this.value,
+    ];
+
+    return keccak256(
+      getBufferFromHex(
+        new RlpEncoder().encode({
+          input,
+        })
+      )
     );
   }
 

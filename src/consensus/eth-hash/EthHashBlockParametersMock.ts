@@ -9,7 +9,7 @@ export class EthHashBlockParametersMock extends EthHashBlockParameters {
     super(ethHashHelper);
   }
 
-  public getBlockParameters({ blockNumber }: { blockNumber: BigNumber }) {
+  public getBlockParameters() {
     const cacheSize = new BigNumber(1024);
     const datasetSize = cacheSize.multipliedBy(3);
 

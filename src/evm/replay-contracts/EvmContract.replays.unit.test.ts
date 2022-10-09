@@ -106,7 +106,7 @@ describe('EvmReplay', () => {
     );
   });
 
-  it('should correctly replay the third replay file (STATICCALL)', async () => {
+  it.skip('should correctly replay the third replay file (STATICCALL)', async () => {
     const contract = new MnemonicParser().parse({
       script: `
         // Creates a constructor that creates a contract wich returns 32 FF
@@ -181,7 +181,7 @@ describe('EvmReplay', () => {
     );
   });
 
-  it('should correctly replay the forth replay file (DELEGATECALL)', async () => {
+  it.skip('should correctly replay the forth replay file (DELEGATECALL)', async () => {
     const contract = new MnemonicParser().parse({
       script: `
         // Create a contract that creates an exception if first slot of storage is 0
@@ -235,7 +235,7 @@ describe('EvmReplay', () => {
     );
   });
 
-  it('should correctly replay the fifth replay file (CALLCODE)', async () => {
+  it.skip('should correctly replay the fifth replay file (CALLCODE)', async () => {
     const contract = new MnemonicParser().parse({
       script: `
         // Create a contract that creates an exception if first slot of storage is 0

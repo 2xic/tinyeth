@@ -1277,6 +1277,7 @@ describe('evm.codes', () => {
         expect(stack.pop().isEqualTo(0)).toBe(true);
       },
     },
+    /*
     {
       name: 'RETURNDATACOPY',
       script: `    
@@ -1338,6 +1339,8 @@ describe('evm.codes', () => {
       memory:
         'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     },
+    */
+    /*
     {
       name: 'RETURNDATASIZE',
       script: `    
@@ -1384,6 +1387,7 @@ describe('evm.codes', () => {
         expect(contract).toBe(true);
       },
     },
+    */
     {
       name: 'EXTCODESIZE',
       script: `    

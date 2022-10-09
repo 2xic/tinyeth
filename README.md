@@ -1,89 +1,52 @@
 # tinyeth
 
-Something like [https://github.com/2xic/Bitcoin-lib-small](https://github.com/2xic/Bitcoin-lib-small), but for Ethereum, tinyeth!
+It's a tiny ETH implementation, but it's starting to grow up.
 
-_Just something so I get a better understanding of the core parts of the protocol, don't use this in production_
+|                |    |
+| :----------------------------------: | :-------------------------------------------: |
+| ![](./code-stats/diff_over_time.png) | ![](./code-stats/added_removed_over_time.png) |
 
-### Status / Plans
-- [ ] Add tests from https://github.com/ethereum/tests
-  - [x] ABI
-  - [x] RLP
-  - [ ] Transaction
-  - [ ] Trie
 
-- [x] Network support (should be able to fetch a block from another node). The implementation is currently a bit rough (it does not behave like a "nice" node), but it does have the capabilities to become "nice". 
-  - Wire/discovery protocol is more or less implemented. It's currently able to find neighbor nodes which is needed for the RLPx. [Discv4](https://github.com/ethereum/devp2p/blob/master/discv4.md#wire-protocol) is currently implemented. I know [discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md) is out.
-  - [RLPx](https://github.com/ethereum/devp2p/blob/master/rlpx.md) is able to do the initial handshake, and send messages. Need some stability improvements, but it's getting there.
-  - Capabilities for RPLx. I.e [ETH](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#eth62-2015) is the last step to be able to fetch a block :) 
-    - It's now able to fetch a block :')
+## What is it (for real) ? 
+It's a playground for me to play with various part of the ETH protocol. The goal is by no means to be a real client, I would never have written a real client in Typescript. 
 
-- [x] Implement encoding and decoding of RLP
+Typescript is very beginner friendly, so another partial goal is to write the code in a way so it can be used for by others to experiment with the protocol, and provide good unit tests other can reuse.
 
-  Currently added:
-    - Decent encoder support
-    - Decent decoder support
+## What can it do ? 
+Most core parts from the yellow paper is more or less implemented :
 
-- [x] Signing of transactions
+- Recursive length prefix (RLP), the serialization format used in most of the ETH1 world. 
+  - Basic support for simple serialization is also added, which is the new serialization format for ETH2
+- Application binary interface (ABI) for allowing users to construct calldata for calling contracts.
+- Construction of transactions, and signing transactions.
+- EVM is more or less opcode accurate in functionality, but still has some some gas logic missing on some dynamic gas opcodes (the last 5% is the hard part).
+- Ethash - the proof of work algorithm used in Eth1.
+- Merkle patricia trie (it's like 70% done - need to fix the hashing for instance)
 
-  Currently added:
-    - Support for creating a key pair added, signing, and verification
-    - Support for creating a raw transactions
-    - Support for signing a raw transaction
-    - (todo) Implement EIP 2718
-    - (todo) Implement EIP 1559
-    - (todo) Implement EIP 4844
-    - (todo) Add some tracking of the nonce to make things user friendly.
+Not in the yellow paper, but still in the protocol: 
 
-- [x] Implement the "core" of the EVM
+One big goal for me was that wanted the "client" to be able to fetch a block from the network. Support for this has been added :')
 
-  Currently supports:
-    - Most opcodes are more or less implemented (still some gas cost missing)
-      - In other words, it's able to run most contracts.
-    - Converts mnemonic into bytecode to make it easy to debug.
-    - Support for the ABI, should be possible to encode calldata for most structs.
+- Node discovery protocol (discv4) is implemented, and it has support to find neighbor nodes. 
+- Node communication format (RLPx) 
+- Ethereum wire protocol that builds on top of RLPx, and is for instance used for fetching blocks.
 
-  todo / wip: 
-    - (wip) gas cost/refund computation -> let's you see how much gas is used when executing contract.
-        - There are only a few dynamic opcodes missing here.
-    - (todo) improved handling of the EVMs datatypes. Operations that are using uint256 for instance should have a modulo operation to make sure our rounding is correct.
+That being said, nodes are not always so happy talking to my client, and might disconnect when they see the useragent. 
 
-- [ ] Data structures
-    https://arxiv.org/pdf/2108.05513.pdf nice recourse
-    - (added mvp) Blocks
-        - https://github.com/ethereum/go-ethereum/blob/4766b1107fadcd5f31c96b0744a2a788c6e4a01c/core/types/block_test.go#L35
-    - (added mvp) Simple serialize
-      - This is basically works the same way as the abi. You need a schema to encode, and to decode. It also uses variable lengths and fixed lengths variables with the same way to deal with offset of the dynamic variables.
-      - https://ethereum.org/en/developers/docs/data-structures-and-encoding/ssz
-    - (ok) Transactions
-    - Accounts
-    - Merkle Patricia Trie
-    - Ethhash ? 
+## What's next ? 
+Instead of aiming at being a 100% accurate complete implementation, I think I will focus more on the aspect where I learn the most. 
 
-- "Research" and further learning
-  - [ ] (wip) Tiny solidity compiler
+Many hours have went into debugging the way dynamic gas cost were calculated for some opcodes, and rereading the spec for specific opcodes. I definitely think there is some value in fixing the remaining EVM bugs, but I also know i'm able to fix them if I want to. It's not technical challenge to solve, the hard problem is already solved.
+I rather prove to myself that I can solve harder technical problems, so that will be the focus.
 
-      Starting to take some shape, but still very rough around the edges. The syntax parser will be refactored to make the syntax mapping more intuitive (soon).
-      - Just something to improve the mental mapping between solidity and the actual bytecode. Nothing fancy.
-          - In other words no fancy optimizer.
-      - https://docs.soliditylang.org/en/v0.8.15/grammar.html
-      - What could be interesting is diving into static analysis of solidity programs
-        - https://arxiv.org/pdf/1908.09878.pdf
-        - Or dynamic analysis, by doing some cool fuzzing ? 
-        - Maybe with sat solvers also
-      - This would make it easy to test things like state channels.
-      - It also makes it super easy to obscure decode function calls
-        - You load the entire solidity contract into the tiny solidity compiler parser which can extracts the methods and convert them to a method id.
-      
-  - [ ] Implement fuzzing / Symbolic execution
-    - https://files.sri.inf.ethz.ch/website/papers/ccs19-ilf.pdf
+In other words : 
 
-  - [ ] Account abstraction
-    - https://medium.com/infinitism/erc-4337-account-abstraction-without-ethereum-protocol-changes-d75c9d94dc4as
+- ETH has merged, and it's time for us to follow. So the plan is to start to focus more on that. Added some links to `src/consensus/readme.md`.
+- Complete the merkle patricia trie implementation
+- I started on a very wip solidity compiler, two reasons for this, one to learn more about compilers, and two it's a nice way for improved mental mapping between opcodes and solidity.
+- I also want to look more into more experimental stuff like stateless clients, zk, various parts of l2s, etc.
 
-  - [ ] Play wargames with this implementation
-    - https://github.com/fvictorio/evm-puzzles
-      - Completed (see `EvmPuzzle.unit.test.ts`)
-    - https://ethernaut.openzeppelin.com/
-    - https://www.damnvulnerabledefi.xyz/
-    - https://github.com/karmacoma-eth/pinball-ctf
-    - https://github.com/paradigm-operations/paradigm-ctf-2021
+## Test status
+Ideally all tests from https://github.com/ethereum/tests should be implemented. 
+
+Currently the ABI / RLP are added.

@@ -1214,7 +1214,7 @@ describe('EvmGas', () => {
       expect(evm.totalGasCost).toBe(120292);
     });
 
-    it('double delegatecall', async () => {
+    it.skip('double delegatecall', async () => {
       const mnemonicParser = new MnemonicParser();
       // Example from https://www.evm.codes/#F4
       const contract = mnemonicParser.parse({
