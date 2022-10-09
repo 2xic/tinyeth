@@ -21,7 +21,7 @@ export class Network {
       block: {
         blockHash:
           '29045A592007D0C246EF02C2223570DA9522D0CF0F73282C79A1BC8F0BB2C238',
-        timeStamp: dayjs('2022-01-01'),
+        timeStamp: dayjs('2022-01-01').utc(),
         height: 42,
         coinbase: new Address('5B38Da6a701c568545dCfcB03FcB875f56beddC4'),
         gasLimit: 0xffffffffffff,

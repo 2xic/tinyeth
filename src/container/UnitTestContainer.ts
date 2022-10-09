@@ -6,6 +6,10 @@ import { MockSocket } from '../network/socket/MockSocket';
 import { ExposedFrameCommunication } from '../network/auth/frameing/ExposedFrameCommunication';
 import { ReplayContractTestUtils } from '../evm';
 import { ContainerOptions, CoreContainer } from './CoreContainer';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 export class UnitTestContainer extends CoreContainer {
   public create(options?: Omit<ContainerOptions, 'loggingEnabled'>) {
