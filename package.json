@@ -18,8 +18,7 @@
     "unit": "npm run build && jest",
     "int": "npm run build && jest -c jest.config.int.js",
     "lint": "npx eslint ./ --fix",
-    "clean": "rm -rf ./dist/",
-    "install": "npm run build"
+    "clean": "rm -rf ./dist/"
   },
   "jest-junit": {
     "outputDirectory": "reports",
@@ -68,7 +67,6 @@
     "crc-32": "^1.2.2",
     "dayjs": "^1.11.2",
     "ecies-geth": "^1.6.4",
-    "ecies-parity": "github:sigp/ecies-parity",
     "eciesjs": "^0.3.14",
     "elliptic": "^6.5.4",
     "eth-ecies": "^1.0.6",

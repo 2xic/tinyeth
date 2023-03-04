@@ -21,6 +21,7 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
   }) => void | ExecutionResults;
   arguments: number | ((index: number) => number);
   deltaStart?: number;
+  isTerminating: boolean;
 }) {
   const record: Record<number, OpCode> = {};
   for (let opcode = options.fromOpcode; opcode <= options.toOpcode; opcode++) {
@@ -37,6 +38,7 @@ export function CreateOpCodeWIthVariableArgumentLength(options: {
       arguments: opcode_arguments,
       gasCost: options.gasCost,
       onExecute: options.iteratedExecuteConstruction(delta),
+      isTerminating: options.isTerminating,
     });
   }
   return record;

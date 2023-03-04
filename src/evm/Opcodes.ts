@@ -26,7 +26,7 @@ BigNumber.set({ EXPONENTIAL_AT: 10_024 });
     - They should use the SignedUnsignedNumberConverter.
 */
 
-export const Opcodes: Record<number, OpCode> = {
+export const OpcodeLookups: Record<number, OpCode> = {
   0x0: new OpCode({
     name: 'STOP',
     arguments: 0,
@@ -34,6 +34,7 @@ export const Opcodes: Record<number, OpCode> = {
       evm.stop();
     },
     gasCost: 0,
+    isTerminating: true,
   }),
   0x1: new OpCode({
     name: 'ADD',
@@ -44,6 +45,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(a.plus(b));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x2: new OpCode({
     name: 'MUL',
@@ -54,6 +56,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(a.multipliedBy(b));
     },
     gasCost: 5,
+    isTerminating: false,
   }),
   0x3: new OpCode({
     name: 'SUB',
@@ -64,6 +67,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(a.minus(b));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x4: new OpCode({
     name: 'DIV',
@@ -74,6 +78,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(a.divideFloor(b));
     },
     gasCost: 5,
+    isTerminating: false,
   }),
   0x5: new OpCode({
     name: 'SDIV',
@@ -84,6 +89,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(a.divideFloor(b));
     },
     gasCost: 5,
+    isTerminating: false,
   }),
   0x6: new OpCode({
     name: 'MOD',
@@ -94,6 +100,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(new BigNumber(a).modulo(b));
     },
     gasCost: 5,
+    isTerminating: false,
   }),
   0x7: new OpCode({
     name: 'SMOD',
@@ -107,6 +114,7 @@ export const Opcodes: Record<number, OpCode> = {
       );
       stack.push(results);
     },
+    isTerminating: false,
   }),
   0x8: new OpCode({
     name: 'ADDMOD',
@@ -120,6 +128,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(new BigNumber(newLocal).modulo(c));
     },
     gasCost: 8,
+    isTerminating: false,
   }),
   0x9: new OpCode({
     name: 'MULMOD',
@@ -133,6 +142,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(newLocal.mod(c));
     },
     gasCost: 8,
+    isTerminating: false,
   }),
   0x0a: new OpCode({
     name: 'EXP',
@@ -149,6 +159,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: 0,
+    isTerminating: false,
   }),
   0x10: new OpCode({
     name: 'LT',
@@ -159,6 +170,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(getBigNumberFromBoolean(a.isLessThan(b)));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x11: new OpCode({
     name: 'GT',
@@ -169,6 +181,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(getBigNumberFromBoolean(a.isGreaterThan(b)));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x12: new OpCode({
     name: 'SLT',
@@ -179,6 +192,7 @@ export const Opcodes: Record<number, OpCode> = {
       const b = new SignedUnsignedNumberConverter().parse(stack.pop());
       stack.push(getBigNumberFromBoolean(a.isLessThan(b)));
     },
+    isTerminating: false,
   }),
   0x13: new OpCode({
     name: 'SGT',
@@ -189,6 +203,7 @@ export const Opcodes: Record<number, OpCode> = {
       const b = new SignedUnsignedNumberConverter().parse(stack.pop());
       stack.push(getBigNumberFromBoolean(a.isGreaterThan(b)));
     },
+    isTerminating: false,
   }),
   0x14: new OpCode({
     name: 'EQ',
@@ -199,6 +214,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(getBigNumberFromBoolean(a.isEqualTo(b)));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x15: new OpCode({
     name: 'ISZERO',
@@ -207,6 +223,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(getBigNumberFromBoolean(stack.pop().isZero()));
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x16: new OpCode({
     name: 'AND',
@@ -218,6 +235,7 @@ export const Opcodes: Record<number, OpCode> = {
       const results = a.and(b);
       stack.push(results);
     },
+    isTerminating: false,
   }),
   0x17: new OpCode({
     name: 'OR',
@@ -229,6 +247,7 @@ export const Opcodes: Record<number, OpCode> = {
       const results = a.or(b);
       stack.push(results);
     },
+    isTerminating: false,
   }),
   0x18: new OpCode({
     name: 'XOR',
@@ -240,6 +259,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(results);
     },
     gasCost: 3,
+    isTerminating: false,
   }),
   0x19: new OpCode({
     name: 'NOT',
@@ -250,6 +270,7 @@ export const Opcodes: Record<number, OpCode> = {
       const b = new BigNumber(2).pow(256);
       stack.push(b.plus(new BigNumber((~BigInt(a)).toString())));
     },
+    isTerminating: false,
   }),
   0x1a: new OpCode({
     name: 'BYTE',
@@ -264,6 +285,7 @@ export const Opcodes: Record<number, OpCode> = {
         )
       );
     },
+    isTerminating: false,
   }),
   0x1b: new OpCode({
     name: 'SHL',
@@ -276,6 +298,7 @@ export const Opcodes: Record<number, OpCode> = {
 
       stack.push(new BigNumber(c).modulo(new BigNumber(2).pow(256)));
     },
+    isTerminating: false,
   }),
   0x1c: new OpCode({
     name: 'SHR',
@@ -288,6 +311,7 @@ export const Opcodes: Record<number, OpCode> = {
 
       stack.push(new BigNumber(c).modulo(new BigNumber(2).pow(256)));
     },
+    isTerminating: false,
   }),
   0x1d: new OpCode({
     name: 'SAR',
@@ -305,6 +329,7 @@ export const Opcodes: Record<number, OpCode> = {
       );
       stack.push(results);
     },
+    isTerminating: false,
   }),
   0x20: new OpCode({
     name: 'SHA3',
@@ -332,6 +357,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
+    isTerminating: false,
   }),
   0x30: new OpCode({
     name: 'ADDRESS',
@@ -342,6 +368,7 @@ export const Opcodes: Record<number, OpCode> = {
       // I think we should add some call stack.
       stack.push(context.sender.raw);
     },
+    isTerminating: false,
   }),
   0x31: new OpCode({
     name: 'BALANCE',
@@ -369,6 +396,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: 0,
+    isTerminating: false,
   }),
   0x32: new OpCode({
     name: 'ORIGIN',
@@ -377,6 +405,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, context }) => {
       stack.push(context.sender.raw);
     },
+    isTerminating: false,
   }),
   0x33: new OpCode({
     name: 'CALLER',
@@ -386,6 +415,7 @@ export const Opcodes: Record<number, OpCode> = {
       // TODO: this should be the last call, not the sender.
       stack.push(context.sender.raw);
     },
+    isTerminating: false,
   }),
   0x34: new OpCode({
     name: 'CALLVALUE',
@@ -394,6 +424,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(new BigNumber(context.value.value));
     },
     gasCost: 2,
+    isTerminating: false,
   }),
   0x35: new OpCode({
     name: 'CALLDATALOAD',
@@ -411,6 +442,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(value);
     },
     gasCost: () => 3,
+    isTerminating: false,
   }),
   0x36: new OpCode({
     name: 'CALLDATASIZE',
@@ -419,6 +451,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(new BigNumber(context.data.length));
     },
     gasCost: 2,
+    isTerminating: false,
   }),
   0x37: new OpCode({
     name: 'CALLDATACOPY',
@@ -446,6 +479,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: 0,
+    isTerminating: false,
   }),
   0x38: new OpCode({
     name: 'CODESIZE',
@@ -454,6 +488,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(new BigNumber(evm.program.length));
     },
     gasCost: 2,
+    isTerminating: false,
   }),
   0x39: new OpCode({
     name: 'CODECOPY',
@@ -482,6 +517,7 @@ export const Opcodes: Record<number, OpCode> = {
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a3-copy-operations
     gasCost: () => 3,
+    isTerminating: false,
   }),
   0x3a: new OpCode({
     name: 'GASPRICE',
@@ -491,6 +527,7 @@ export const Opcodes: Record<number, OpCode> = {
       const gasPrice = network.block.gasPrice;
       stack.push(new BigNumber(gasPrice));
     },
+    isTerminating: false,
   }),
   0x3b: new OpCode({
     name: 'EXTCODESIZE',
@@ -509,6 +546,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 0,
+    isTerminating: false,
   }),
   0x3c: new OpCode({
     name: 'EXTCODECOPY',
@@ -550,6 +588,7 @@ export const Opcodes: Record<number, OpCode> = {
         dynamicGasCost: computedGas,
       };
     },
+    isTerminating: false,
   }),
   0x3d: new OpCode({
     name: 'RETURNDATASIZE',
@@ -564,6 +603,7 @@ export const Opcodes: Record<number, OpCode> = {
         throw new Error('Invalid - I think');
       }
     },
+    isTerminating: false,
   }),
   0x3e: new OpCode({
     name: 'RETURNDATACOPY',
@@ -587,6 +627,7 @@ export const Opcodes: Record<number, OpCode> = {
       }
     },
     gasCost: () => 1,
+    isTerminating: false,
   }),
   0x3f: new OpCode({
     name: 'EXTCODEHASH',
@@ -600,6 +641,7 @@ export const Opcodes: Record<number, OpCode> = {
     },
     // Has dynamic gas cost
     gasCost: () => 1,
+    isTerminating: false,
   }),
   0x40: new OpCode({
     name: 'BLOCKHASH',
@@ -610,6 +652,7 @@ export const Opcodes: Record<number, OpCode> = {
       const block = network.getBlock({ height });
       stack.push(block.hash);
     },
+    isTerminating: false,
   }),
   0x41: new OpCode({
     name: 'COINBASE',
@@ -619,6 +662,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.push(block.coinbase);
     },
     gasCost: () => 2,
+    isTerminating: false,
   }),
   0x42: new OpCode({
     name: 'TIMESTAMP',
@@ -628,6 +672,7 @@ export const Opcodes: Record<number, OpCode> = {
       const block = network.block;
       stack.push(new BigNumber(block.timeStamp.unix()));
     },
+    isTerminating: false,
   }),
   0x43: new OpCode({
     // Block number
@@ -638,6 +683,7 @@ export const Opcodes: Record<number, OpCode> = {
       const block = network.block;
       stack.push(new BigNumber(block.height));
     },
+    isTerminating: false,
   }),
   0x44: new OpCode({
     name: 'DIFFICULTY',
@@ -647,6 +693,7 @@ export const Opcodes: Record<number, OpCode> = {
       const block = network.block;
       stack.push(block.difficulty);
     },
+    isTerminating: false,
   }),
   0x45: new OpCode({
     name: 'GASLIMIT',
@@ -655,6 +702,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, context }) => {
       stack.push(new BigNumber(context.gasLimit));
     },
+    isTerminating: false,
   }),
   0x46: new OpCode({
     name: 'CHAINID',
@@ -664,6 +712,7 @@ export const Opcodes: Record<number, OpCode> = {
       const block = network.block;
       stack.push(new BigNumber(block.chainId));
     },
+    isTerminating: false,
   }),
   0x47: new OpCode({
     name: 'SELFBALANCE',
@@ -672,6 +721,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, context, evmAccountState }) => {
       stack.push(evmAccountState.getBalance({ address: context.sender }));
     },
+    isTerminating: false,
   }),
   0x48: new OpCode({
     name: 'BASEFEE',
@@ -681,6 +731,7 @@ export const Opcodes: Record<number, OpCode> = {
       const baseFee = network.block.baseFee;
       stack.push(new BigNumber(baseFee));
     },
+    isTerminating: false,
   }),
   0x50: new OpCode({
     name: 'POP',
@@ -689,6 +740,7 @@ export const Opcodes: Record<number, OpCode> = {
       stack.pop();
     },
     gasCost: 2,
+    isTerminating: false,
   }),
   0x51: new OpCode({
     name: 'MLOAD',
@@ -710,6 +762,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
+    isTerminating: false,
   }),
   0x52: new OpCode({
     name: 'MSTORE',
@@ -739,6 +792,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 3,
+    isTerminating: false,
   }),
   0x53: new OpCode({
     name: 'MSTORE8',
@@ -759,6 +813,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 3,
+    isTerminating: false,
   }),
   0x54: new OpCode({
     name: 'SLOAD',
@@ -785,6 +840,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 0,
+    isTerminating: false,
   }),
   0x55: new OpCode({
     name: 'SSTORE',
@@ -808,6 +864,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 0,
+    isTerminating: false,
   }),
   0x56: new OpCode({
     name: 'JUMP',
@@ -829,6 +886,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: 8,
+    isTerminating: true,
   }),
   0x57: new OpCode({
     name: 'JUMPI',
@@ -854,6 +912,7 @@ export const Opcodes: Record<number, OpCode> = {
       }
     },
     gasCost: 10,
+    isTerminating: false,
   }),
   0x58: new OpCode({
     name: 'PC',
@@ -862,6 +921,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, evm }) => {
       stack.push(new BigNumber(evm.pc));
     },
+    isTerminating: false,
   }),
   0x59: new OpCode({
     name: 'MSIZE',
@@ -870,6 +930,7 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: ({ stack, memory }) => {
       stack.push(new BigNumber(memory.size));
     },
+    isTerminating: false,
   }),
   0x5a: new OpCode({
     name: 'GAS',
@@ -879,6 +940,7 @@ export const Opcodes: Record<number, OpCode> = {
       const { stack, evm } = context;
       stack.push(evm.gasLeft.minus(opcode.staticGasCost));
     },
+    isTerminating: false,
   }),
   0x5b: new OpCode({
     name: 'JUMPDEST',
@@ -887,6 +949,7 @@ export const Opcodes: Record<number, OpCode> = {
       // Just metadata
     },
     gasCost: 1,
+    isTerminating: false,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x60,
@@ -900,6 +963,7 @@ export const Opcodes: Record<number, OpCode> = {
         stack.push(value);
       },
     gasCost: 3,
+    isTerminating: false,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x80,
@@ -916,6 +980,7 @@ export const Opcodes: Record<number, OpCode> = {
         }
       },
     gasCost: 3,
+    isTerminating: false,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x90,
@@ -928,6 +993,7 @@ export const Opcodes: Record<number, OpCode> = {
         stack.swap(0, index);
       },
     gasCost: 3,
+    isTerminating: false,
   }),
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0xa0,
@@ -958,6 +1024,7 @@ export const Opcodes: Record<number, OpCode> = {
         };
       },
     gasCost: 0,
+    isTerminating: false,
   }),
   0xf0: new OpCode({
     name: 'CREATE',
@@ -1006,6 +1073,7 @@ export const Opcodes: Record<number, OpCode> = {
       };
     },
     gasCost: () => 32000,
+    isTerminating: false,
   }),
   0xf1: new OpCode({
     name: 'CALL',
@@ -1051,6 +1119,7 @@ export const Opcodes: Record<number, OpCode> = {
         },
       });
     },
+    isTerminating: false,
   }),
   0xf2: new OpCode({
     name: 'CALLCODE',
@@ -1102,6 +1171,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
+    isTerminating: false,
   }),
   0xf3: new OpCode({
     name: 'RETURN',
@@ -1124,6 +1194,7 @@ export const Opcodes: Record<number, OpCode> = {
     },
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a0-1-memory-expansion
     gasCost: () => 0,
+    isTerminating: true,
   }),
   0xf4: new OpCode({
     name: 'DELEGATECALL',
@@ -1194,6 +1265,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
+    isTerminating: false,
   }),
   0xf5: new OpCode({
     name: 'CREATE2',
@@ -1233,6 +1305,7 @@ export const Opcodes: Record<number, OpCode> = {
         stack.push(new BigNumber(0));
       }
     },
+    isTerminating: false,
   }),
   0xfa: new OpCode({
     name: 'STATICCALL',
@@ -1301,6 +1374,7 @@ export const Opcodes: Record<number, OpCode> = {
         setPc: false,
       };
     },
+    isTerminating: false,
   }),
   0xfd: new OpCode({
     name: 'REVERT',
@@ -1320,6 +1394,7 @@ export const Opcodes: Record<number, OpCode> = {
       );
     },
     gasCost: () => 0,
+    isTerminating: true,
   }),
   0xfe: new OpCode({
     name: 'INVALID',
@@ -1329,12 +1404,14 @@ export const Opcodes: Record<number, OpCode> = {
     onExecute: () => {
       throw new Reverted('Ran INVALID opcode');
     },
+    isTerminating: true,
   }),
   0xff: new OpCode({
     name: 'SELFDESTRUCT',
     arguments: 1,
     // TODO, this is dynamic
     gasCost: () => 2,
+    isTerminating: false,
   }),
 };
 

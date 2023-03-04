@@ -1,7 +1,7 @@
 import { EvmStack } from './EvmStack';
 import { InvalidPc } from './errors/InvalidPc';
 import { ExecutionResults, OpCode } from './OpCode';
-import { Opcodes } from './Opcodes';
+import { OpcodeLookups } from './Opcodes';
 import { Wei } from './eth-units/Wei';
 import { Network } from './Network';
 import BigNumber from 'bignumber.js';
@@ -105,7 +105,7 @@ export class Evm implements InterfaceEvm {
     const { opcode, opcodeNumber } = this.loadOpcode();
     const prevGas = this.gasCost();
     this.logger.log(
-      `Running ${Opcodes[opcodeNumber].mnemonic} (pc: 0x${this.pc.toString(
+      `Running ${OpcodeLookups[opcodeNumber].mnemonic} (pc: 0x${this.pc.toString(
         16
       )})`
     );
@@ -166,7 +166,7 @@ export class Evm implements InterfaceEvm {
         `${
           this.gasCost() - prevGas
         } (${this.gasCost()}) gas used after opcode ${
-          Opcodes[opcodeNumber].mnemonic
+          OpcodeLookups[opcodeNumber].mnemonic
         }`
       );
       this.logger.log(this.memory.raw.toString('hex') || 'empty memory');
@@ -200,9 +200,9 @@ export class Evm implements InterfaceEvm {
     return this.program[this.pc];
   }
 
-  private loadOpcode(): { opcode: OpCode; opcodeNumber: number } {
+  protected loadOpcode(): { opcode: OpCode; opcodeNumber: number } {
     const opcodeNumber = this.currentOpcodeNumber;
-    const opcode = Opcodes[opcodeNumber];
+    const opcode = OpcodeLookups[opcodeNumber];
     if (!opcode) {
       throw new Error(`0x${opcodeNumber.toString(16)}`);
     }

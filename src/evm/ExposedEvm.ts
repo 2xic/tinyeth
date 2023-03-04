@@ -42,4 +42,8 @@ export class ExposedEvm extends Evm implements InterfaceEvm {
       logger
     );
   }
+
+  public peekOpcode(){
+    return this.loadOpcode();
+  }
 }

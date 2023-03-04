@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { convertNumberToPadHex } from '../utils/convertNumberToPadHex';
 import { getBufferFromHex } from '../utils/getBufferFromHex';
-import { mnemonicLookup } from './MnemonicLookup';
-import { Opcodes } from './Opcodes';
+import { loadLookupTable, mnemonicLookup } from './MnemonicLookup';
+import { OpcodeLookups } from './Opcodes';
 
 @injectable()
 export class MnemonicParser {
@@ -19,6 +19,7 @@ export class MnemonicParser {
   }
 
   private convert({ mnemonics }: ConvertInterface) {
+    loadLookupTable();
     let bytesCodes = Buffer.alloc(0);
     for (const mnemonic of mnemonics) {
       const opcodeArguments = mnemonic.split(' ');
@@ -36,7 +37,7 @@ export class MnemonicParser {
         opcodeArguments,
         foundOpcode,
       });
-      const argumentsPadding = Opcodes[foundOpcode].length - 1;
+      const argumentsPadding = OpcodeLookups[foundOpcode].length - 1;
       if (converted_arguments.length < argumentsPadding) {
         converted_arguments = Buffer.concat([
           Buffer.alloc(argumentsPadding - converted_arguments.length),
@@ -63,7 +64,7 @@ export class MnemonicParser {
   }) {
     return Buffer.from(
       opcodeArguments
-        .slice(1, Opcodes[foundOpcode].length)
+        .slice(1, OpcodeLookups[foundOpcode].length)
         .map((item) =>
           item.startsWith('0x')
             ? getBufferFromHex(item).toString('hex')

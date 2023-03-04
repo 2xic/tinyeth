@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 import { padHex } from '../../utils';
 import { Address } from '../Address';
 import { ExposedEvm } from '../ExposedEvm';
-import { Opcodes } from '../Opcodes';
+import { OpcodeLookups } from '../Opcodes';
 
 @injectable()
 export class ReplayContractTestUtils {
@@ -42,8 +42,8 @@ export class ReplayContractTestUtils {
           Previous pc 0x${previousPc.toString(16)} vs 0x${
             fileData[index - 1].pc
           }
-          Previous opcode ${Opcodes[evm.program[previousPc]].mnemonic} vs  ${
-            Opcodes[evm.program[parseInt(state.pc, 16)]].mnemonic
+          Previous opcode ${OpcodeLookups[evm.program[previousPc]].mnemonic} vs  ${
+            OpcodeLookups[evm.program[parseInt(state.pc, 16)]].mnemonic
           } and ${index} index
 
           
@@ -59,9 +59,9 @@ export class ReplayContractTestUtils {
 
         throw new Error(`
         Error in gas computation at previous opcode ${
-          Opcodes[evm.program[previousPc]].mnemonic
+          OpcodeLookups[evm.program[previousPc]].mnemonic
         }
-        vs  ${Opcodes[evm.program[parseInt(state.pc, 16)]]?.mnemonic}
+        vs  ${OpcodeLookups[evm.program[parseInt(state.pc, 16)]]?.mnemonic}
          
         PC 0x${previousPc.toString(16)} and ${index}th state index
 
@@ -261,7 +261,7 @@ export class ReplayContractTestUtils {
     previousPc: number;
     lastStackState: BigNumber[];
   }) {
-    const opcode = Opcodes[evm.program[previousPc]];
+    const opcode = OpcodeLookups[evm.program[previousPc]];
     const opcodeArguments = opcode.mnemonic.startsWith('PUSH')
       ? [...evm.program.slice(previousPc, previousPc + opcode.length)]
           .map((item: number): string => {

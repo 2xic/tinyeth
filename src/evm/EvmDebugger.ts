@@ -4,7 +4,7 @@ import { Evm } from './Evm';
 import { ExposedEvm } from './ExposedEvm';
 import { GasKeys } from './gas/GasKeys';
 import { EvmContext } from './interfaceEvm';
-import { Opcodes } from './Opcodes';
+import { OpcodeLookups } from './Opcodes';
 
 @injectable()
 export class EvmDebugger {
@@ -50,9 +50,9 @@ export class EvmDebugger {
 
   private getOpcode({ evm }: { evm: Evm }) {
     if (evm.pc < evm.program.length) {
-      return Opcodes[evm.program[evm.pc]];
+      return OpcodeLookups[evm.program[evm.pc]];
     } else if (evm.previousPc < evm.program.length) {
-      return Opcodes[evm.program[evm.previousPc]];
+      return OpcodeLookups[evm.program[evm.previousPc]];
     }
   }
 

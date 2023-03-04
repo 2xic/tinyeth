@@ -1,11 +1,11 @@
-import { Opcodes } from './Opcodes';
+import { OpcodeLookups } from './Opcodes';
 
 export function getOpcodesFromBytes(input: Buffer) {
   const opcodes = [];
   let buffer = input;
   while (buffer.length) {
     const currentOpcode = buffer[0];
-    const opcode = Opcodes[currentOpcode];
+    const opcode = OpcodeLookups[currentOpcode];
     if (!opcode) {
       opcodes.push('INVALID');
       buffer = buffer.slice(1);
