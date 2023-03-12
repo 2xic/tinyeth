@@ -42,7 +42,9 @@ export class ReplayContractTestUtils {
           Previous pc 0x${previousPc.toString(16)} vs 0x${
             fileData[index - 1].pc
           }
-          Previous opcode ${OpcodeLookups[evm.program[previousPc]].mnemonic} vs  ${
+          Previous opcode ${
+            OpcodeLookups[evm.program[previousPc]].mnemonic
+          } vs  ${
             OpcodeLookups[evm.program[parseInt(state.pc, 16)]].mnemonic
           } and ${index} index
 

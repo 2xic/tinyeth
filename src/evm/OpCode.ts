@@ -11,7 +11,7 @@ export class OpCode {
         opcode: OpCode
       ) => UnionResults | Promise<UnionResults>;
       gasCost: number | ((context: EvmContextWithSelfReference) => number);
-      isTerminating: boolean
+      isTerminating: boolean;
     }
   ) {}
 
@@ -29,8 +29,8 @@ export class OpCode {
   public get mnemonic() {
     return this.options.name;
   }
-  
-  public get isTerminating(){
+
+  public get isTerminating() {
     return this.options.isTerminating;
   }
 

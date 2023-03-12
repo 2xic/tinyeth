@@ -8,5 +8,6 @@ export * from './EvmExternalStorageRequests';
 export * from './replay-contracts/ReplayContractTestUtils';
 export * from './Address';
 export * from './Network';
-export * from './eth-units'
+export * from './eth-units';
 export * from './MnemonicParser';
+export * from './OpcodeMnemonic';

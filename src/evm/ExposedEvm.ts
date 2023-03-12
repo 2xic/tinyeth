@@ -43,7 +43,7 @@ export class ExposedEvm extends Evm implements InterfaceEvm {
     );
   }
 
-  public peekOpcode(){
+  public peekOpcode() {
     return this.loadOpcode();
   }
 }

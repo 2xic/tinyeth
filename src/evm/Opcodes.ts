@@ -15,6 +15,7 @@ import { computeGasSentWithCall } from './gas/computeGasSentWithCall';
 import { wordSize } from './gas/wordSize';
 import { getBigNumberFromBoolean } from './getBigNumberFromBoolean';
 import { ExecutionResults, OpCode } from './OpCode';
+import { OpcodeMnemonic } from './OpcodeMnemonic';
 import { SignedUnsignedNumberConverter } from './SignedUnsignedNumberConverter';
 
 // TODO: see if there is away around this.
@@ -28,7 +29,7 @@ BigNumber.set({ EXPONENTIAL_AT: 10_024 });
 
 export const OpcodeLookups: Record<number, OpCode> = {
   0x0: new OpCode({
-    name: 'STOP',
+    name: OpcodeMnemonic.STOP,
     arguments: 0,
     onExecute: ({ evm }) => {
       evm.stop();
@@ -37,7 +38,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: true,
   }),
   0x1: new OpCode({
-    name: 'ADD',
+    name: OpcodeMnemonic.ADD,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new SignedUnsignedNumberConverter().parse(stack.pop());
@@ -48,7 +49,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x2: new OpCode({
-    name: 'MUL',
+    name: OpcodeMnemonic.MUL,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new SignedUnsignedNumberConverter().parse(stack.pop());
@@ -59,7 +60,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3: new OpCode({
-    name: 'SUB',
+    name: OpcodeMnemonic.SUB,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new SignedUnsignedNumberConverter().parse(stack.pop());
@@ -70,7 +71,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x4: new OpCode({
-    name: 'DIV',
+    name: OpcodeMnemonic.DIV,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new EvmNumberHandler(stack.pop());
@@ -81,7 +82,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x5: new OpCode({
-    name: 'SDIV',
+    name: OpcodeMnemonic.SDIV,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new EvmNumberHandler(stack.pop());
@@ -92,7 +93,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x6: new OpCode({
-    name: 'MOD',
+    name: OpcodeMnemonic.MOD,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -103,7 +104,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x7: new OpCode({
-    name: 'SMOD',
+    name: OpcodeMnemonic.SMOD,
     arguments: 1,
     gasCost: 5,
     onExecute: ({ stack }) => {
@@ -117,7 +118,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x8: new OpCode({
-    name: 'ADDMOD',
+    name: OpcodeMnemonic.ADDMOD,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -131,7 +132,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x9: new OpCode({
-    name: 'MULMOD',
+    name: OpcodeMnemonic.MULMOD,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -145,7 +146,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x0a: new OpCode({
-    name: 'EXP',
+    name: OpcodeMnemonic.EXP,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -162,7 +163,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x10: new OpCode({
-    name: 'LT',
+    name: OpcodeMnemonic.LT,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -173,7 +174,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x11: new OpCode({
-    name: 'GT',
+    name: OpcodeMnemonic.GT,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -184,7 +185,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x12: new OpCode({
-    name: 'SLT',
+    name: OpcodeMnemonic.SLT,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -195,7 +196,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x13: new OpCode({
-    name: 'SGT',
+    name: OpcodeMnemonic.SGT,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -206,7 +207,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x14: new OpCode({
-    name: 'EQ',
+    name: OpcodeMnemonic.EQ,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = stack.pop();
@@ -217,7 +218,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x15: new OpCode({
-    name: 'ISZERO',
+    name: OpcodeMnemonic.ISZERO,
     arguments: 1,
     onExecute: ({ stack }) => {
       stack.push(getBigNumberFromBoolean(stack.pop().isZero()));
@@ -226,7 +227,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x16: new OpCode({
-    name: 'AND',
+    name: OpcodeMnemonic.AND,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -238,7 +239,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x17: new OpCode({
-    name: 'OR',
+    name: OpcodeMnemonic.OR,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -250,7 +251,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x18: new OpCode({
-    name: 'XOR',
+    name: OpcodeMnemonic.XOR,
     arguments: 1,
     onExecute: ({ stack }) => {
       const a = new EvmNumberHandler(stack.pop());
@@ -262,7 +263,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x19: new OpCode({
-    name: 'NOT',
+    name: OpcodeMnemonic.NOT,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -273,7 +274,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x1a: new OpCode({
-    name: 'BYTE',
+    name: OpcodeMnemonic.BYTE,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -288,7 +289,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x1b: new OpCode({
-    name: 'SHL',
+    name: OpcodeMnemonic.SHL,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -301,7 +302,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x1c: new OpCode({
-    name: 'SHR',
+    name: OpcodeMnemonic.SHR,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -314,7 +315,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x1d: new OpCode({
-    name: 'SAR',
+    name: OpcodeMnemonic.SAR,
     arguments: 1,
     gasCost: 3,
     onExecute: ({ stack }) => {
@@ -332,7 +333,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x20: new OpCode({
-    name: 'SHA3',
+    name: OpcodeMnemonic.SHA3,
     arguments: 1,
     gasCost: 30,
     onExecute: ({ stack, memory, gasComputer }) => {
@@ -360,7 +361,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x30: new OpCode({
-    name: 'ADDRESS',
+    name: OpcodeMnemonic.ADDRESS,
     arguments: 1,
     gasCost: 2,
     onExecute: ({ stack, context }) => {
@@ -371,7 +372,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x31: new OpCode({
-    name: 'BALANCE',
+    name: OpcodeMnemonic.BALANCE,
     arguments: 1,
     onExecute: ({
       stack,
@@ -399,7 +400,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x32: new OpCode({
-    name: 'ORIGIN',
+    name: OpcodeMnemonic.ORIGIN,
     arguments: 1,
     gasCost: 2,
     onExecute: ({ stack, context }) => {
@@ -408,7 +409,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x33: new OpCode({
-    name: 'CALLER',
+    name: OpcodeMnemonic.CALLER,
     arguments: 1,
     gasCost: 2,
     onExecute: ({ stack, context }) => {
@@ -418,7 +419,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x34: new OpCode({
-    name: 'CALLVALUE',
+    name: OpcodeMnemonic.CALLVALUE,
     arguments: 1,
     onExecute: ({ stack, context }) => {
       stack.push(new BigNumber(context.value.value));
@@ -427,7 +428,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x35: new OpCode({
-    name: 'CALLDATALOAD',
+    name: OpcodeMnemonic.CALLDATALOAD,
     arguments: 1,
     onExecute: ({ context, stack }) => {
       const index = stack.pop().toNumber();
@@ -445,7 +446,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x36: new OpCode({
-    name: 'CALLDATASIZE',
+    name: OpcodeMnemonic.CALLDATASIZE,
     arguments: 1,
     onExecute: ({ stack, context }) => {
       stack.push(new BigNumber(context.data.length));
@@ -454,7 +455,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x37: new OpCode({
-    name: 'CALLDATACOPY',
+    name: OpcodeMnemonic.CALLDATACOPY,
     arguments: 1,
     onExecute: ({ stack, memory, context, gasComputer }) => {
       const dataOffset = stack.pop().toNumber();
@@ -482,7 +483,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x38: new OpCode({
-    name: 'CODESIZE',
+    name: OpcodeMnemonic.CODESIZE,
     arguments: 1,
     onExecute: ({ evm, stack }) => {
       stack.push(new BigNumber(evm.program.length));
@@ -491,7 +492,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x39: new OpCode({
-    name: 'CODECOPY',
+    name: OpcodeMnemonic.CODECOPY,
     arguments: 1,
     onExecute: ({ evm, stack, memory, gasComputer }) => {
       const destOffset = stack.pop().toNumber();
@@ -520,7 +521,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3a: new OpCode({
-    name: 'GASPRICE',
+    name: OpcodeMnemonic.GASPRICE,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -530,7 +531,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3b: new OpCode({
-    name: 'EXTCODESIZE',
+    name: OpcodeMnemonic.EXTCODESIZE,
     arguments: 1,
     onExecute: ({ stack, network, gasComputer }) => {
       const stackItem = stack.pop();
@@ -549,7 +550,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3c: new OpCode({
-    name: 'EXTCODECOPY',
+    name: OpcodeMnemonic.EXTCODECOPY,
     arguments: 1,
     gasCost: () => 0,
     onExecute: ({ stack, network, memory, gasComputer }) => {
@@ -591,7 +592,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3d: new OpCode({
-    name: 'RETURNDATASIZE',
+    name: OpcodeMnemonic.RETURNDATASIZE,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, subContext }) => {
@@ -606,7 +607,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3e: new OpCode({
-    name: 'RETURNDATACOPY',
+    name: OpcodeMnemonic.RETURNDATACOPY,
     arguments: 1,
     // TODO implement https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a5-balance-extcodesize-extcodehash
     onExecute: ({ stack, memory, subContext }) => {
@@ -630,7 +631,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x3f: new OpCode({
-    name: 'EXTCODEHASH',
+    name: OpcodeMnemonic.EXTCODEHASH,
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const address = stack.pop();
@@ -644,7 +645,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x40: new OpCode({
-    name: 'BLOCKHASH',
+    name: OpcodeMnemonic.BLOCKHASH,
     arguments: 1,
     gasCost: () => 20,
     onExecute: ({ network, stack }) => {
@@ -655,7 +656,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x41: new OpCode({
-    name: 'COINBASE',
+    name: OpcodeMnemonic.COINBASE,
     arguments: 1,
     onExecute: ({ stack, network }) => {
       const block = network.block;
@@ -665,7 +666,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x42: new OpCode({
-    name: 'TIMESTAMP',
+    name: OpcodeMnemonic.TIMESTAMP,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -676,7 +677,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
   }),
   0x43: new OpCode({
     // Block number
-    name: 'NUMBER',
+    name: OpcodeMnemonic.NUMBER,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -686,7 +687,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x44: new OpCode({
-    name: 'DIFFICULTY',
+    name: OpcodeMnemonic.DIFFICULTY,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -696,7 +697,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x45: new OpCode({
-    name: 'GASLIMIT',
+    name: OpcodeMnemonic.GASLIMIT,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, context }) => {
@@ -705,7 +706,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x46: new OpCode({
-    name: 'CHAINID',
+    name: OpcodeMnemonic.CHAINID,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -715,7 +716,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x47: new OpCode({
-    name: 'SELFBALANCE',
+    name: OpcodeMnemonic.SELFBALANCE,
     arguments: 1,
     gasCost: () => 5,
     onExecute: ({ stack, context, evmAccountState }) => {
@@ -724,7 +725,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x48: new OpCode({
-    name: 'BASEFEE',
+    name: OpcodeMnemonic.BASEFEE,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, network }) => {
@@ -734,7 +735,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x50: new OpCode({
-    name: 'POP',
+    name: OpcodeMnemonic.POP,
     arguments: 1,
     onExecute: ({ stack }) => {
       stack.pop();
@@ -743,7 +744,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x51: new OpCode({
-    name: 'MLOAD',
+    name: OpcodeMnemonic.MLOAD,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 3,
@@ -765,7 +766,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x52: new OpCode({
-    name: 'MSTORE',
+    name: OpcodeMnemonic.MSTORE,
     arguments: 1,
     onExecute: ({ stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
@@ -795,7 +796,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x53: new OpCode({
-    name: 'MSTORE8',
+    name: OpcodeMnemonic.MSTORE8,
     arguments: 1,
     onExecute: ({ stack, memory, gasComputer }) => {
       const offset = stack.pop();
@@ -816,7 +817,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x54: new OpCode({
-    name: 'SLOAD',
+    name: OpcodeMnemonic.SLOAD,
     arguments: 1,
     onExecute: async ({ stack, storage, context, gasComputer }) => {
       const key = stack.pop();
@@ -843,7 +844,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x55: new OpCode({
-    name: 'SSTORE',
+    name: OpcodeMnemonic.SSTORE,
     arguments: 1,
     onExecute: ({ stack, gasComputer, storage }): ExecutionResults => {
       const key = stack.pop();
@@ -867,7 +868,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x56: new OpCode({
-    name: 'JUMP',
+    name: OpcodeMnemonic.JUMP,
     arguments: 1,
     onExecute: ({ evm, stack }) => {
       const pc = stack.pop().toNumber();
@@ -889,7 +890,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: true,
   }),
   0x57: new OpCode({
-    name: 'JUMPI',
+    name: OpcodeMnemonic.JUMPI,
     arguments: 1,
     onExecute: ({ evm, stack }) => {
       const pc = stack.pop().toNumber();
@@ -915,7 +916,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x58: new OpCode({
-    name: 'PC',
+    name: OpcodeMnemonic.PC,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, evm }) => {
@@ -924,7 +925,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x59: new OpCode({
-    name: 'MSIZE',
+    name: OpcodeMnemonic.MSIZE,
     arguments: 1,
     gasCost: () => 2,
     onExecute: ({ stack, memory }) => {
@@ -933,7 +934,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x5a: new OpCode({
-    name: 'GAS',
+    name: OpcodeMnemonic.GAS,
     arguments: 1,
     gasCost: 2,
     onExecute: (context, opcode) => {
@@ -943,7 +944,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0x5b: new OpCode({
-    name: 'JUMPDEST',
+    name: OpcodeMnemonic.JUMPDEST,
     arguments: 1,
     onExecute: () => {
       // Just metadata
@@ -954,7 +955,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x60,
     toOpcode: 0x7f,
-    baseName: 'PUSH',
+    baseName: OpcodeMnemonic.PUSH,
     arguments: (index) => index + 1,
     iteratedExecuteConstruction:
       (index) =>
@@ -968,7 +969,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x80,
     toOpcode: 0x8f,
-    baseName: 'DUP',
+    baseName: OpcodeMnemonic.DUP,
     arguments: 1,
     iteratedExecuteConstruction:
       (index) =>
@@ -985,7 +986,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0x90,
     toOpcode: 0x9f,
-    baseName: 'SWAP',
+    baseName: OpcodeMnemonic.SWAP,
     arguments: 1,
     iteratedExecuteConstruction:
       (index) =>
@@ -998,7 +999,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
   ...CreateOpCodeWIthVariableArgumentLength({
     fromOpcode: 0xa0,
     toOpcode: 0xa4,
-    baseName: 'LOG',
+    baseName: OpcodeMnemonic.LOG,
     deltaStart: 0,
     arguments: 1,
     iteratedExecuteConstruction:
@@ -1027,7 +1028,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xf0: new OpCode({
-    name: 'CREATE',
+    name: OpcodeMnemonic.CREATE,
     arguments: 1,
     onExecute: async ({
       stack,
@@ -1076,7 +1077,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xf1: new OpCode({
-    name: 'CALL',
+    name: OpcodeMnemonic.CALL,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
@@ -1122,7 +1123,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xf2: new OpCode({
-    name: 'CALLCODE',
+    name: OpcodeMnemonic.CALLCODE,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
@@ -1174,7 +1175,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xf3: new OpCode({
-    name: 'RETURN',
+    name: OpcodeMnemonic.RETURN,
     arguments: 1,
     onExecute: ({ evm, stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
@@ -1197,7 +1198,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: true,
   }),
   0xf4: new OpCode({
-    name: 'DELEGATECALL',
+    name: OpcodeMnemonic.DELEGATECALL,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 100,
@@ -1268,7 +1269,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xf5: new OpCode({
-    name: 'CREATE2',
+    name: OpcodeMnemonic.CREATE2,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 2,
@@ -1308,7 +1309,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xfa: new OpCode({
-    name: 'STATICCALL',
+    name: OpcodeMnemonic.STATICCALL,
     arguments: 1,
     // TODO this is dynamic
     gasCost: () => 0,
@@ -1377,7 +1378,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: false,
   }),
   0xfd: new OpCode({
-    name: 'REVERT',
+    name: OpcodeMnemonic.REVERT,
     arguments: 1,
     onExecute: ({ evm, stack, memory, gasComputer }) => {
       const offset = stack.pop().toNumber();
@@ -1397,7 +1398,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: true,
   }),
   0xfe: new OpCode({
-    name: 'INVALID',
+    name: OpcodeMnemonic.INVALID,
     arguments: 1,
     gasCost: () => 0,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -1407,7 +1408,7 @@ export const OpcodeLookups: Record<number, OpCode> = {
     isTerminating: true,
   }),
   0xff: new OpCode({
-    name: 'SELFDESTRUCT',
+    name: OpcodeMnemonic.SELFDESTRUCT,
     arguments: 1,
     // TODO, this is dynamic
     gasCost: () => 2,

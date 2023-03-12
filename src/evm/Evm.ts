@@ -105,9 +105,9 @@ export class Evm implements InterfaceEvm {
     const { opcode, opcodeNumber } = this.loadOpcode();
     const prevGas = this.gasCost();
     this.logger.log(
-      `Running ${OpcodeLookups[opcodeNumber].mnemonic} (pc: 0x${this.pc.toString(
-        16
-      )})`
+      `Running ${
+        OpcodeLookups[opcodeNumber].mnemonic
+      } (pc: 0x${this.pc.toString(16)})`
     );
 
     const evmContext: EvmContext = {
@@ -176,14 +176,21 @@ export class Evm implements InterfaceEvm {
     return true;
   }
 
-  public async execute(options?: { stopAtOpcode?: number; stopAtPc?: number }) {
+  public async execute(options?: {
+    stopAtOpcode?: number;
+    stopAtOpcodes?: number[];
+    stopAtPc?: number;
+  }) {
+    const stopAtOpcodes = options?.stopAtOpcodes || [];
+    if (options?.stopAtOpcode) stopAtOpcodes.push(options.stopAtOpcode);
+
     while (this.isRunning) {
-      await this.step();
-      if (options?.stopAtOpcode == this.currentOpcodeNumber) {
+      if (stopAtOpcodes?.includes(this.currentOpcodeNumber)) {
         break;
       } else if (options?.stopAtPc === this.pc) {
         break;
       }
+      await this.step();
     }
 
     // https://eips.ethereum.org/EIPS/eip-3529 -> max one fifth is refunded.
